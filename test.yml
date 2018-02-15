@@ -1,0 +1,14 @@
+---
+- name: Deploy a vm
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+#    - kubevirt_vm:
+#       state: present
+#       src: /tmp/x.yml
+    - kubevirt_vm:
+       state: present
+       name: testvm1002
+       namespace: default

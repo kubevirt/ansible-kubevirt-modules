@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-import base64
 from kubernetes import client, config
 import os
 import yaml
@@ -11,8 +10,8 @@ VERSION = 'v1alpha1'
 
 
 DOCUMENTATION = '''
-module: kubevirt_vm
-short_description: Handles kubevirt vms
+module: kubevirt_vmrs
+short_description: Handles kubevirt vm replicasets
 description:
     - Longer description of the module
     - Use name, namespace and src
@@ -24,13 +23,13 @@ requirements:
     - kubernetes python package you can grab from pypi'''
 
 EXAMPLES = '''
-- name: Create a vm
-  kubevirt_vm:
+- name: Create a virtualmachinereplicaset
+  kubevirt_vmrs:
     name: testvm
     namespace: default
 
-- name: Delete that vm
-  kubevirt_vm:
+- name: Delete a virtualmachinereplicaset
+  kubevirt_vmrs:
     name: testvm
     namespace: testvm
     state: absent
@@ -38,9 +37,9 @@ EXAMPLES = '''
 
 
 def exists(crds, name, namespace):
-    allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachines')["items"]
-    vms = [vm for vm in allvms if vm.get("metadata")["namespace"] == namespace and vm.get("metadata")["name"] == name]
-    result = True if vms else False
+    allvmrs = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachinereplicasets')["items"]
+    vmrss = [vmrs for vmrs in allvmrs if vmrs.get("metadata")["namespace"] == namespace and vmrs.get("metadata")["name"] == name]
+    result = True if vmrss else False
     return result
 
 
@@ -53,23 +52,21 @@ def main():
         },
         "name": {"required": False, "type": "str"},
         "namespace": {"required": False, "type": "str"},
+        "replicas": {"required": False, "type": "int", "default": 3},
         "memory": {"required": False, "type": "str", "default": '64M'},
-        "lun": {"required": False, "type": "int", "default": 3},
-        "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
-        "target": {"required": False, "type": "str", "default": 'iscsi-demo-target'},
+        "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:v0.2.0'},
+        "labels": {"required": False, "type": "int"},
         "src": {"required": False, "type": "str"},
-        "cloudinit": {"required": False, "type": "str"},
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
     crds = client.CustomObjectsApi()
     name = module.params['name']
     namespace = module.params['namespace']
+    image = module.params['image']
     memory = module.params['memory']
-    target = module.params['target']
-    iqn = module.params['iqn']
-    lun = module.params['lun']
-    cloudinit = module.params['cloudinit']
+    replicas = module.params['replicas']
+    labels = module.params['labels']
     src = module.params['src']
     state = module.params['state']
     if src is not None:
@@ -95,19 +92,19 @@ def main():
             changed = True
             skipped = False
             if src is None:
-                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': [{'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}]}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
-                if cloudinit is not None:
-                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'disk': {'dev': 'vdb'}, 'name': 'cloudinitdisk'}
-                    # cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': 'true'}, 'name': 'cloudinitdisk'}
-                    vm['spec']['domain']['devices']['disks'].append(cloudinitdisk)
-                    userDataBase64 = base64.b64encode(cloudinit)
-                    cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
-                    vm['spec']['volumes'].append(cloudinitvolume)
-            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
+                vmrs = {'kind': 'VirtualMachineReplicaSet', 'spec': {'replicas': replicas, 'template': {'spec': {'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'registryvolume', 'disk': {'dev': 'vda'}, 'name': 'registrydisk'}]}}, 'volumes': [{'name': 'registryvolume', 'registryDisk': {'image': image}}]}, 'metadata': {'name': name}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'name': name, 'namespace': namespace}}
+                if labels is not None:
+                    try:
+                        labels = yaml.load(labels)
+                        vmrs['spec']['template']['metadata']['labels'] = labels
+                        vmrs['spec']['selector'] = {'matchLabels': labels}
+                    except yaml.scanner.ScannerError as err:
+                        module.fail_json(msg="Couldn't parse labels, got %s" % err)
+            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', vmrs)
 
     else:
         if found:
-            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name, client.V1DeleteOptions())
+            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', name, client.V1DeleteOptions())
             changed = True
             skipped = False
         else:

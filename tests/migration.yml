@@ -1,0 +1,14 @@
+---
+- name: Migrate a vm
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+#    - kubevirt_vm:
+#       state: present
+#       src: /tmp/x.yml
+    - kubevirt_migration:
+       state: absent
+       name: agassi
+       namespace: default

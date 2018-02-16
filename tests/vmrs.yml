@@ -1,5 +1,5 @@
 ---
-- name: Deploy a vm
+- name: Create a vmreplicaset
   hosts: localhost
   connection: local
   vars:
@@ -8,7 +8,7 @@
 #    - kubevirt_vm:
 #       state: present
 #       src: /tmp/x.yml
-    - kubevirt_vm:
+    - kubevirt_vmrs:
        state: present
-       name: testvm1002
+       name: myrs
        namespace: default

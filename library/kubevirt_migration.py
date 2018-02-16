@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-import base64
 from kubernetes import client, config
 import os
 import yaml
@@ -11,7 +10,7 @@ VERSION = 'v1alpha1'
 
 
 DOCUMENTATION = '''
-module: kubevirt_vm
+module: kubevirt_migration
 short_description: Handles kubevirt vms
 description:
     - Longer description of the module
@@ -24,13 +23,13 @@ requirements:
     - kubernetes python package you can grab from pypi'''
 
 EXAMPLES = '''
-- name: Create a vm
-  kubevirt_vm:
+- name: Migrate a migration
+  kubevirt_migration:
     name: testvm
     namespace: default
 
-- name: Delete that vm
-  kubevirt_vm:
+- name: Remove that migration
+  kubevirt_migration:
     name: testvm
     namespace: testvm
     state: absent
@@ -38,9 +37,9 @@ EXAMPLES = '''
 
 
 def exists(crds, name, namespace):
-    allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachines')["items"]
-    vms = [vm for vm in allvms if vm.get("metadata")["namespace"] == namespace and vm.get("metadata")["name"] == name]
-    result = True if vms else False
+    allmigrations = crds.list_cluster_custom_object(DOMAIN, VERSION, 'migrations')["items"]
+    migrations = [migration for migration in allmigrations if migration.get("metadata")["namespace"] == namespace and migration.get("metadata")["name"] == name]
+    result = True if migrations else False
     return result
 
 
@@ -53,23 +52,15 @@ def main():
         },
         "name": {"required": False, "type": "str"},
         "namespace": {"required": False, "type": "str"},
-        "memory": {"required": False, "type": "str", "default": '64M'},
-        "lun": {"required": False, "type": "int", "default": 3},
-        "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
-        "target": {"required": False, "type": "str", "default": 'iscsi-demo-target'},
+        "host": {"required": False, "type": "str"},
         "src": {"required": False, "type": "str"},
-        "cloudinit": {"required": False, "type": "str"},
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
     crds = client.CustomObjectsApi()
     name = module.params['name']
     namespace = module.params['namespace']
-    memory = module.params['memory']
-    target = module.params['target']
-    iqn = module.params['iqn']
-    lun = module.params['lun']
-    cloudinit = module.params['cloudinit']
+    host = module.params['host']
     src = module.params['src']
     state = module.params['state']
     if src is not None:
@@ -95,19 +86,14 @@ def main():
             changed = True
             skipped = False
             if src is None:
-                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': [{'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}]}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
-                if cloudinit is not None:
-                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'disk': {'dev': 'vdb'}, 'name': 'cloudinitdisk'}
-                    # cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': 'true'}, 'name': 'cloudinitdisk'}
-                    vm['spec']['domain']['devices']['disks'].append(cloudinitdisk)
-                    userDataBase64 = base64.b64encode(cloudinit)
-                    cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
-                    vm['spec']['volumes'].append(cloudinitvolume)
-            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
+                migration = {'kind': 'Migration', 'spec': {'selector': {'name': name}}, 'apiVersion': '%s/%s' % (DOMAIN, VERSION), 'metadata': {'name': name, 'namespace': namespace}}
+                if host is not None:
+                    migration['spec']['nodeSelector'] == {'kubernetes.io/hostname': host}
+            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', migration)
 
     else:
         if found:
-            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name, client.V1DeleteOptions())
+            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', name, client.V1DeleteOptions())
             changed = True
             skipped = False
         else:

@@ -38,6 +38,19 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 install_python_requirements
 > Set to true, if you want kubernetes python module installed. Defaults to false. Will install via `pip`
 
+## LOCAL TESTING
+
+```
+pip install kubernetes
+set -x ANSIBLE_LIBRARY .
+ansible-playbook tests/*yml
+```
+
+## TODO
+
+- use cdrom for cloudinit when kubevirt 0.3 is out
+- improve documentation
+
 ## License
 
 Apache V2

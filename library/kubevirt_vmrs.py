@@ -27,6 +27,8 @@ EXAMPLES = '''
   kubevirt_vmrs:
     name: testvm
     namespace: default
+    labels:
+      flavor: big
 
 - name: Delete a virtualmachinereplicaset
   kubevirt_vmrs:
@@ -55,7 +57,7 @@ def main():
         "replicas": {"required": False, "type": "int", "default": 3},
         "memory": {"required": False, "type": "str", "default": '64M'},
         "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:v0.2.0'},
-        "labels": {"required": False, "type": "int"},
+        "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
     }
     module = AnsibleModule(argument_spec=argument_spec)
@@ -95,7 +97,6 @@ def main():
                 vmrs = {'kind': 'VirtualMachineReplicaSet', 'spec': {'replicas': replicas, 'template': {'spec': {'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'registryvolume', 'disk': {'dev': 'vda'}, 'name': 'registrydisk'}]}}, 'volumes': [{'name': 'registryvolume', 'registryDisk': {'image': image}}]}, 'metadata': {'name': name}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'name': name, 'namespace': namespace}}
                 if labels is not None:
                     try:
-                        labels = yaml.load(labels)
                         vmrs['spec']['template']['metadata']['labels'] = labels
                         vmrs['spec']['selector'] = {'matchLabels': labels}
                     except yaml.scanner.ScannerError as err:

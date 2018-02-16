@@ -12,3 +12,5 @@
        state: present
        name: myrs
        namespace: default
+       labels:
+        myvm: big

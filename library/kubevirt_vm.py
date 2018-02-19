@@ -4,6 +4,7 @@ from ansible.module_utils.basic import AnsibleModule
 import base64
 from kubernetes import client, config
 import os
+import time
 import yaml
 
 DOMAIN = "kubevirt.io"
@@ -44,6 +45,14 @@ def exists(crds, name, namespace):
     return result
 
 
+def status(crds, name, namespace):
+    try:
+        vm = crds.get_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name)
+        return vm['status']['phase']
+    except Exception as err:
+        return err
+
+
 def main():
     argument_spec = {
         "state": {
@@ -53,6 +62,8 @@ def main():
         },
         "name": {"required": False, "type": "str"},
         "namespace": {"required": False, "type": "str"},
+        "wait": {"required": False, "type": "bool", "default": False},
+        "timeout": {"required": False, "type": "int", "default": 20},
         "memory": {"required": False, "type": "str", "default": '64M'},
         "lun": {"required": False, "type": "int", "default": 3},
         "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
@@ -65,6 +76,8 @@ def main():
     crds = client.CustomObjectsApi()
     name = module.params['name']
     namespace = module.params['namespace']
+    wait = module.params['wait']
+    timeout = module.params['timeout']
     memory = module.params['memory']
     target = module.params['target']
     iqn = module.params['iqn']
@@ -107,6 +120,19 @@ def main():
                 meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
             except Exception as err:
                     module.fail_json(msg='Error creating vm, got %s' % err)
+            if wait:
+                waittime = 0
+                while True:
+                    currentstatus = status(crds, name, namespace)
+                    if currentstatus == 'Running':
+                        break
+                    elif currentstatus == 'Not Found':
+                        module.fail_json(msg='Vm not found')
+                    elif waittime > timeout:
+                        module.fail_json(msg='timeout waiting for vm to be running')
+                    else:
+                        waittime += 5
+                        time.sleep(5)
     else:
         if found:
             try:

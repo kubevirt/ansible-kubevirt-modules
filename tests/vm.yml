@@ -9,6 +9,12 @@
 #       state: present
 #       src: /tmp/x.yml
     - kubevirt_vm:
-       state: absent
-       name: testvm1002
+       state: present
+       name: "{{ item }}"
+       wait: true
        namespace: default
+      with_items:
+#        - agassi
+#        - fabian
+#        - roman
+        - testvm2008

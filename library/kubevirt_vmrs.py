@@ -82,8 +82,10 @@ def main():
                     module.fail_json(msg='Error parsing src file, got %s' % err)
             name = vm.get("metadata")["name"]
             namespace = vm.get("metadata")["namespace"]
-    if name is None or namespace is None:
-        module.fail_json(msg='missing name/namespace')
+    if name is None:
+        module.fail_json(msg='missing name')
+    if namespace is None:
+        module.fail_json(msg='missing namespace')
     found = exists(crds, name, namespace)
     if state == 'present':
         if found:
@@ -94,7 +96,7 @@ def main():
             changed = True
             skipped = False
             if src is None:
-                vmrs = {'kind': 'VirtualMachineReplicaSet', 'spec': {'replicas': replicas, 'template': {'spec': {'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'registryvolume', 'disk': {'dev': 'vda'}, 'name': 'registrydisk'}]}}, 'volumes': [{'name': 'registryvolume', 'registryDisk': {'image': image}}]}, 'metadata': {'name': name}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'name': name, 'namespace': namespace}}
+                vmrs = {'kind': 'VirtualMachineReplicaSet', 'spec': {'replicas': replicas, 'template': {'spec': {'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'registryvolume', 'disk': {'dev': 'vda'}, 'name': 'registrydisk'}]}}, 'volumes': [{'name': 'registryvolume', 'registryDisk': {'image': image}}]}, 'metadata': {'name': name}}}, 'apiVersion': '%s/%s' % (DOMAIN, VERSION), 'metadata': {'name': name, 'namespace': namespace}}
                 if labels is not None:
                     try:
                         vmrs['spec']['template']['metadata']['labels'] = labels

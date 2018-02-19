@@ -96,8 +96,10 @@ def main():
                     module.fail_json(msg='Error parsing src file, got %s' % err)
             name = vm.get("metadata")["name"]
             namespace = vm.get("metadata")["namespace"]
-    if name is None or namespace is None:
-        module.fail_json(msg='missing name/namespace')
+    if name is None:
+        module.fail_json(msg='missing name')
+    if namespace is None:
+        module.fail_json(msg='missing namespace')
     found = exists(crds, name, namespace)
     if state == 'present':
         if found:

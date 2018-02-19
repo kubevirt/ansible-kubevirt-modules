@@ -89,11 +89,16 @@ def main():
                 migration = {'kind': 'Migration', 'spec': {'selector': {'name': name}}, 'apiVersion': '%s/%s' % (DOMAIN, VERSION), 'metadata': {'name': name, 'namespace': namespace}}
                 if host is not None:
                     migration['spec']['nodeSelector'] == {'kubernetes.io/hostname': host}
-            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', migration)
-
+            try:
+                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', migration)
+            except Exception as err:
+                module.fail_json(msg='Error creating migration, got %s' % err)
     else:
         if found:
-            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', name, client.V1DeleteOptions())
+            try:
+                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'migrations', name, client.V1DeleteOptions())
+            except Exception as err:
+                module.fail_json(msg='Error deleting migration, got %s' % err)
             changed = True
             skipped = False
         else:

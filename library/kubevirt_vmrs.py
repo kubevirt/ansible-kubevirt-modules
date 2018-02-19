@@ -101,11 +101,16 @@ def main():
                         vmrs['spec']['selector'] = {'matchLabels': labels}
                     except yaml.scanner.ScannerError as err:
                         module.fail_json(msg="Couldn't parse labels, got %s" % err)
-            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', vmrs)
-
+            try:
+                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', vmrs)
+            except Exception as err:
+                module.fail_json(msg='Error creating virtualmachinereplicaset, got %s' % err)
     else:
         if found:
-            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', name, client.V1DeleteOptions())
+            try:
+                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', name, client.V1DeleteOptions())
+            except Exception as err:
+                module.fail_json(msg='Error deleting virtualmachinereplicaset, got %s' % err)
             changed = True
             skipped = False
         else:

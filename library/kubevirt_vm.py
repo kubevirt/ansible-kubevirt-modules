@@ -103,11 +103,16 @@ def main():
                     userDataBase64 = base64.b64encode(cloudinit)
                     cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
                     vm['spec']['volumes'].append(cloudinitvolume)
-            meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
-
+            try:
+                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
+            except Exception as err:
+                    module.fail_json(msg='Error creating vm, got %s' % err)
     else:
         if found:
-            meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name, client.V1DeleteOptions())
+            try:
+                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name, client.V1DeleteOptions())
+            except Exception as err:
+                    module.fail_json(msg='Error deleting vm, got %s' % err)
             changed = True
             skipped = False
         else:

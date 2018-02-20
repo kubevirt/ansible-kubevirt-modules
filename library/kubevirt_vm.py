@@ -65,11 +65,13 @@ def main():
         "wait": {"required": False, "type": "bool", "default": False},
         "timeout": {"required": False, "type": "int", "default": 20},
         "memory": {"required": False, "type": "str", "default": '64M'},
+        "disk": {"required": False, "type": "str"},
         "lun": {"required": False, "type": "int", "default": 3},
         "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
         "target": {"required": False, "type": "str", "default": 'iscsi-demo-target'},
         "src": {"required": False, "type": "str"},
         "cloudinit": {"required": False, "type": "str"},
+        "cdrom": {"required": False, "type": "bool", "default": False},
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
@@ -79,10 +81,12 @@ def main():
     wait = module.params['wait']
     timeout = module.params['timeout']
     memory = module.params['memory']
+    disk = module.params['disk']
     target = module.params['target']
     iqn = module.params['iqn']
     lun = module.params['lun']
     cloudinit = module.params['cloudinit']
+    cdrom = module.params['cdrom']
     src = module.params['src']
     state = module.params['state']
     if src is not None:
@@ -110,10 +114,17 @@ def main():
             changed = True
             skipped = False
             if src is None:
-                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': [{'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}]}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
+                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': []}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
+                if disk is not None:
+                    registryvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}}
+                else:
+                    registryvolume = {'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}
+                vm['spec']['volumes'].append(registryvolume)
                 if cloudinit is not None:
-                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'disk': {'dev': 'vdb'}, 'name': 'cloudinitdisk'}
-                    # cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': 'true'}, 'name': 'cloudinitdisk'}
+                    if cdrom:
+                        cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
+                    else:
+                        cloudinitdisk = {'volumeName': 'cloudinitvolume', 'disk': {'dev': 'vdb'}, 'name': 'cloudinitdisk'}
                     vm['spec']['domain']['devices']['disks'].append(cloudinitdisk)
                     userDataBase64 = base64.b64encode(cloudinit)
                     cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}

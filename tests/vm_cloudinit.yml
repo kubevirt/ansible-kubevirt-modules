@@ -10,10 +10,11 @@
 #       src: /tmp/x.yml
     - kubevirt_vm:
        state: present
-       name: agassi
+       name: jhendrix
        namespace: default
-       lun: 4 
+       cdrom: true
+       # lun: 4 
        cloudinit: |
            #cloud-config
-           hostname: roman
-           password: atomic
+           hostname: jhendrix
+           password: mysecret

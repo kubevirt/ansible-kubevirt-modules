@@ -9,9 +9,9 @@
 #       state: present
 #       src: /tmp/x.yml
     - kubevirt_vm:
-       state: present
+       state: absent
        name: "{{ item }}"
-       wait: true
+       wait: false
        namespace: default
       with_items:
 #        - agassi

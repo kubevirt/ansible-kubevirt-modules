@@ -64,7 +64,7 @@ def main():
         "namespace": {"required": False, "type": "str"},
         "wait": {"required": False, "type": "bool", "default": False},
         "timeout": {"required": False, "type": "int", "default": 20},
-        "memory": {"required": False, "type": "str", "default": '64M'},
+        "memory": {"required": False, "type": "str", "default": '512M'},
         "disk": {"required": False, "type": "str"},
         "lun": {"required": False, "type": "int", "default": 3},
         "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},

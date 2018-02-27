@@ -6,8 +6,9 @@
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - kubevirt_vm:
-       state: present
+       state: absent
        name: fedora2
        disk: kubevirt/fedora-cloud-registry-disk-demo:v0.3.0-alpha.2
+       memory: 1024M
        wait: false
        namespace: default

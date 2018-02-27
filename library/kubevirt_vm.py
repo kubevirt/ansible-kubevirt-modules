@@ -116,7 +116,7 @@ def main():
             if src is None:
                 vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': []}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
                 if disk is not None:
-                    registryvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}}
+                    registryvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}, 'name': 'myvolume'}
                 else:
                     registryvolume = {'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}
                 vm['spec']['volumes'].append(registryvolume)

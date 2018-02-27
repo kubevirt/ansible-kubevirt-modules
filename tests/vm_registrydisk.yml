@@ -7,7 +7,7 @@
   tasks:
     - kubevirt_vm:
        state: present
-       name: fedora
+       name: fedora2
        disk: kubevirt/fedora-cloud-registry-disk-demo:v0.3.0-alpha.2
        wait: false
        namespace: default

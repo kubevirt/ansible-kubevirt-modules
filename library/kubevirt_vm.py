@@ -98,8 +98,11 @@ def main():
                     vm = yaml.load(data)
                 except yaml.scanner.ScannerError as err:
                     module.fail_json(msg='Error parsing src file, got %s' % err)
-            name = vm.get("metadata")["name"]
-            namespace = vm.get("metadata")["namespace"]
+            metadata = vm.get("metadata")
+    	    if name is None:
+                module.fail_json(msg='missing metadata')
+            name = metadata.get("name")
+            namespace = metadata.get("namespace")
     if name is None:
         module.fail_json(msg='missing name')
     if namespace is None:

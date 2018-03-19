@@ -66,6 +66,7 @@ def main():
         "timeout": {"required": False, "type": "int", "default": 20},
         "memory": {"required": False, "type": "str", "default": '512M'},
         "disk": {"required": False, "type": "str"},
+        "pvc": {"required": False, "type": "pvc"},
         "lun": {"required": False, "type": "int", "default": 3},
         "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
         "target": {"required": False, "type": "str", "default": 'iscsi-demo-target'},
@@ -82,6 +83,7 @@ def main():
     timeout = module.params['timeout']
     memory = module.params['memory']
     disk = module.params['disk']
+    pvc = module.params['pvc']
     target = module.params['target']
     iqn = module.params['iqn']
     lun = module.params['lun']
@@ -99,7 +101,7 @@ def main():
                 except yaml.scanner.ScannerError as err:
                     module.fail_json(msg='Error parsing src file, got %s' % err)
             metadata = vm.get("metadata")
-    	    if name is None:
+            if metadata is None:
                 module.fail_json(msg='missing metadata')
             name = metadata.get("name")
             namespace = metadata.get("namespace")
@@ -119,10 +121,12 @@ def main():
             if src is None:
                 vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': []}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
                 if disk is not None:
-                    registryvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}, 'name': 'myvolume'}
+                    myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}, 'name': 'myvolume'}
+                elif pvc is not None:
+                    myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc}, 'name': 'myvolume'}
                 else:
-                    registryvolume = {'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}
-                vm['spec']['volumes'].append(registryvolume)
+                    myvolume = {'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}
+                vm['spec']['volumes'].append(myvolume)
                 if cloudinit is not None:
                     if cdrom:
                         cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
@@ -162,6 +166,7 @@ def main():
             skipped = True
             meta = {'result': 'skipped'}
     module.exit_json(changed=changed, skipped=skipped, meta=meta)
+
 
 if __name__ == '__main__':
     main()

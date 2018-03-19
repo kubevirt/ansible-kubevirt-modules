@@ -17,7 +17,7 @@ The modules are found in the [library folder](./library)
 Use the Galaxy client to install the role:
 
 ```
-$ ansible-galaxy install karmabs.kubevirt-modules
+$ ansible-galaxy install karmab.kubevirt-modules
 ```
 
 Once installed, add it to a playbook:

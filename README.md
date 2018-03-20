@@ -10,7 +10,7 @@ The modules are found in the [library folder](./library)
 
 - Ansible
 - Kubernetes Python Module
-- [kubevirt](https://github.com/karmab/kubevirt) running
+- [kubevirt](https://github.com/kubevirt/kubevirt) running
 
 ## Installation and use
 

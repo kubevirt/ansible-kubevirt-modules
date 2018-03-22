@@ -11,7 +11,7 @@
 
 - Ansible 2.4.3.0
 - Kubernetes Python Module
-- [KubeVirt](https://github.com/karmab/kubevirt)
+- [kubevirt](https://github.com/kubevirt/kubevirt)
 
 ## Installation and usage
 

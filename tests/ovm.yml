@@ -1,0 +1,12 @@
+---
+- name: Deploy a vm
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_ovm:
+       state: present
+       name: bbecker
+       namespace: default
+       registrydisk: kubevirt/fedora-cloud-registry-disk-demo

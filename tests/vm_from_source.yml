@@ -6,7 +6,5 @@
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - kubevirt_vm:
-       name: jmacenroe
-       namespace: default
        state: present
-       registrydisk: kubevirt/fedora-cloud-registry-disk-demo
+       src: /tmp/x.yml

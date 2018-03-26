@@ -37,6 +37,8 @@ EXAMPLES = '''
     state: absent
 '''
 
+REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+
 
 def exists(crds, name, namespace):
     allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachines')["items"]
@@ -60,19 +62,15 @@ def main():
             "choices": ['present', 'absent'],
             "type": 'str'
         },
-        "name": {"required": False, "type": "str"},
-        "namespace": {"required": False, "type": "str"},
+        "name": {"required": True, "type": "str"},
+        "namespace": {"required": True, "type": "str"},
         "wait": {"required": False, "type": "bool", "default": False},
         "timeout": {"required": False, "type": "int", "default": 20},
         "memory": {"required": False, "type": "str", "default": '512M'},
-        "disk": {"required": False, "type": "str"},
+        "registrydisk": {"required": False, "type": "str", "choices": REGISTRYDISKS},
         "pvc": {"required": False, "type": "pvc"},
-        "lun": {"required": False, "type": "int", "default": 3},
-        "iqn": {"required": False, "type": "str", "default": 'iqn.2017-01.io.kubevirt:sn.42'},
-        "target": {"required": False, "type": "str", "default": 'iscsi-demo-target'},
         "src": {"required": False, "type": "str"},
         "cloudinit": {"required": False, "type": "str"},
-        "cdrom": {"required": False, "type": "bool", "default": False},
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
@@ -82,13 +80,9 @@ def main():
     wait = module.params['wait']
     timeout = module.params['timeout']
     memory = module.params['memory']
-    disk = module.params['disk']
+    registrydisk = module.params['registrydisk']
     pvc = module.params['pvc']
-    target = module.params['target']
-    iqn = module.params['iqn']
-    lun = module.params['lun']
     cloudinit = module.params['cloudinit']
-    cdrom = module.params['cdrom']
     src = module.params['src']
     state = module.params['state']
     if src is not None:
@@ -103,12 +97,12 @@ def main():
             metadata = vm.get("metadata")
             if metadata is None:
                 module.fail_json(msg='missing metadata')
-            name = metadata.get("name")
-            namespace = metadata.get("namespace")
-    if name is None:
-        module.fail_json(msg='missing name')
-    if namespace is None:
-        module.fail_json(msg='missing namespace')
+            srcname = metadata.get("name")
+            srcnamespace = metadata.get("namespace")
+            if srcname is None or srcname != name:
+                module.fail_json(msg='Different name found in src file')
+            if srcnamespace is not None and srcnamespace != namespace:
+                module.fail_json(msg='Different namespace found in src file')
     found = exists(crds, name, namespace)
     if state == 'present':
         if found:
@@ -120,18 +114,15 @@ def main():
             skipped = False
             if src is None:
                 vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': []}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
-                if disk is not None:
-                    myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': disk}, 'name': 'myvolume'}
+                if registrydisk is not None:
+                    myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': registrydisk}, 'name': 'myvolume'}
                 elif pvc is not None:
                     myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc}, 'name': 'myvolume'}
                 else:
-                    myvolume = {'iscsi': {'targetPortal': target, 'iqn': iqn, 'lun': lun}, 'name': 'myvolume'}
+                    module.fail_json(msg='Missing disk information')
                 vm['spec']['volumes'].append(myvolume)
                 if cloudinit is not None:
-                    if cdrom:
-                        cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
-                    else:
-                        cloudinitdisk = {'volumeName': 'cloudinitvolume', 'disk': {'dev': 'vdb'}, 'name': 'cloudinitdisk'}
+                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
                     vm['spec']['domain']['devices']['disks'].append(cloudinitdisk)
                     userDataBase64 = base64.b64encode(cloudinit)
                     cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}

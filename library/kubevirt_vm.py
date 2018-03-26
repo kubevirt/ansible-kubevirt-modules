@@ -68,7 +68,7 @@ def main():
         "timeout": {"required": False, "type": "int", "default": 20},
         "memory": {"required": False, "type": "str", "default": '512M'},
         "registrydisk": {"required": False, "type": "str", "choices": REGISTRYDISKS},
-        "pvc": {"required": False, "type": "pvc"},
+        "pvc": {"required": False, "type": "str"},
         "src": {"required": False, "type": "str"},
         "cloudinit": {"required": False, "type": "str"},
     }

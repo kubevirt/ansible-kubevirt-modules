@@ -1,18 +1,19 @@
-# ansible-kubevirt-modules
+# Ansible KubeVirt Modules
 
-Provides access to the latest release of the kubevirt modules. 
+[Ansible](https://github.com/ansible/ansible) modules for [KubeVirt](https://github.com/kubevirt/kubevirt) management. 
 
-Include this role in a playbook, and any other plays, roles, and includes will have access to the modules.
+## Contents
 
-The modules are found in the [library folder](./library)
+- `library`: Ansible modules files for KubeVirt management
+- `tests`: Ansible playbooks to test KubeVirt modules
 
 ## Requirements
 
-- Ansible
+- Ansible 2.4.3.0
 - Kubernetes Python Module
-- [kubevirt](https://github.com/kubevirt/kubevirt) running
+- [kubevirt](https://github.com/kubevirt/kubevirt)
 
-## Installation and use
+## Installation and usage
 
 Use the Galaxy client to install the role:
 
@@ -31,13 +32,9 @@ Once installed, add it to a playbook:
       install_python_requirements: no
     - role: hello-underworld
 ```
+> **NOTE:** Set `install_python_reqirememnts: yes` to install Kubernetes Python module
 
 Because the role is referenced, the `hello-underworld` role is able to make use of the kubevirt modules
-
-### Module parameters
-
-install_python_requirements
-> Set to true, if you want kubernetes python module installed. Defaults to false. Will install via `pip`
 
 ## LOCAL TESTING
 
@@ -46,12 +43,3 @@ pip install kubernetes
 set -x ANSIBLE_LIBRARY .
 ansible-playbook tests/*yml
 ```
-
-## TODO
-
-- use cdrom for cloudinit when kubevirt 0.3 is out
-- improve documentation
-
-## License
-
-Apache V2

@@ -3,6 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 import base64
 from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 import os
 import time
 import yaml
@@ -40,21 +41,30 @@ EXAMPLES = '''
 
 
 def exists(crds, name, namespace):
-    allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'offlinevirtualmachines')["items"]
-    vms = [vm for vm in allvms if vm.get("metadata")["namespace"] == namespace and vm.get("metadata")["name"] == name]
-    result = True if vms else False
+    '''returns true if the offline virtual machine already exists, otherwise
+    false.'''
+    allovms = crds.list_cluster_custom_object(
+        DOMAIN, VERSION, 'offlinevirtualmachines')["items"]
+    ovms = [
+        ovm for ovm in allovms if ovm.get("metadata")["namespace"] ==
+        namespace and ovm.get("metadata")["name"] == name
+    ]
+    result = True if ovms else False
     return result
 
 
 def status(crds, name, namespace):
+    '''returns the current state of the offline virtual machine.'''
     try:
-        vm = crds.get_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name)
-        return vm['status']['phase']
-    except Exception as err:
+        ovm = crds.get_namespaced_custom_object(
+            DOMAIN, VERSION, namespace, 'offlinevirtualmachines', name)
+        return ovm['status']['phase']
+    except ApiException as err:
         return err
 
 
 def main():
+    '''Entry point.'''
     argument_spec = {
         "state": {
             "default": "present",
@@ -92,10 +102,10 @@ def main():
         else:
             with open(src) as data:
                 try:
-                    vm = yaml.load(data)
+                    ovm = yaml.load(data)
                 except yaml.scanner.ScannerError as err:
                     module.fail_json(msg='Error parsing src file, got %s' % err)
-            metadata = vm.get("metadata")
+            metadata = ovm.get("metadata")
             if metadata is None:
                 module.fail_json(msg='missing metadata')
             srcname = metadata.get("name")
@@ -115,24 +125,24 @@ def main():
             skipped = False
             if src is None:
                 # vm = {'kind': 'OfflineVirtualMachine', 'spec': {'running': True, 'template': {'metadata': {'labels': {'kubevirt.io/provider': 'kcli'}}, 'spec': {'domain': {'resources': {'requests': {'memory': '%sM' % memory}}, 'cpu': {'cores': cores}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda', 'bus': 'virtio'}, 'name': 'mydisk'}]}}, 'volumes': []}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'annotations': {}, 'name': name, 'namespace': namespace}}
-                vm = {'kind': 'OfflineVirtualMachine', 'spec': {'running': True, 'template': {'metadata': {}, 'spec': {'domain': {'resources': {'requests': {'memory': '%s' % memory}}, 'cpu': {'cores': cores}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'bus': 'virtio'}, 'name': 'mydisk'}]}}, 'volumes': []}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'annotations': {}, 'name': name, 'namespace': namespace}}
-                vm['spec']['template']['spec']['domain']['machine'] = {'type': 'q35'}
+                ovm = {'kind': 'OfflineVirtualMachine', 'spec': {'running': True, 'template': {'metadata': {}, 'spec': {'domain': {'resources': {'requests': {'memory': '%s' % memory}}, 'cpu': {'cores': cores}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'bus': 'virtio'}, 'name': 'mydisk'}]}}, 'volumes': []}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'annotations': {}, 'name': name, 'namespace': namespace}}
+                ovm['spec']['template']['spec']['domain']['machine'] = {'type': 'q35'}
                 if registrydisk is not None:
                     myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': registrydisk}, 'name': 'myvolume'}
                 elif pvc is not None:
                     myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc}, 'name': 'myvolume'}
                 else:
                     module.fail_json(msg='Missing disk information')
-                vm['spec']['template']['spec']['volumes'].append(myvolume)
+                ovm['spec']['template']['spec']['volumes'].append(myvolume)
                 if cloudinit is not None:
                     cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
-                    vm['spec']['template']['spec']['domain']['devices']['disks'].append(cloudinitdisk)
+                    ovm['spec']['template']['spec']['domain']['devices']['disks'].append(cloudinitdisk)
                     userDataBase64 = base64.b64encode(cloudinit)
                     cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
-                    vm['spec']['template']['spec']['volumes'].append(cloudinitvolume)
+                    ovm['spec']['template']['spec']['volumes'].append(cloudinitvolume)
             try:
-                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'offlinevirtualmachines', vm)
-            except Exception as err:
+                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'offlinevirtualmachines', ovm)
+            except ApiException as err:
                     module.fail_json(msg='Error creating ovm, got %s' % err)
             if wait:
                 waittime = 0
@@ -151,7 +161,7 @@ def main():
         if found:
             try:
                 meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'offlinevirtualmachines', name, client.V1DeleteOptions())
-            except Exception as err:
+            except ApiException as err:
                     module.fail_json(msg='Error deleting ovm, got %s' % err)
             changed = True
             skipped = False

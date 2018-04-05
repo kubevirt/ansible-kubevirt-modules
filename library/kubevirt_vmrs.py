@@ -28,11 +28,11 @@ options:
     name:
         description:
             - Name of the VM ReplicaSet.
-        required: false
+        required: true
     namespace:
         description:
             - Namespace to add the VM ReplicaSet to or delete from.
-        required: false
+        required: true
     replicas:
         description:
             - Number of desired pods.
@@ -103,8 +103,8 @@ def main():
             "choices": ['present', 'absent'],
             "type": 'str'
         },
-        "name": {"required": False, "type": "str"},
-        "namespace": {"required": False, "type": "str"},
+        "name": {"required": True, "type": "str"},
+        "namespace": {"required": True, "type": "str"},
         "replicas": {"required": False, "type": "int", "default": 3},
         "memory": {"required": False, "type": "str", "default": '64M'},
         "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:v0.2.0'},
@@ -131,12 +131,15 @@ def main():
                     vm = yaml.load(data)
                 except yaml.scanner.ScannerError as err:
                     module.fail_json(msg='Error parsing src file, got %s' % err)
-            name = vm.get("metadata")["name"]
-            namespace = vm.get("metadata")["namespace"]
-    if name is None:
-        module.fail_json(msg='missing name')
-    if namespace is None:
-        module.fail_json(msg='missing namespace')
+            metadata = vm.get("metadata")
+            if metadata is None:
+                module.fail_json(msg="missing metadata")
+            srcname = metadata.get("name")
+            srcnamespace = metadata.get("namespace")
+            if srcname is None or srcname != name:
+                module.fail_json(msg='missing or different name in %s' % src)
+            if srcnamespace is None or srcnamespace != namespace:
+                module.fail_json(msg='missing or different namespace in %s' % src)
     found = exists(crds, name, namespace)
     if state == 'present':
         if found:

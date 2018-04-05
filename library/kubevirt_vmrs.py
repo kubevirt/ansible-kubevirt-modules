@@ -62,7 +62,7 @@ notes:
     - Details at https://github.com/kubevirt/kubevirt
     - And https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 requirements:
-    - kubernetes python package you can grab from pypi'''
+    - Kubernetes Python package'''
 
 EXAMPLES = '''
 - name: Create a VM ReplicaSet

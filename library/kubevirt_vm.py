@@ -46,7 +46,7 @@ options:
         required: false
         default: "20"
     memory:
-        description
+        description:
             - Memory to assign to the VM.
         required: false
         default: "512M"
@@ -63,9 +63,9 @@ options:
             - Local YAML file to use as a source to define the VM. It overrides all parameters.
         required: false
     registrydisk:
-        description
+        description:
             - Name of a base disk for the VM.
-        requiredi: false
+        required: false
         choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
     cloudinit:
         description:

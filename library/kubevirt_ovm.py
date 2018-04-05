@@ -47,20 +47,20 @@ options:
         required: false
         default: "20"
     cores:
-        description
+        description:
             - Number of cores inside the Offline VM.
         type: int
         required: false
         default: "2"
     memory:
-        description
+        description:
             - Memory to assign to the Offline VM.
         required: false
         default: "512M"
     registrydisk:
-        description
+        description:
             - Name of a base disk for the Offline VM.
-        requiredi: false
+        required: false
         choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
     pvc:
         description:
@@ -77,7 +77,7 @@ options:
 notes:
     - Details at https://github.com/kubevirt/kubevirt
 requirements:
-    - kubernetes python package you can grab from pypi'''
+    - Kubernetes Python package'''
 
 EXAMPLES = '''
 - name: Create the Offline VM

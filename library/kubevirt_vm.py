@@ -4,17 +4,6 @@
 # Copyright (c) 2018, Karim Boumedhel <@karmab>, Irina Gulina <@alexxa>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-import base64
-from kubernetes import client, config
-import os
-import time
-import yaml
-
-DOMAIN = "kubevirt.io"
-VERSION = 'v1alpha1'
-
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -32,21 +21,21 @@ author:
 options:
     state:
         description:
-            - Whether to create (C(present)) or delete (C(absent)) a VM.
+            - Whether to create (C(present)) or delete (C(absent)) the VM.
         required: false
         default: "present"
         choices: ["present", "absent"]
     name:
         description:
-            - Name of a VM.
+            - Name of the VM.
         required: true
     namespace:
         description:
-            - Namespace to add a VM to or delete from.
+            - Namespace to add the VM to or delete from.
         required: true
     wait:
         description:
-            - Wait for a VM to be running.
+            - Wait for the VM to start running.
         type: bool
         required: false
         default: 'no'
@@ -58,28 +47,33 @@ options:
         default: "20"
     memory:
         description
-            -
+            - Memory to assign to the VM.
         required: false
         default: "512M"
     disk:
         description:
-            - Attach a volume as a disk to a VM.
+            - Attach a volume as a disk to the VM.
         required: false
     pvc:
         description:
-            - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for a VM.
+            - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for ithe VM.
         required: false
     src:
         description:
-            - Local YAML file to use as a source to define a VM. It overrides all parameters.
+            - Local YAML file to use as a source to define the VM. It overrides all parameters.
         required: false
+    registrydisk:
+        description
+            - Name of a base disk for the VM.
+        requiredi: false
+        choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
     cloudinit:
         description:
-            - String containing cloudInit information to pass to a VM. It will be encoded as base64.
+            - String containing cloudInit information to pass to the VM. It will be encoded as base64.
         required: false
     cdrom:
         description:
-            - Attach a volume as a CD-ROM to a VM.
+            - Attach a volume as a CD-ROM to the VM.
         type: bool
         required: false
         default: "no"
@@ -94,15 +88,25 @@ EXAMPLES = '''
     name: testvm
     namespace: default
 
-- name: Delete A VM
+- name: Delete a VM
   kubevirt_vm:
     name: testvm
-    namespace: testvm
+    namespace: default
     state: absent
 '''
 
-REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+RETURN = ''' # '''
 
+from ansible.module_utils.basic import AnsibleModule
+import base64
+from kubernetes import client, config
+import os
+import time
+import yaml
+
+DOMAIN = "kubevirt.io"
+VERSION = 'v1alpha1'
+REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
 
 def exists(crds, name, namespace):
     allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachines')["items"]

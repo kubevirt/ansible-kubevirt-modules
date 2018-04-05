@@ -4,18 +4,6 @@
 # Copyright (c) 2018, Karim Boumedhel <@karmab>, Irina Gulina <@alexxa>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-import base64
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-import os
-import time
-import yaml
-
-DOMAIN = "kubevirt.io"
-VERSION = 'v1alpha1'
-REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -29,25 +17,26 @@ description:
 version_added: "2.4.x"
 author:
     - Karim Boumedhel (@karmab)
+    - Sergi Jimenez (@tripledes)
     - Irina Gulina (@alexxa)
 options:
     state:
         description:
-            - Whether to create (C(present)) or delete (C(absent)) a VM replicaset.
+            - Whether to create (C(present)) or delete (C(absent)) the Offline VM.
         required: false
         default: "present"
         choices: ["present", "absent"]
     name:
         description:
-            - Name of an Offline VM.
-        required: false
+            - Name of the Offline VM.
+        required: true
     namespace:
         description:
-            - Namespace to add an Offline VM to or delete from.
-        required: false
+            - Namespace to add the Offline VM to or delete from.
+        required: true
     wait:
         description:
-            - Wait for a VM to be running.
+            - Wait for the Offline VM to start running.
         type: bool
         required: false
         default: 'no'
@@ -59,26 +48,31 @@ options:
         default: "20"
     cores:
         description
-            - Number of cores inside a VM.
+            - Number of cores inside the Offline VM.
         type: int
         required: false
         default: "2"
     memory:
         description
-            -
+            - Memory to assign to the Offline VM.
         required: false
         default: "512M"
+    registrydisk:
+        description
+            - Name of a base disk for the Offline VM.
+        requiredi: false
+        choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
     pvc:
         description:
-            - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for a VM.
+            - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for the Offline VM.
         required: false
     src:
         description:
-            - Local YAML file to use as a source to define a VM. It overrides all parameters.
+            - Local YAML file to use as a source to define the Offline VM. It overrides all parameters.
         required: false
     cloudinit:
         description:
-            - String containing cloudInit information to pass to a VM. It will be encoded as base64.
+            - String containing cloudInit information to pass to the Offline VM. It will be encoded as base64.
         required: false
 notes:
     - Details at https://github.com/kubevirt/kubevirt
@@ -86,18 +80,31 @@ requirements:
     - kubernetes python package you can grab from pypi'''
 
 EXAMPLES = '''
-- name: Create a vm
-  kubevirt_vm:
-    name: testvm
+- name: Create the Offline VM
+  kubevirt_ovm:
+    name: testovm
     namespace: default
 
-- name: Delete that vm
-  kubevirt_vm:
-    name: testvm
-    namespace: testvm
+- name: Delete the Offline VM
+  kubevirt_ovm:
+    name: testovm
+    namespace: default
     state: absent
 '''
 
+RETURN = ''' # '''
+
+from ansible.module_utils.basic import AnsibleModule
+import base64
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+import os
+import time
+import yaml
+
+DOMAIN = "kubevirt.io"
+VERSION = 'v1alpha1'
+REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
 
 def exists(crds, name, namespace):
     '''returns true if the offline virtual machine already exists, otherwise

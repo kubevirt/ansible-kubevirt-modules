@@ -50,10 +50,6 @@ options:
             - Memory to assign to the VM.
         required: false
         default: "512M"
-    disk:
-        description:
-            - Attach a volume as a disk to the VM.
-        required: false
     pvc:
         description:
             - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for ithe VM.
@@ -66,17 +62,12 @@ options:
         description:
             - Name of a base disk for the VM.
         required: false
-        choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+        choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo',
+        'kubevirt/fedora-cloud-registry-disk-demo']
     cloudinit:
         description:
             - String containing cloudInit information to pass to the VM. It will be encoded as base64.
         required: false
-    cdrom:
-        description:
-            - Attach a volume as a CD-ROM to the VM.
-        type: bool
-        required: false
-        default: "no"
 notes:
     - Details at https://github.com/kubevirt/kubevirt
 requirements:
@@ -106,7 +97,9 @@ import yaml
 
 DOMAIN = "kubevirt.io"
 VERSION = 'v1alpha1'
-REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo',
+                 'kubevirt/fedora-cloud-registry-disk-demo']
+
 
 def exists(crds, name, namespace):
     allvms = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachines')["items"]
@@ -181,19 +174,28 @@ def main():
             changed = True
             skipped = False
             if src is None:
-                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0, 'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda'}, 'name': 'mydisk'}]}}, 'volumes': []}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
+                vm = {'kind': 'VirtualMachine', 'spec': {'terminationGracePeriodSeconds': 0,
+                                                         'domain': {'resources': {'requests': {'memory': memory}},
+                                                                    'devices': {'disks': [{'volumeName': 'myvolume',
+                                                                                           'disk': {'dev': 'vda'},
+                                                                                           'name': 'mydisk'}]}},
+                                                         'volumes': []},
+                      'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'namespace': namespace, 'name': name}}
                 if registrydisk is not None:
                     myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': registrydisk}, 'name': 'myvolume'}
                 elif pvc is not None:
-                    myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc}, 'name': 'myvolume'}
+                    myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc},
+                                'name': 'myvolume'}
                 else:
                     module.fail_json(msg='Missing disk information')
                 vm['spec']['volumes'].append(myvolume)
                 if cloudinit is not None:
-                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
+                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True},
+                                     'name': 'cloudinitdisk'}
                     vm['spec']['domain']['devices']['disks'].append(cloudinitdisk)
                     userDataBase64 = base64.b64encode(cloudinit)
-                    cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
+                    cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64},
+                                       'name': 'cloudinitvolume'}
                     vm['spec']['volumes'].append(cloudinitvolume)
             try:
                 meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', vm)
@@ -215,7 +217,8 @@ def main():
     else:
         if found:
             try:
-                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines', name, client.V1DeleteOptions())
+                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachines',
+                                                            name, client.V1DeleteOptions())
             except Exception as err:
                     module.fail_json(msg='Error deleting vm, got %s' % err)
             changed = True

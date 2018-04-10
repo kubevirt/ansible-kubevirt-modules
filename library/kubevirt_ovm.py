@@ -22,7 +22,8 @@ author:
 options:
     state:
         description:
-            - Whether to create (C(present)) or delete (C(absent)) the Offline VM.
+            - "Whether to create (C(present)) or delete (C(absent))
+              the Offline VM."
         required: false
         default: "present"
         choices: ["present", "absent"]
@@ -61,18 +62,24 @@ options:
         description:
             - Name of a base disk for the Offline VM.
         required: false
-        choices: ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+        choices:
+            - 'kubevirt/alpine-registry-disk-demo'
+            - 'kubevirt/cirros-registry-disk-demo'
+            - 'kubevirt/fedora-cloud-registry-disk-demo'
     pvc:
         description:
-            - Name of a PersistentVolumeClaim existing in the same namespace to use as a base disk for the Offline VM.
+            - "Name of a PersistentVolumeClaim existing in the same namespace
+              to use as a base disk for the Offline VM."
         required: false
     src:
         description:
-            - Local YAML file to use as a source to define the Offline VM. It overrides all parameters.
+            - "Local YAML file to use as a source to define the Offline VM.
+              It overrides all parameters."
         required: false
     cloudinit:
         description:
-            - String containing cloudInit information to pass to the Offline VM. It will be encoded as base64.
+            - "String containing cloudInit information to pass to
+              the Offline VM. It will be encoded as base64."
         required: false
 notes:
     - Details at https://github.com/kubevirt/kubevirt
@@ -95,24 +102,173 @@ EXAMPLES = '''
 RETURN = ''' # '''
 
 from ansible.module_utils.basic import AnsibleModule
-import base64
+from ansible import errors
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
-import os
+import base64
 import time
 import yaml
 
 DOMAIN = "kubevirt.io"
 VERSION = 'v1alpha1'
-REGISTRYDISKS = ['kubevirt/alpine-registry-disk-demo', 'kubevirt/cirros-registry-disk-demo', 'kubevirt/fedora-cloud-registry-disk-demo']
+REGISTRYDISKS = [
+    'kubevirt/alpine-registry-disk-demo',
+    'kubevirt/cirros-registry-disk-demo',
+    'kubevirt/fedora-cloud-registry-disk-demo']
+
+
+def build_ovm_definition(params):
+    '''build Offline VM from params.'''
+    ovm_def = dict()
+    ovm_def["spec"] = dict()
+    spec = dict()
+    domain = dict()
+    resources = dict()
+    devices = dict()
+    devices["disks"] = list()
+    disk = dict()
+    metadata = dict()
+    template = dict()
+
+    resources["requests"] = dict()
+    resources["requests"]["memory"] = params.get("memory")
+
+    disk["volumeName"] = "myvolume"
+    disk["disk"] = dict({"bus": "virtio"})
+    disk["name"] = "mydisk"
+    devices["disks"].append(disk)
+
+    domain["resources"] = resources
+    domain["devices"] = devices
+    domain["cpu"] = dict({"cores": params.get("cores")})
+    domain["machine"] = dict({'type': 'q35'})
+
+    spec["domain"] = domain
+    spec["volumes"] = list()
+
+    template["spec"] = spec
+    template["metadata"] = dict()
+
+    metadata["annotations"] = dict()
+    metadata["name"] = params.get("name")
+    metadata["namespace"] = params.get("namespace")
+
+    ovm_def["kind"] = "OfflineVirtualMachine"
+    ovm_def["apiVersion"] = DOMAIN + "/" + VERSION
+    ovm_def["spec"]["template"] = template
+    ovm_def["spec"]["running"] = True
+    ovm_def["metadata"] = metadata
+
+    return ovm_def
+
+
+def wait(crds, params):
+    '''wait for the VM to be running.'''
+    waittime = 0
+    name = params.get("name")
+    namespace = params.get("namespace")
+    timeout = params.get("timeout")
+    while True:
+        currentstatus = status(crds, name, namespace)
+        if currentstatus == 'Running':
+            return True
+        elif currentstatus == 'Not Found':
+            return False
+        elif waittime > timeout:
+            return False
+        else:
+            waittime += 5
+            time.sleep(5)
+
+
+def build_volume_definition(pvc, registrydisk):
+    '''build myvolume object with user provided data.'''
+    myvolume = dict()
+    myvolume["volumeName"] = "myvolume"
+    myvolume["name"] = "myvolume"
+    if registrydisk is not None:
+        myvolume["registryDisk"] = dict({"image": registrydisk})
+    elif pvc is not None:
+        myvolume["persistentVolumeClaim"] = dict(
+            {'claimName': pvc})
+    return myvolume
+
+
+def build_cloudinitdisk_definition():
+    '''return cloudinitdisk dictionary.'''
+    cloudinitdisk = dict()
+    cloudinitdisk["volumeName"] = "cloudinitvolume"
+    cloudinitdisk["cdrom"] = dict({"readOnly": True})
+    cloudinitdisk["name"] = "cloudinitdisk"
+    return cloudinitdisk
+
+
+def build_cloudinitvol_definition(user_data):
+    '''return cloudinitvolume dictionary.'''
+    user_data_base64 = dict(
+        {"userDataBase64": base64.b64encode(user_data)})
+    cloudinitvolume = dict()
+    cloudinitvolume["cloudInitNoCloud"] = user_data_base64
+    cloudinitvolume["name"] = "cloudinitvolume"
+    return cloudinitvolume
+
+
+def validate_data(pvc, registrydisk):
+    '''validate required that cannot be defined as required.'''
+    if pvc is None and registrydisk is None:
+        return False
+    return True
+
+
+def build_ovm_from_src(src):
+    '''build Offline VM definition from source file.'''
+    try:
+        with open(src) as data:
+            try:
+                ovm_def = yaml.load(data)
+            except yaml.scanner.ScannerError as err:
+                raise errors.AnsibleModuleError(
+                    "failed while parsing source file %s: %s"
+                    % (src, str(err)))
+        if ovm_def.get("metadata") is None:
+            raise errors.AnsibleModuleError(
+                "failed to get metadata from %s" % src)
+    except IOError as err:
+        raise errors.AnsibleModuleError(
+            "failed while opening %s: %s" % (src, str(err)))
+    return ovm_def
+
+
+def create_ovm(crds, ovm_def):
+    '''create offline vm and returns API answer.'''
+    metadata = ovm_def.get("metadata")
+    try:
+        meta = crds.create_namespaced_custom_object(
+            DOMAIN, VERSION, metadata.get("namespace"),
+            "offlinevirtualmachines", ovm_def)
+    except ApiException as err:
+        raise errors.AnsibleModuleError("Error creating offline vm: %s" % err)
+    return meta
+
+
+def delete_ovm(crds, name, namespace):
+    '''delete vm and returns API answer.'''
+    try:
+        meta = crds.delete_namespaced_custom_object(
+            DOMAIN, VERSION, namespace, 'offlinevirtualmachines', name,
+            client.V1DeleteOptions())
+    except ApiException as err:
+        raise errors.AnsibleModuleError("Error deleting vm: %s" % str(err))
+    return meta
+
 
 def exists(crds, name, namespace):
-    '''returns true if the offline virtual machine already exists, otherwise
+    '''return true if the offline virtual machine already exists, otherwise
     false.'''
-    allovms = crds.list_cluster_custom_object(
+    all_ovms = crds.list_cluster_custom_object(
         DOMAIN, VERSION, 'offlinevirtualmachines')["items"]
     ovms = [
-        ovm for ovm in allovms if ovm.get("metadata")["namespace"] ==
+        ovm for ovm in all_ovms if ovm.get("metadata")["namespace"] ==
         namespace and ovm.get("metadata")["name"] == name
     ]
     result = True if ovms else False
@@ -122,9 +278,9 @@ def exists(crds, name, namespace):
 def status(crds, name, namespace):
     '''returns the current state of the offline virtual machine.'''
     try:
-        ovm = crds.get_namespaced_custom_object(
+        ovm_instance = crds.get_namespaced_custom_object(
             DOMAIN, VERSION, namespace, 'offlinevirtualmachines', name)
-        return ovm['status']['phase']
+        return ovm_instance['status']['phase']
     except ApiException as err:
         return err
 
@@ -143,99 +299,58 @@ def main():
         "timeout": {"required": False, "type": "int", "default": 20},
         "cores": {"required": False, "type": "int", "default": 2},
         "memory": {"required": False, "type": "str", "default": '512M'},
-        "registrydisk": {"required": False, "type": "str", 'choices': REGISTRYDISKS},
+        "registrydisk": {
+            "required": False, "type": "str", 'choices': REGISTRYDISKS},
         "pvc": {"required": False, "type": "pvc"},
         "src": {"required": False, "type": "str"},
-        "cloudinit": {"required": False, "type": "str"},
+        "cloudinit": {"required": False, "type": "str"}
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
     crds = client.CustomObjectsApi()
-    name = module.params['name']
-    namespace = module.params['namespace']
-    wait = module.params['wait']
-    timeout = module.params['timeout']
-    cores = module.params['cores']
-    memory = module.params['memory']
     registrydisk = module.params['registrydisk']
     pvc = module.params['pvc']
-    cloudinit = module.params['cloudinit']
     src = module.params['src']
-    state = module.params['state']
+
+    if not validate_data(pvc, registrydisk):
+        module.fail_json(msg="Either pvc or registrydisk is required")
+
     if src is not None:
-        if not os.path.exists(src):
-            module.fail_json(msg='src %s not found' % src)
-        else:
-            with open(src) as data:
-                try:
-                    ovm = yaml.load(data)
-                except yaml.scanner.ScannerError as err:
-                    module.fail_json(msg='Error parsing src file, got %s' % err)
-            metadata = ovm.get("metadata")
-            if metadata is None:
-                module.fail_json(msg='missing metadata')
-            srcname = metadata.get("name")
-            srcnamespace = metadata.get("namespace")
-            if srcname is None or srcname != name:
-                module.fail_json(msg='Different name found in src file')
-            if namespace is not None and srcnamespace != namespace:
-                module.fail_json(msg='Different namespace found in src file')
-    found = exists(crds, name, namespace)
-    if state == 'present':
+        ovm_def = build_ovm_from_src(src)
+    else:
+        ovm_def = build_ovm_definition(module.params)
+        ovm_def["spec"]["template"]["spec"]["volumes"].append(
+            build_volume_definition(pvc, registrydisk))
+        if module.params["cloudinit"] is not None:
+            template = ovm_def["spec"]["template"]
+            template["spec"]["domain"]["devices"]["disks"].append(
+                build_cloudinitdisk_definition())
+            template["spec"]["volumes"].append(
+                build_cloudinitvol_definition(module.params["cloudinit"]))
+            del template
+
+    found = exists(crds, module.params["name"], module.params["namespace"])
+
+    if module.params["state"] == 'present':
         if found:
-            changed = False
-            skipped = True
-            meta = {'result': 'skipped'}
-        else:
-            changed = True
-            skipped = False
-            if src is None:
-                # vm = {'kind': 'OfflineVirtualMachine', 'spec': {'running': True, 'template': {'metadata': {'labels': {'kubevirt.io/provider': 'kcli'}}, 'spec': {'domain': {'resources': {'requests': {'memory': '%sM' % memory}}, 'cpu': {'cores': cores}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'dev': 'vda', 'bus': 'virtio'}, 'name': 'mydisk'}]}}, 'volumes': []}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'annotations': {}, 'name': name, 'namespace': namespace}}
-                ovm = {'kind': 'OfflineVirtualMachine', 'spec': {'running': True, 'template': {'metadata': {}, 'spec': {'domain': {'resources': {'requests': {'memory': '%s' % memory}}, 'cpu': {'cores': cores}, 'devices': {'disks': [{'volumeName': 'myvolume', 'disk': {'bus': 'virtio'}, 'name': 'mydisk'}]}}, 'volumes': []}}}, 'apiVersion': 'kubevirt.io/v1alpha1', 'metadata': {'annotations': {}, 'name': name, 'namespace': namespace}}
-                ovm['spec']['template']['spec']['domain']['machine'] = {'type': 'q35'}
-                if registrydisk is not None:
-                    myvolume = {'volumeName': 'myvolume', 'registryDisk': {'image': registrydisk}, 'name': 'myvolume'}
-                elif pvc is not None:
-                    myvolume = {'volumeName': 'myvolume', 'persistentVolumeClaim': {'claimName': pvc}, 'name': 'myvolume'}
-                else:
-                    module.fail_json(msg='Missing disk information')
-                ovm['spec']['template']['spec']['volumes'].append(myvolume)
-                if cloudinit is not None:
-                    cloudinitdisk = {'volumeName': 'cloudinitvolume', 'cdrom': {'readOnly': True}, 'name': 'cloudinitdisk'}
-                    ovm['spec']['template']['spec']['domain']['devices']['disks'].append(cloudinitdisk)
-                    userDataBase64 = base64.b64encode(cloudinit)
-                    cloudinitvolume = {'cloudInitNoCloud': {'userDataBase64': userDataBase64}, 'name': 'cloudinitvolume'}
-                    ovm['spec']['template']['spec']['volumes'].append(cloudinitvolume)
-            try:
-                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'offlinevirtualmachines', ovm)
-            except ApiException as err:
-                    module.fail_json(msg='Error creating ovm, got %s' % err)
-            if wait:
-                waittime = 0
-                while True:
-                    currentstatus = status(crds, name, namespace)
-                    if currentstatus == 'Running':
-                        break
-                    elif currentstatus == 'Not Found':
-                        module.fail_json(msg='Vm not found')
-                    elif waittime > timeout:
-                        module.fail_json(msg='timeout waiting for vm to be running')
-                    else:
-                        waittime += 5
-                        time.sleep(5)
+            module.exit_json(
+                chaged=False, skipped=True, meta={"result": "skipped"})
+
+        meta = create_ovm(crds, ovm_def)
+        if module.params["wait"]:
+            if not wait(crds, module.params):
+                module.fail_json(
+                    msg="Timed out waiting for the Offline VM")
+        module.exit_json(changed=True, skipped=False, meta=meta)
+
     else:
         if found:
-            try:
-                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'offlinevirtualmachines', name, client.V1DeleteOptions())
-            except ApiException as err:
-                    module.fail_json(msg='Error deleting ovm, got %s' % err)
-            changed = True
-            skipped = False
-        else:
-            changed = False
-            skipped = True
-            meta = {'result': 'skipped'}
-    module.exit_json(changed=changed, skipped=skipped, meta=meta)
+            meta = delete_ovm(
+                crds, module.params["name"], module.params["namespace"])
+            module.exit_json(changed=True, skipped=False, meta=meta)
+
+        module.exit_json(
+            changed=False, skipped=True, meta=dict({"result": "skipped"}))
 
 
 if __name__ == '__main__':

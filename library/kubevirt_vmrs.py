@@ -21,7 +21,8 @@ author:
 options:
     state:
         description:
-            - Whether to create (C(present)) or delete (C(absent)) the VM ReplicaSet.
+            - "Whether to create (C(present)) or delete (C(absent))
+              the VM ReplicaSet."
         required: false
         default: "present"
         choices: ["present", "absent"]
@@ -56,7 +57,8 @@ options:
         required: false
     src:
         description:
-            - Local YAML file to use as a source to define the VM ReplicaSet. It overrides all parameters.
+            - "Local YAML file to use as a source to define the VM ReplicaSet.
+               It overrides all parameters."
         required: false
 notes:
     - Details at https://github.com/kubevirt/kubevirt
@@ -82,99 +84,164 @@ EXAMPLES = '''
 RETURN = ''' # '''
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible import errors
 from kubernetes import client, config
-import os
+from kubernetes.client.rest import ApiException
 import yaml
 
 DOMAIN = "kubevirt.io"
-VERSION = 'v1alpha1'
+VERSION = "v1alpha1"
+
+
+def build_vmrs_definition(params):
+    '''return a dict() containing VM ReplicaSet definition based on params.'''
+    vmrs_def = dict()
+    vmrs_def["spec"] = dict()
+    template = dict()
+    template["spec"] = dict()
+    domain = dict()
+    resources = dict()
+    devices = dict()
+    devices["disks"] = list()
+    disk = dict()
+    volumes = list()
+    vol = dict()
+    metadata = dict()
+
+    disk["volumeName"] = "registryvolume"
+    disk["disk"] = dict({"bus": "virtio"})
+    disk["name"] = "registrydisk"
+    devices["disks"].append(disk)
+
+    resources["requests"] = dict({"memory": params.get("memory")})
+
+    domain["devices"] = devices
+    domain["resources"] = resources
+
+    vol["name"] = "registryvolume"
+    vol["registryDisk"] = dict({"image": params.get("image")})
+
+    volumes.append(vol)
+
+    template["spec"]["domain"] = domain
+    template["spec"]["volumes"] = volumes
+    template["metadata"] = dict({"name": params.get("name")})
+
+    metadata["name"] = params.get("name")
+    metadata["namespace"] = params.get("namespace")
+
+    vmrs_def["kind"] = "VirtualMachineReplicaSet"
+    vmrs_def["apiVersion"] = DOMAIN + "/" + VERSION
+    vmrs_def["metadata"] = metadata
+    vmrs_def["spec"]["replicas"] = params.get("replicas")
+
+    if params.get("labels") is not None:
+        template["metadata"]["labels"] = params.get("labels")
+        vmrs_def["spec"]["selector"] = {"matchLabels": params.get("labels")}
+
+    vmrs_def["spec"]["template"] = template
+
+    return vmrs_def
+
+
+def build_vmrs_from_src(src):
+    '''build VM ReplicaSet definition from the source file.'''
+    try:
+        with open(src) as data:
+            try:
+                vm_def = yaml.load(data)
+            except yaml.scanner.ScannerError as err:
+                errors.AnsibleModuleError(str(err))
+        if vm_def.get("metadata") is None:
+            raise errors.AnsibleModuleError(
+                "failed to get metadata from %s" % src)
+    except IOError as err:
+        raise errors.AnsibleModuleError(
+            "Failed while opening %s: %s" % (src, str(err)))
+    return vm_def
+
+
+def create_vmrs(crds, vmrs_def):
+    '''create VM ReplicaSet and return API answer.'''
+    try:
+        metadata = vmrs_def.get("metadata")
+        meta = crds.create_namespaced_custom_object(
+            DOMAIN, VERSION, metadata.get("namespace"),
+            "virtualmachinereplicasets", vmrs_def)
+    except ApiException as err:
+        raise errors.AnsibleModuleError(
+            "Error creating vmrs: %s" % str(err))
+    return meta
+
+
+def delete_vmrs(crds, name, namespace):
+    '''delete VM ReplicaSet and return API answer.'''
+    try:
+        meta = crds.delete_namespaced_custom_object(
+            DOMAIN, VERSION, namespace, "virtualmachinereplicasets", name,
+            client.V1DeleteOptions())
+    except ApiException as err:
+        raise errors.AnsibleModuleError("Error deleting vmrs: %s" % str(err))
+    return meta
+
 
 def exists(crds, name, namespace):
-    allvmrs = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachinereplicasets')["items"]
-    vmrss = [vmrs for vmrs in allvmrs if vmrs.get("metadata")["namespace"] == namespace 
-             and vmrs.get("metadata")["name"] == name]
-    result = True if vmrss else False
+    '''return true if the VM ReplicaSet already exists, otherwise false.'''
+    all_vmrs = crds.list_cluster_custom_object(
+        DOMAIN, VERSION, "virtualmachinereplicasets")["items"]
+    vmrss_instance = [
+        vmrs for vmrs in all_vmrs if vmrs.get("metadata")["namespace"] ==
+        namespace and vmrs.get("metadata")["name"] == name]
+    result = True if vmrss_instance else False
     return result
 
 
 def main():
+    '''Entry point.'''
     argument_spec = {
         "state": {
             "default": "present",
-            "choices": ['present', 'absent'],
-            "type": 'str'
+            "choices": ["present", "absent"],
+            "type": "str"
         },
         "name": {"required": True, "type": "str"},
         "namespace": {"required": True, "type": "str"},
         "replicas": {"required": False, "type": "int", "default": 3},
-        "memory": {"required": False, "type": "str", "default": '64M'},
-        "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:latest'},
+        "memory": {"required": False, "type": "str", "default": "64M"},
+        "image": {
+            "required": False, "type": "str",
+            "default": "kubevirt/cirros-registry-disk-demo:latest"},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
     }
     module = AnsibleModule(argument_spec=argument_spec)
     config.load_kube_config()
     crds = client.CustomObjectsApi()
-    name = module.params['name']
-    namespace = module.params['namespace']
-    image = module.params['image']
-    memory = module.params['memory']
-    replicas = module.params['replicas']
-    labels = module.params['labels']
-    src = module.params['src']
-    state = module.params['state']
+    src = module.params["src"]
+
     if src is not None:
-        if not os.path.exists(src):
-            module.fail_json(msg='src %s not found' % src)
-        else:
-            with open(src) as data:
-                try:
-                    vm = yaml.load(data)
-                except yaml.scanner.ScannerError as err:
-                    module.fail_json(msg='Error parsing src file, got %s' % err)
-            metadata = vm.get("metadata")
-            if metadata is None:
-                module.fail_json(msg="missing metadata")
-            srcname = metadata.get("name")
-            srcnamespace = metadata.get("namespace")
-            if srcname is None or srcname != name:
-                module.fail_json(msg='missing or different name in %s' % src)
-            if srcnamespace is None or srcnamespace != namespace:
-                module.fail_json(msg='missing or different namespace in %s' % src)
-    found = exists(crds, name, namespace)
-    if state == 'present':
+        vmrs_def = build_vmrs_from_src(module.params)
+    else:
+        vmrs_def = build_vmrs_definition(module.params)
+
+    found = exists(crds, module.params["name"], module.params["namespace"])
+
+    if module.params["state"] == "present":
         if found:
-            changed = False
-            skipped = True
-            meta = {'result': 'skipped'}
-        else:
-            changed = True
-            skipped = False
-            if src is None:
-                vmrs = {'kind': 'VirtualMachineReplicaSet', 'spec': {'replicas': replicas, 'template': {'spec': {'domain': {'resources': {'requests': {'memory': memory}}, 'devices': {'disks': [{'volumeName': 'registryvolume', 'disk': {'dev': 'vda'}, 'name': 'registrydisk'}]}}, 'volumes': [{'name': 'registryvolume', 'registryDisk': {'image': image}}]}, 'metadata': {'name': name}}}, 'apiVersion': '%s/%s' % (DOMAIN, VERSION), 'metadata': {'name': name, 'namespace': namespace}}
-                if labels is not None:
-                    try:
-                        vmrs['spec']['template']['metadata']['labels'] = labels
-                        vmrs['spec']['selector'] = {'matchLabels': labels}
-                    except yaml.scanner.ScannerError as err:
-                        module.fail_json(msg="Couldn't parse labels, got %s" % err)
-            try:
-                meta = crds.create_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', vmrs)
-            except Exception as err:
-                module.fail_json(msg='Error creating virtualmachinereplicaset, got %s' % err)
+            module.exit_json(
+                changed=False, skipped=True, meta={"result": "skipped"})
+
+        meta = create_vmrs(crds, vmrs_def)
+        module.exit_json(changed=True, skipped=False, meta=meta)
     else:
         if found:
-            try:
-                meta = crds.delete_namespaced_custom_object(DOMAIN, VERSION, namespace, 'virtualmachinereplicasets', name, client.V1DeleteOptions())
-            except Exception as err:
-                module.fail_json(msg='Error deleting virtualmachinereplicaset, got %s' % err)
-            changed = True
-            skipped = False
-        else:
-            changed = False
-            skipped = True
-            meta = {'result': 'skipped'}
-    module.exit_json(changed=changed, skipped=skipped, meta=meta)
+            meta = delete_vmrs(
+                crds, module.params["name"], module.params["namespace"])
+            module.exit_json(
+                changed=True, skipped=False, meta=meta)
+        module.exit_json(
+            changed=False, skipped=True, meta=dict({"result": "skipped"}))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

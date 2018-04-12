@@ -81,6 +81,12 @@ options:
             - "String containing cloudInit information to pass to
               the Offline VM. It will be encoded as base64."
         required: false
+    insecure:
+        description:
+            - "Disable SSL certificate verification."
+        type: bool
+        required: false
+        default: "no"
 notes:
     - Details at https://github.com/kubevirt/kubevirt
 requirements:
@@ -104,6 +110,7 @@ RETURN = ''' # '''
 from ansible.module_utils.basic import AnsibleModule
 from ansible import errors
 from kubernetes import client, config
+from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
 import base64
 import time
@@ -285,6 +292,16 @@ def status(crds, name, namespace):
         return err
 
 
+def connect(params):
+    '''return CustomObjectsApi object after parsing user options.'''
+    config.load_kube_config()
+    cfg = Configuration()
+    if params.get("insecure"):
+        cfg.verify_ssl = False
+    api_client = client.ApiClient(configuration=cfg)
+    return client.CustomObjectsApi(api_client=api_client)
+
+
 def main():
     '''Entry point.'''
     argument_spec = {
@@ -303,11 +320,11 @@ def main():
             "required": False, "type": "str", 'choices': REGISTRYDISKS},
         "pvc": {"required": False, "type": "pvc"},
         "src": {"required": False, "type": "str"},
-        "cloudinit": {"required": False, "type": "str"}
+        "cloudinit": {"required": False, "type": "str"},
+        "insecure": {"required": False, "type": "bool", "default": False}
     }
     module = AnsibleModule(argument_spec=argument_spec)
-    config.load_kube_config()
-    crds = client.CustomObjectsApi()
+    crds = connect(module.params)
     registrydisk = module.params['registrydisk']
     pvc = module.params['pvc']
     src = module.params['src']

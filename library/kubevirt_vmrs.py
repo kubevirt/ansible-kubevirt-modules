@@ -60,7 +60,12 @@ options:
             - "Local YAML file to use as a source to define the VM ReplicaSet.
                It overrides all parameters."
         required: false
-notes:
+    insecure:
+        description:
+            - "Disable SSL certificate verification."
+        type: bool
+        required: false
+        default: "no"notes:
     - Details at https://github.com/kubevirt/kubevirt
     - And https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 requirements:
@@ -86,6 +91,7 @@ RETURN = ''' # '''
 from ansible.module_utils.basic import AnsibleModule
 from ansible import errors
 from kubernetes import client, config
+from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
 import yaml
 
@@ -196,6 +202,16 @@ def exists(crds, name, namespace):
     return result
 
 
+def connect(params):
+    '''return CustomObjectsApi object after parsing user options.'''
+    config.load_kube_config()
+    cfg = Configuration()
+    if params.get("insecure"):
+        cfg.verify_ssl = False
+    api_client = client.ApiClient(configuration=cfg)
+    return client.CustomObjectsApi(api_client=api_client)
+
+
 def main():
     '''Entry point.'''
     argument_spec = {
@@ -213,10 +229,10 @@ def main():
             "default": "kubevirt/cirros-registry-disk-demo:latest"},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
+        "insecure": {"required": False, "type": "bool", "default": False}
     }
     module = AnsibleModule(argument_spec=argument_spec)
-    config.load_kube_config()
-    crds = client.CustomObjectsApi()
+    crds = connect(module.params)
     src = module.params["src"]
 
     if src is not None:

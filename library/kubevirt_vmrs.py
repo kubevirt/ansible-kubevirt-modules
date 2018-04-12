@@ -48,7 +48,7 @@ options:
         description:
             - Name of the image with the embedded disk.
         required: false
-        default: 'kubevirt/cirros-registry-disk-demo:v0.2.0'
+        default: 'kubevirt/cirros-registry-disk-demo:latest'
     label:
         description:
             - Attributes of the VM ReplicaSet.
@@ -91,7 +91,8 @@ VERSION = 'v1alpha1'
 
 def exists(crds, name, namespace):
     allvmrs = crds.list_cluster_custom_object(DOMAIN, VERSION, 'virtualmachinereplicasets')["items"]
-    vmrss = [vmrs for vmrs in allvmrs if vmrs.get("metadata")["namespace"] == namespace and vmrs.get("metadata")["name"] == name]
+    vmrss = [vmrs for vmrs in allvmrs if vmrs.get("metadata")["namespace"] == namespace 
+             and vmrs.get("metadata")["name"] == name]
     result = True if vmrss else False
     return result
 
@@ -107,7 +108,7 @@ def main():
         "namespace": {"required": True, "type": "str"},
         "replicas": {"required": False, "type": "int", "default": 3},
         "memory": {"required": False, "type": "str", "default": '64M'},
-        "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:v0.2.0'},
+        "image": {"required": False, "type": "str", "default": 'kubevirt/cirros-registry-disk-demo:latest'},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
     }

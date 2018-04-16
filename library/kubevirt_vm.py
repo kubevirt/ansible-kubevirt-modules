@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2018, Karim Boumedhel <@karmab>, Irina Gulina <@alexxa>
+# Copyright (c) 2018, KubeVirt Team <@kubevirt>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
@@ -16,8 +16,7 @@ description:
     - Create or delete a KubeVirt VM
 version_added: "2.4.x"
 author:
-    - Karim Boumedhel (@karmab)
-    - Irina Gulina (@alexxa)
+    - KubeVirt Team (@kubevirt)
 options:
     state:
         description:

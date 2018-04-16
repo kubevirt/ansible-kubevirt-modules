@@ -49,10 +49,6 @@ options:
             - Memory to assign to the VM.
         required: false
         default: "512M"
-    disk:
-        description:
-            - Attach a volume as a disk to the VM.
-        required: false
     pvc:
         description:
             - "Name of a PersistentVolumeClaim existing in the same namespace
@@ -76,12 +72,6 @@ options:
             - "String containing cloudInit information to pass to the VM.
                It will be encoded as base64."
         required: false
-    cdrom:
-        description:
-            - Attach a volume as a CD-ROM to the VM.
-        type: bool
-        required: false
-        default: "no"
     insecure:
         description:
             - "Disable SSL certificate verification."

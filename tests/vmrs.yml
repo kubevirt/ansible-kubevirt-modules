@@ -9,5 +9,7 @@
        state: present
        name: myrs
        namespace: default
+       pvc: fedoravm-pvc
+       insecure: yes
        labels:
         myvm: big

@@ -56,19 +56,11 @@ options:
             - Memory to assign to the Offline VM.
         required: false
         default: "512M"
-    registrydisk:
-        description:
-            - Name of a base disk for the Offline VM.
-        required: false
-        choices:
-            - 'kubevirt/alpine-registry-disk-demo'
-            - 'kubevirt/cirros-registry-disk-demo'
-            - 'kubevirt/fedora-cloud-registry-disk-demo'
     pvc:
         description:
             - "Name of a PersistentVolumeClaim existing in the same namespace
               to use as a base disk for the Offline VM."
-        required: false
+        required: true
     src:
         description:
             - "Local YAML file to use as a source to define the Offline VM.
@@ -314,16 +306,14 @@ def main():
         "timeout": {"required": False, "type": "int", "default": 20},
         "cores": {"required": False, "type": "int", "default": 2},
         "memory": {"required": False, "type": "str", "default": '512M'},
-        "registrydisk": {
-            "required": False, "type": "str", 'choices': REGISTRYDISKS},
-        "pvc": {"required": False, "type": "pvc"},
+        "pvc": {"required": True, "type": "str"},
         "src": {"required": False, "type": "str"},
         "cloudinit": {"required": False, "type": "str"},
         "insecure": {"required": False, "type": "bool", "default": False}
     }
     module = AnsibleModule(argument_spec=argument_spec)
     crds = connect(module.params)
-    registrydisk = module.params['registrydisk']
+    registrydisk = None
     pvc = module.params['pvc']
     src = module.params['src']
 

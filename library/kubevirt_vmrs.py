@@ -43,12 +43,12 @@ options:
         description:
             - Memory to assing to the VM ReplicaSet.
         required: false
-        default: "64M"
-    image:
+        default: "512M"
+    pvc:
         description:
-            - Name of the image with the embedded disk.
-        required: false
-        default: 'kubevirt/cirros-registry-disk-demo:latest'
+            - "Name of a PersistentVolumeClaim existing in the same namespace
+              to use as a base disk for the VM."
+        required: true
     label:
         description:
             - Attributes of the VM ReplicaSet.
@@ -64,7 +64,8 @@ options:
             - "Disable SSL certificate verification."
         type: bool
         required: false
-        default: "no"notes:
+        default: "no"
+notes:
     - Details at https://github.com/kubevirt/kubevirt
     - And https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 requirements:
@@ -109,13 +110,11 @@ def build_vmrs_definition(params):
     devices = dict()
     devices["disks"] = list()
     disk = dict()
-    volumes = list()
-    vol = dict()
     metadata = dict()
 
-    disk["volumeName"] = "registryvolume"
+    disk["volumeName"] = "myvolume"
     disk["disk"] = dict({"bus": "virtio"})
-    disk["name"] = "registrydisk"
+    disk["name"] = "mydisk"
     devices["disks"].append(disk)
 
     resources["requests"] = dict({"memory": params.get("memory")})
@@ -123,13 +122,8 @@ def build_vmrs_definition(params):
     domain["devices"] = devices
     domain["resources"] = resources
 
-    vol["name"] = "registryvolume"
-    vol["registryDisk"] = dict({"image": params.get("image")})
-
-    volumes.append(vol)
-
     template["spec"]["domain"] = domain
-    template["spec"]["volumes"] = volumes
+    template["spec"]["volumes"] = list()
     template["metadata"] = dict({"name": params.get("name")})
 
     metadata["name"] = params.get("name")
@@ -149,6 +143,19 @@ def build_vmrs_definition(params):
     return vmrs_def
 
 
+def build_volume_definition(pvc, registrydisk):
+    '''build myvolume object with user provided data.'''
+    myvolume = dict()
+    myvolume["volumeName"] = "myvolume"
+    myvolume["name"] = "myvolume"
+    if registrydisk is not None:
+        myvolume["registryDisk"] = dict({"image": registrydisk})
+    elif pvc is not None:
+        myvolume["persistentVolumeClaim"] = dict(
+            {'claimName': pvc})
+    return myvolume
+
+
 def build_vmrs_from_src(src):
     '''build VM ReplicaSet definition from the source file.'''
     try:
@@ -164,6 +171,13 @@ def build_vmrs_from_src(src):
         raise errors.AnsibleModuleError(
             "Failed while opening %s: %s" % (src, str(err)))
     return vm_def
+
+
+def validate_data(pvc, registrydisk):
+    '''validate required that cannot be defined as required.'''
+    if pvc is None and registrydisk is None:
+        return False
+    return True
 
 
 def create_vmrs(crds, vmrs_def):
@@ -222,22 +236,27 @@ def main():
         "name": {"required": True, "type": "str"},
         "namespace": {"required": True, "type": "str"},
         "replicas": {"required": False, "type": "int", "default": 3},
-        "memory": {"required": False, "type": "str", "default": "64M"},
-        "image": {
-            "required": False, "type": "str",
-            "default": "kubevirt/cirros-registry-disk-demo:latest"},
+        "memory": {"required": False, "type": "str", "default": "512M"},
+        "pvc": {"required": True, "type": "str"},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
         "insecure": {"required": False, "type": "bool", "default": False}
     }
     module = AnsibleModule(argument_spec=argument_spec)
     crds = connect(module.params)
+    registrydisk = None
+    pvc = module.params["pvc"]
     src = module.params["src"]
+
+    if not validate_data(pvc, registrydisk):
+        module.fail_json(msg="Either pvc or registrydisk is required")
 
     if src is not None:
         vmrs_def = build_vmrs_from_src(module.params)
     else:
         vmrs_def = build_vmrs_definition(module.params)
+        vmrs_def["spec"]["template"]["spec"]["volumes"].append(
+            build_volume_definition(pvc, registrydisk))
 
     found = exists(crds, module.params["name"], module.params["namespace"])
 

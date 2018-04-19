@@ -1,24 +1,49 @@
+# Test code for the kubevirt_vmrs module.
+# (c) 2018, KubeVirt Team <@kubevirt>
+
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+
 ---
-- name: Create a VM ReplicaSet
-  hosts: localhost
-  connection: local
-  vars:
-    ansible_python_interpreter: "/usr/bin/env python"
+- name: Test kubevirt_vmrs module
   tasks:
-    - kubevirt_vmrs:
-       state: present
-       name: myrs
-       namespace: default
-       pvc: fedoravm-pvc
-       insecure: yes
-       labels:
-        myvm: big
-       cloudinit: |
-           #cloud-config
-           hostname: baldr
-           users:
-             - name: kubevirt
-               gecos: KubeVirt Project
-               sudo: ALL=(ALL) NOPASSWD:ALL
-               ssh_authorized_keys:
-                 - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+    - name: create a VM ReplicaSet
+      kubevirt_vmrs:
+        state: present
+        name: test-vmrs
+        namespace: default
+        pvc: fedoravm-pvc
+        insecure: yes
+        cloudinit: '{{ cloudinit_string }}'
+        labels:
+          myvm: big
+      register: create_vmrs
+
+    - name: verify that the VM ReplicaSet was created
+      assert:
+        that:
+          - "{{ create_vmrs.changed }}==True"
+
+    - name: delete the VM ReplicaSet
+      kubevirt_vmrs:
+        state: absent
+        name: test-vmrs
+        namespace: default
+      register: delete_vmrs
+
+    - name: verify that the VM ReplicaSet was deleted
+      assert:
+        that:
+          - "{{ delete_vmrs.changed }}==True"

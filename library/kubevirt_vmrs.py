@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2018, KubeVirt Team <@kubevirt>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Apache License, Version 2.0 (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],

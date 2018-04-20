@@ -60,7 +60,9 @@ options:
         description:
             - "Name of a PersistentVolumeClaim existing in the same namespace
               to use as a base disk for the Offline VM."
-        required: true
+            - "**C(pvc) option is required to create the Offline VM.
+              It's not needed to remove the Offline VM.**"
+        required: false
     src:
         description:
             - "Local YAML file to use as a source to define the Offline VM.
@@ -306,7 +308,7 @@ def main():
         "timeout": {"required": False, "type": "int", "default": 20},
         "cores": {"required": False, "type": "int", "default": 2},
         "memory": {"required": False, "type": "str", "default": '512M'},
-        "pvc": {"required": True, "type": "str"},
+        "pvc": {"required": False, "type": "str"},
         "src": {"required": False, "type": "str"},
         "cloudinit": {"required": False, "type": "str"},
         "insecure": {"required": False, "type": "bool", "default": False}
@@ -314,29 +316,27 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     crds = connect(module.params)
     registrydisk = None
-    pvc = module.params['pvc']
-    src = module.params['src']
-
-    if not validate_data(pvc, registrydisk):
-        module.fail_json(msg="Either pvc or registrydisk is required")
-
-    if src is not None:
-        ovm_def = build_ovm_from_src(src)
-    else:
-        ovm_def = build_ovm_definition(module.params)
-        ovm_def["spec"]["template"]["spec"]["volumes"].append(
-            build_volume_definition(pvc, registrydisk))
-        if module.params["cloudinit"] is not None:
-            template = ovm_def["spec"]["template"]
-            template["spec"]["domain"]["devices"]["disks"].append(
-                build_cloudinitdisk_definition())
-            template["spec"]["volumes"].append(
-                build_cloudinitvol_definition(module.params["cloudinit"]))
-            del template
-
     found = exists(crds, module.params["name"], module.params["namespace"])
 
     if module.params["state"] == 'present':
+        pvc = module.params['pvc']
+        src = module.params['src']
+        if not validate_data(pvc, registrydisk):
+            module.fail_json(msg="pvc is required when state is present.")
+
+        if src is not None:
+            ovm_def = build_ovm_from_src(src)
+        else:
+            ovm_def = build_ovm_definition(module.params)
+            ovm_def["spec"]["template"]["spec"]["volumes"].append(
+                build_volume_definition(pvc, registrydisk))
+            if module.params["cloudinit"] is not None:
+                template = ovm_def["spec"]["template"]
+                template["spec"]["domain"]["devices"]["disks"].append(
+                    build_cloudinitdisk_definition())
+                template["spec"]["volumes"].append(
+                    build_cloudinitvol_definition(module.params["cloudinit"]))
+                del template
         if found:
             module.exit_json(
                 chaged=False, skipped=True, meta={"result": "skipped"})

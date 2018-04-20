@@ -61,6 +61,11 @@ options:
             - "Local YAML file to use as a source to define the VM ReplicaSet.
                It overrides all parameters."
         required: false
+    cloudinit:
+        description:
+            - "String containing cloudInit information to pass
+              to the VM ReplicaSet. It will be encoded as base64."
+        required: false
     insecure:
         description:
             - "Disable SSL certificate verification."
@@ -95,6 +100,7 @@ from ansible import errors
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
+import base64
 import yaml
 
 DOMAIN = "kubevirt.io"
@@ -175,6 +181,25 @@ def build_vmrs_from_src(src):
     return vm_def
 
 
+def build_cloudinitdisk_definition():
+    '''return cloudinitdisk dictionary.'''
+    cloudinitdisk = dict()
+    cloudinitdisk["volumeName"] = "cloudinitvolume"
+    cloudinitdisk["cdrom"] = dict({"readOnly": True})
+    cloudinitdisk["name"] = "cloudinitdisk"
+    return cloudinitdisk
+
+
+def build_cloudinitvol_definition(user_data):
+    '''return cloudinitvolume dictionary.'''
+    user_data_base64 = dict(
+        {"userDataBase64": base64.b64encode(user_data)})
+    cloudinitvolume = dict()
+    cloudinitvolume["cloudInitNoCloud"] = user_data_base64
+    cloudinitvolume["name"] = "cloudinitvolume"
+    return cloudinitvolume
+
+
 def validate_data(pvc, registrydisk):
     '''validate required that cannot be defined as required.'''
     if pvc is None and registrydisk is None:
@@ -242,6 +267,7 @@ def main():
         "pvc": {"required": False, "type": "str"},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
+        "cloudinit": {"required": False, "type": "str"},
         "insecure": {"required": False, "type": "bool", "default": False}
     }
     module = AnsibleModule(argument_spec=argument_spec)
@@ -262,6 +288,13 @@ def main():
             vmrs_def = build_vmrs_definition(module.params)
             vmrs_def["spec"]["template"]["spec"]["volumes"].append(
                 build_volume_definition(pvc, registrydisk))
+            if module.params["cloudinit"] is not None:
+                template = vmrs_def["spec"]["template"]
+                template["spec"]["domain"]["devices"]["disks"].append(
+                    build_cloudinitdisk_definition())
+                template["spec"]["volumes"].append(
+                    build_cloudinitvol_definition(module.params["cloudinit"]))
+                del template
 
         if found:
             module.exit_json(

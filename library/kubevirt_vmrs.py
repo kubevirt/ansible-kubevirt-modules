@@ -48,7 +48,9 @@ options:
         description:
             - "Name of a PersistentVolumeClaim existing in the same namespace
               to use as a base disk for the VM."
-        required: true
+            - "**C(pvc) option is required to create the VM ReplicaSet.
+              It's not needed to remove the VM ReplicaSet.**"
+        required: false
     label:
         description:
             - Attributes of the VM ReplicaSet.
@@ -237,7 +239,7 @@ def main():
         "namespace": {"required": True, "type": "str"},
         "replicas": {"required": False, "type": "int", "default": 3},
         "memory": {"required": False, "type": "str", "default": "512M"},
-        "pvc": {"required": True, "type": "str"},
+        "pvc": {"required": False, "type": "str"},
         "labels": {"required": False, "type": "dict"},
         "src": {"required": False, "type": "str"},
         "insecure": {"required": False, "type": "bool", "default": False}
@@ -245,22 +247,22 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     crds = connect(module.params)
     registrydisk = None
-    pvc = module.params["pvc"]
-    src = module.params["src"]
-
-    if not validate_data(pvc, registrydisk):
-        module.fail_json(msg="Either pvc or registrydisk is required")
-
-    if src is not None:
-        vmrs_def = build_vmrs_from_src(module.params)
-    else:
-        vmrs_def = build_vmrs_definition(module.params)
-        vmrs_def["spec"]["template"]["spec"]["volumes"].append(
-            build_volume_definition(pvc, registrydisk))
-
     found = exists(crds, module.params["name"], module.params["namespace"])
 
     if module.params["state"] == "present":
+        pvc = module.params["pvc"]
+        src = module.params["src"]
+
+        if not validate_data(pvc, registrydisk):
+            module.fail_json(msg="pvc is required when state is present.")
+
+        if src is not None:
+            vmrs_def = build_vmrs_from_src(module.params)
+        else:
+            vmrs_def = build_vmrs_definition(module.params)
+            vmrs_def["spec"]["template"]["spec"]["volumes"].append(
+                build_volume_definition(pvc, registrydisk))
+
         if found:
             module.exit_json(
                 changed=False, skipped=True, meta={"result": "skipped"})

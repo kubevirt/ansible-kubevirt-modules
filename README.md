@@ -101,7 +101,7 @@ fedoravm-pvc   Bound     pv0002    5Gi        RWO                           1m
 
 ```shell
 $ pip install kubernetes
-$ export ANSIBLE_LIBRARY=.
+$ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```
 

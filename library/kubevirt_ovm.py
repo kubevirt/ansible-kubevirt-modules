@@ -24,7 +24,7 @@ options:
               the Offline VM."
         required: false
         default: "present"
-        choices: ["present", "absent"]
+        choices: ["present", "running", "absent"]
     name:
         description:
             - Name of the Offline VM.
@@ -155,7 +155,8 @@ def build_ovm_definition(params):
     ovm_def["kind"] = "OfflineVirtualMachine"
     ovm_def["apiVersion"] = DOMAIN + "/" + VERSION
     ovm_def["spec"]["template"] = template
-    ovm_def["spec"]["running"] = True
+    running = True if params["state"] in ['present', 'running'] else False
+    ovm_def["spec"]["running"] = running
     ovm_def["metadata"] = metadata
 
     return ovm_def
@@ -299,7 +300,7 @@ def main():
     argument_spec = {
         "state": {
             "default": "present",
-            "choices": ['present', 'absent'],
+            "choices": ['present', 'running', 'absent'],
             "type": 'str'
         },
         "name": {"required": True, "type": "str"},
@@ -317,8 +318,7 @@ def main():
     crds = connect(module.params)
     registrydisk = None
     found = exists(crds, module.params["name"], module.params["namespace"])
-
-    if module.params["state"] == 'present':
+    if module.params["state"] in ['present', 'running']:
         pvc = module.params['pvc']
         src = module.params['src']
         if not validate_data(pvc, registrydisk):

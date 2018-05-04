@@ -11,7 +11,7 @@
        namespace: default
        pvc: fedoravm-pvc
        insecure: yes
-       labels:
+       selector:
         myvm: big
        cloudinit: |
            #cloud-config

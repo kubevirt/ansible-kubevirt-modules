@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2018, KubeVirt Team <@kubevirt>
-# Apache License, Version 2.0 (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
+# Apache License, Version 2.0
+# (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
+import re
 from ansible import errors
 
 DOMAIN = "kubevirt.io"
@@ -49,6 +51,13 @@ KIND_TRANS = {
     "offlinevirtualmachines": "OfflineVirtualMachine",
     "virtualmachinereplicasets": "VirtualMachineReplicaSet"
 }
+
+
+def to_snake(name):
+    """ Convert a tring from camel to snake """
+    return re.sub(
+        '((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
+
 
 def get_spec(api_group):
     '''return argument_spec based on api_group.'''

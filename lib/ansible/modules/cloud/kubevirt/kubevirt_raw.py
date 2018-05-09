@@ -46,7 +46,7 @@ from ansible.module_utils.kubevirt.raw import KubeVirtRawModule
 
 def main():
     '''Entry point.'''
-    KubeVirtRawModule.execute_module()
+    KubeVirtRawModule().execute_module()
 
 
 if __name__ == '__main__':

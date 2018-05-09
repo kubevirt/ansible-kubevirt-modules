@@ -4,8 +4,13 @@
 # Apache License, Version 2.0
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
+import os
+import copy
+from kubernetes.config import kube_config
+import kubevirt as sdk
+
 from ansible.module_utils.kubevirt.common import KubeVirtAnsibleModule
-from ansible.module_utils.kubevirt.helper import to_snake
+from ansible.module_utils.kubevirt.helper import to_snake, COMMON_ARG_SPEC
 from kubevirt.rest import ApiException as KubeVirtApiException
 from kubevirt.apis import DefaultApi as KubeVirtDefaultApi
 
@@ -50,6 +55,12 @@ class KubeVirtRawModule(KubeVirtAnsibleModule):
                      "or specify it as part of a resource_definition.")
             )
 
+    @property
+    def argspec(self):
+        """ Merge the initial module arguments """
+        argspec = copy.deepcopy(COMMON_ARG_SPEC)
+        return argspec
+
     def execute_module(self):
         """ Method for handling module's actions """
 
@@ -67,8 +78,7 @@ class KubeVirtRawModule(KubeVirtAnsibleModule):
                 # resource already exists
                 self.exit_json(changed=False, result=dict())
             else:
-                # create the resource
-                pass
+                self._create()
 
     def _get_object(self):
         kubevirt_obj = None
@@ -83,6 +93,19 @@ class KubeVirtRawModule(KubeVirtAnsibleModule):
         return kubevirt_obj
 
     def _authenticate(self):
-        # TODO: waiting on details about authentication from lbednar
-        self._api_client = KubeVirtDefaultApi()
-        pass
+        if os.path.exists(
+                os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
+            kube_config.load_kube_config(
+                client_configuration=sdk.configuration)
+            self._api_client = KubeVirtDefaultApi()
+
+    def _create(self):
+        try:
+            body = sdk.V1VirtualMachine()
+            body.update(copy.deepcopy(self.resource_definition))
+            self._api_client.create_namespaced_virtual_machine(
+                body, self.params.get('namespace')
+            )
+        except KubeVirtApiException as exc:
+            self.fail_json(msg='Failed to create requested resource',
+                           error=exc.value.get('status'))

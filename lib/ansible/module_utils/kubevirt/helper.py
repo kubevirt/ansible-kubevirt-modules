@@ -11,46 +11,72 @@ from ansible import errors
 DOMAIN = "kubevirt.io"
 VERSION = "v1alpha1"
 
-ARG_SPEC_COMMON = {
-    "state": {
-        "default": "present",
-        "choices": ['present', 'absent'],
-        "type": 'str'
+COMMON_ARG_SPEC = {
+    'state': {
+        'default': 'present',
+        'choices': ['present', 'absent'],
     },
-    "name": {"required": True, "type": "str"},
-    "namespace": {"required": True, "type": "str"},
-    "cores": {"required": False, "type": "int", "default": 2},
-    "memory": {"required": False, "type": "str", "default": '512M'},
-    "pvc": {"required": False, "type": "str"},
-    "src": {"required": False, "type": "str"},
-    "cloudinit": {"required": False, "type": "str"},
-    "insecure": {"required": False, "type": "bool", "default": False},
-    "labels": {"required": False, "type": "dict"}
-}
-
-ARG_SPEC_OVM = {
-    "state": {
-        "default": "present",
-        "choices": ["present", "running", "absent"],
-        "type": "str"
-    }
-}
-
-ARG_SPEC_VMRS = {
-    "state": {
-        "default": "present",
-        "choices": ["present", "paused", "absent"],
-        "type": "str"
+    'force': {
+        'type': 'bool',
+        'default': False,
     },
-    "selector": {"required": True, "type": "dict"},
-    "replicas": {"required": False, "type": "int", "default": 1}
+    'resource_definition': {
+        'type': 'dict',
+        'aliases': ['definition', 'inline']
+    },
+    'src': {
+        'type': 'path',
+    },
+    'kind': {},
+    'name': {},
+    'namespace': {},
+    'api_version': {
+        'default': 'v1',
+        'aliases': ['api', 'version'],
+    },
 }
 
-KIND_TRANS = {
-    "virtualmachines": "VirtualMachine",
-    "offlinevirtualmachines": "OfflineVirtualMachine",
-    "virtualmachinereplicasets": "VirtualMachineReplicaSet"
-}
+
+#ARG_SPEC_COMMON = {
+#    "state": {
+#        "default": "present",
+#        "choices": ['present', 'absent'],
+#        "type": 'str'
+#    },
+#    "name": {"required": True, "type": "str"},
+#    "namespace": {"required": True, "type": "str"},
+#    "cores": {"required": False, "type": "int", "default": 2},
+#    "memory": {"required": False, "type": "str", "default": '512M'},
+#    "pvc": {"required": False, "type": "str"},
+#    "src": {"required": False, "type": "str"},
+#    "cloudinit": {"required": False, "type": "str"},
+#    "insecure": {"required": False, "type": "bool", "default": False},
+#    "labels": {"required": False, "type": "dict"}
+#}
+#
+#ARG_SPEC_OVM = {
+#    "state": {
+#        "default": "present",
+#        "choices": ["present", "running", "absent"],
+#        "type": "str"
+#    }
+#}
+#
+#ARG_SPEC_VMRS = {
+#    "state": {
+#        "default": "present",
+#        "choices": ["present", "paused", "absent"],
+#        "type": "str"
+#    },
+#    "selector": {"required": True, "type": "dict"},
+#    "replicas": {"required": False, "type": "int", "default": 1}
+#}
+#
+#KIND_TRANS = {
+#    "virtualmachines": "VirtualMachine",
+#    "offlinevirtualmachines": "OfflineVirtualMachine",
+#    "virtualmachinereplicasets": "VirtualMachineReplicaSet"
+#}
 
 
 def to_snake(name):

@@ -14,34 +14,30 @@ from ansible.module_utils.kubevirt.helper import to_snake
 from ansible.module_utils.six import iteritems
 
 
-try:
-    import kubevirt
-    from kubevirt.rest import ApiException
-    HAS_KUBEVIRTPY = True
-except ImportError:
-    HAS_KUBEVIRTPY = False
-
-
-#DOMAIN = "kubevirt.io"
-#VERSION = "v1alpha1"
-#REGISTRYDISKS = [
-#    "kubevirt/alpine-registry-disk-demo",
-#    "kubevirt/cirros-registry-disk-demo",
-#    "kubevirt/fedora-cloud-registry-disk-demo"]
+#try:
+#    import kubevirt
+#    from kubevirt.rest import ApiException
+#    HAS_KUBEVIRTPY = True
+#except ImportError:
+#    HAS_KUBEVIRTPY = False
 
 
 class KubeVirtAnsibleModule(AnsibleModule):
-    '''module_utils for KubeVirt Ansible modules.'''
-    resource_definition = None
-    api_version = None
-    kind = None
-
+    """ Module utils for KubeVirt Ansible modules """
     def __init__(self, *args, **kwargs):
-        pass
+        kwargs['argument_spec'] = self.argspec
+        AnsibleModule.__init__(self, *args, **kwargs)
+
+    @property
+    def argspec(self):
+        raise NotImplementedError()
+
+    def execute_module(self):
+        raise NotImplementedError()
 
     def resource_to_parameters(self, resource):
         """ Converts a resource definition to module parameters """
-        parameters = {}
+        parameters = dict()
         for key, value in iteritems(resource):
             if key in ('apiVersion', 'kind', 'status'):
                 continue

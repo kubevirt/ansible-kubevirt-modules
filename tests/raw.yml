@@ -1,0 +1,33 @@
+---
+- name: Deploy a VM with cloud-init data
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_raw:
+       state: present
+       name: jhendrix
+       namespace: vms 
+       inline:
+         apiVersion: kubevirt.io/v1alpha1
+         kind: VirtualMachine
+         metadata:
+           name: jhendrix
+           namespace: vms
+         spec:
+           domain:
+             resources:
+               requests:
+                 memory: 512M
+             devices:
+               disks:
+               - volumeName: myvolume
+                 name: mydisk
+                 disk:
+                   bus: virtio
+           volumes:
+           - volumeName: myvolume
+             name: myvolume
+             persistentVolumeClaim:
+               claimName: centosvm-pvc

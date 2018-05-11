@@ -41,7 +41,7 @@ EXAMPLES = '''
 
 RETURN = ''' # '''
 
-from ansible.module_utils.kubevirt.raw import KubeVirtRawModule
+from ansible.module_utils.k8svirt.raw import KubeVirtRawModule
 
 
 def main():

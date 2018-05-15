@@ -6,15 +6,14 @@
 
 import os
 import copy
-from kubernetes.config import kube_config
 import kubevirt as sdk
 
 from ansible.module_utils.six import iteritems
 from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
 from ansible.module_utils.k8svirt.helper import to_snake, COMMON_ARG_SPEC, \
-    AUTH_ARG_SPEC
+    AUTH_ARG_SPEC, get_helper
 
-from kubevirt import V1DeleteOptions
+from kubernetes.config import kube_config
 from kubevirt import DefaultApi as KubeVirtDefaultApi
 from kubevirt.rest import ApiException as KubeVirtApiException
 
@@ -69,26 +68,27 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     def execute_module(self):
         """ Method for handling module's actions """
         state = self.params.get('state')
-        self._authenticate()
-        existing = self._get_object()
+        self.__authenticate()
+        existing = self.__get_object()
 
         if state == 'present':
             if existing:
                 self.exit_json(changed=False, result=dict())
             else:
-                self._create()
+                self.__create()
                 self.exit_json(changed=True, result=dict())
         elif state == 'absent':
             if existing:
-                self._delete()
+                self.__delete()
                 self.exit_json(changed=True, result=dict())
             else:
                 self.exit_json(changed=False, result=dict())
 
-    def _get_object(self):
+    def __get_object(self):
         kubevirt_obj = None
+        helper = get_helper(self._api_client, self.kind)
         try:
-            kubevirt_obj = self._api_client.read_namespaced_virtual_machine(
+            kubevirt_obj = helper.exists(
                 self.params.get('name'), self.params.get('namespace')
             )
         except KubeVirtApiException as exc:
@@ -97,38 +97,37 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
                                error=exc.reason)
         return kubevirt_obj
 
-    def _authenticate(self):
+    def __authenticate(self):
         auth_options = {}
-        auth_args = ('host', 'api_key', 'kubeconfig', 'context',
-                     'username', 'password', 'cert_file', 'key_file',
-                     'ssl_ca_cert', 'verify_ssl')
+        # FIXME: removed kubeconfig, context
+        auth_args = ('host', 'api_key', 'username', 'password', 'cert_file',
+                     'key_file', 'ssl_ca_cert', 'verify_ssl')
         for key, value in iteritems(self.params):
             if key in auth_args and value is not None:
                 auth_options[key] = value
 
         if os.path.exists(
                 os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
-            sdk.configuration.verify_ssl = False
+            if not self.params.get('verify_ssl'):
+                sdk.configuration.verify_ssl = False
             kube_config.load_kube_config(
                 client_configuration=sdk.configuration)
             self._api_client = KubeVirtDefaultApi()
 
-    def _create(self):
+    def __create(self):
         try:
-            body = sdk.V1VirtualMachine().to_dict()
-            body.update(copy.deepcopy(self.resource_definition))
-            self._api_client.create_namespaced_virtual_machine(
-                body, self.params.get('namespace')
-            )
+            helper = get_helper(self._api_client, self.kind)
+            helper.create(
+                self.resource_definition, self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to create requested resource',
                            error=exc.reason)
 
-    def _delete(self):
+    def __delete(self):
         try:
-            self._api_client.delete_namespaced_virtual_machine(
-                V1DeleteOptions(), self.params.get('namespace'),
-                self.params.get('name'))
+            helper = get_helper(self._api_client, self.kind)
+            helper.delete(
+                self.params.get('name'), self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to delete requested resource',
                            error=exc.reason)

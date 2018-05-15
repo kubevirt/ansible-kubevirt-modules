@@ -8,7 +8,8 @@
     - kubevirt_raw:
        state: present
        name: jhendrix
-       namespace: vms 
+       namespace: vms
+       verify_ssl: no
        inline:
          apiVersion: kubevirt.io/v1alpha1
          kind: VirtualMachine
@@ -30,4 +31,4 @@
            - volumeName: myvolume
              name: myvolume
              persistentVolumeClaim:
-               claimName: centosvm-pvc
+               claimName: fedoravm-pvc

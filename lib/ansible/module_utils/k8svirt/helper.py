@@ -105,4 +105,5 @@ def get_helper(client, kind):
         pass
     elif kind == "virtual_machine_replica_set":
         pass
+    # FIXME: find/create a better exception (AnsibleModuleError?)
     raise Exception("Unknown kind %s" % kind)

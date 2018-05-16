@@ -74,36 +74,83 @@ def to_snake(name):
         '((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
 
 
+def get_helper(client, kind):
+    """ Factory method for KubeVirt resources """
+    if kind == 'virtual_machine':
+        return VirtualMachineHelper(client)
+    elif kind == 'offline_virtual_machine':
+        return OfflineVirtualMachineHelper(client)
+    elif kind == 'virtual_machine_replica_set':
+        return VirtualMachineReplicaSetHelper(client)
+    # FIXME: find/create a better exception (AnsibleModuleError?)
+    raise Exception('Unknown kind %s' % kind)
+
+
 class VirtualMachineHelper(object):
     """ Helper class for VirtualMachine resources """
     def __init__(self, client):
-        self._client = client
+        self.__client = client
 
     def create(self, body, namespace):
         """ Create VirtualMachine resource """
         vm_body = sdk.V1VirtualMachine().to_dict()
         vm_body.update(copy.deepcopy(body))
-        return self._client.create_namespaced_virtual_machine(
+        return self.__client.create_namespaced_virtual_machine(
             vm_body, namespace)
 
     def delete(self, name, namespace):
         """ Delete VirtualMachine resource """
-        return self._client.delete_namespaced_virtual_machine(
-            V1DeleteOptions(), namespace, name
-        )
+        return self.__client.delete_namespaced_virtual_machine(
+            V1DeleteOptions(), namespace, name)
 
     def exists(self, name, namespace):
         """ Return VirtualMachine resource, if exists """
-        return self._client.read_namespaced_virtual_machine(name, namespace)
+        return self.__client.read_namespaced_virtual_machine(name, namespace)
 
 
-def get_helper(client, kind):
-    """ Factory method for KubeVirt resources """
-    if kind == "virtual_machine":
-        return VirtualMachineHelper(client)
-    elif kind == "offline_virtual_machine":
-        pass
-    elif kind == "virtual_machine_replica_set":
-        pass
-    # FIXME: find/create a better exception (AnsibleModuleError?)
-    raise Exception("Unknown kind %s" % kind)
+class OfflineVirtualMachineHelper(object):
+    """ Helper class for OfflineVirtualMachine resources """
+    def __init__(self, client):
+        """ Class constructor """
+        self.__client = client
+
+    def create(self, body, namespace):
+        """ Create OfflineVirtualMachine resource """
+        ovm_body = sdk.V1OfflineVirtualMachine().to_dict()
+        ovm_body.update(copy.deepcopy(body))
+        return self.__client.create_namespaced_offline_virtual_machine(
+            ovm_body, namespace)
+
+    def delete(self, name, namespace):
+        """ Delete OfflineVirtualMachine resource """
+        return self.__client.delete_namespaced_offline_virtual_machine(
+            V1DeleteOptions(), namespace, name)
+
+    def exists(self, name, namespace):
+        """ Return OfflineVirtualMachine resource, if exists """
+        return self.__client.read_namespaced_offline_virtual_machine(
+            name, namespace)
+
+
+class VirtualMachineReplicaSetHelper(object):
+    """ Helper class for VirtualMachineReplicaSet resources """
+    def __init__(self, client):
+        """ Class constructor """
+        self.__client = client
+
+    def create(self, body, namespace):
+        """ Create VirtualMachine resource """
+        ovm_body = sdk.V1VirtualMachineReplicaSet().to_dict()
+        ovm_body.update(copy.deepcopy(body))
+        return self.__client.create_namespaced_virtual_machine_replica_set(
+            ovm_body, namespace)
+
+    def delete(self, name, namespace):
+        """ Delete VirtualMachine resource """
+        return self.__client.delete_namespaced_virtual_machine_replica_set(
+            V1DeleteOptions(), namespace, name)
+
+    def exists(self, name, namespace):
+        """ Return VirtualMachine resource, if exists """
+        return self.__client.read_namespaced_virtual_machine_replica_set(
+            name, namespace)

@@ -26,10 +26,12 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
             ('resource_definition', 'src')
         ]
 
-        K8sVirtAnsibleModule.__init__(self, *args,
-                                      mutually_exclusive=mutually_exclusive,
-                                      supports_check_mode=False,
-                                      **kwargs)
+        super(KubeVirtRawModule, self).__init__(
+            *args,
+            mutually_exclusive=mutually_exclusive,
+            supports_check_mode=False,
+            **kwargs)
+
         self._api_client = None
         self.kind = self.params.pop('kind')
         self.api_version = self.params.pop('api_version')

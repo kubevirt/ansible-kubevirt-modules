@@ -19,7 +19,7 @@ class K8sVirtAnsibleModule(AnsibleModule):
     def __init__(self, *args, **kwargs):
         """ Class constructor """
         kwargs['argument_spec'] = self.argspec
-        AnsibleModule.__init__(self, *args, **kwargs)
+        super(K8sVirtAnsibleModule, self).__init__(*args, **kwargs)
 
     @property
     def argspec(self):

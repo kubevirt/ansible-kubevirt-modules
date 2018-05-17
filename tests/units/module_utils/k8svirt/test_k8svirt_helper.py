@@ -18,6 +18,10 @@ def test_get_helper():
     client = dict()
     k8svirt_obj = helper.get_helper(client, 'virtual_machine')
     assert isinstance(k8svirt_obj, helper.VirtualMachineHelper)
+    k8svirt_obj = helper.get_helper(client, 'offline_virtual_machine')
+    assert isinstance(k8svirt_obj, helper.OfflineVirtualMachineHelper)
+    k8svirt_obj = helper.get_helper(client, 'virtual_machine_replica_set')
+    assert isinstance(k8svirt_obj, helper.VirtualMachineReplicaSetHelper)
 
 
 def test_get_helper_raise_exception():

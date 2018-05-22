@@ -5,12 +5,10 @@
 # Apache License, Version 2.0
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
-import copy
 import os
 import yaml
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.k8svirt.helper import to_snake
 from ansible.module_utils.six import iteritems
 
 

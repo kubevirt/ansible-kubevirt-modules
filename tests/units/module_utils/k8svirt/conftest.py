@@ -17,3 +17,13 @@ def args_absent():
         state='absent', kind='VirtualMachine', name='testvm', namespace='vms')
     yield args
     del args
+
+
+def pytest_configure(config):
+    import sys
+    sys._called_from_test = True
+
+
+def pytest_unconfigure(config):
+    import sys
+    del sys._called_from_test

@@ -10,10 +10,19 @@ import sys
 import kubevirt as sdk
 
 from ansible.module_utils.six import iteritems
-sys.path.append('lib/ansible/module_utils/k8svirt')
-from common import K8sVirtAnsibleModule
-from helper import to_snake, COMMON_ARG_SPEC, \
-    AUTH_ARG_SPEC, get_helper
+
+# TODO: This is ugly, either find a way to make it always work or clean it up
+# before sending PR to Ansible
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils/k8svirt')
+    from common import K8sVirtAnsibleModule
+    from helper import to_snake, COMMON_ARG_SPEC, \
+        AUTH_ARG_SPEC, get_helper
+else:
+    from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
+    from ansible.module_utils.k8svirt.helper import to_snake, COMMON_ARG_SPEC,\
+        AUTH_ARG_SPEC, get_helper
+
 
 from kubernetes.config import kube_config
 from kubevirt import DefaultApi as KubeVirtDefaultApi

@@ -4,13 +4,13 @@
 
 ## Contents
 
-- `library`: Ansible modules files for KubeVirt management
-- `tests`: Ansible playbooks to test KubeVirt modules
+- `lib`: Ansible modules files for KubeVirt management
+- `tests`: Ansible playbook examples and unit tests
 
 ## Requirements
 
-- Ansible 2.4.3.0
-- Kubernetes Python Module
+- Ansible >= 2.4.3.0
+- [KubeVirt Python SDK](https://github.com/kubevirt/client-python)
 - [KubeVirt](https://github.com/kubevirt/kubevirt)
 
 ## Installation and usage
@@ -76,6 +76,14 @@ spec:
 ```
 /exports/fedora_kubevirt *(rw,root_squash)
 ```
+
+- Make sure KubeVirt can access the `disk.img` file:
+
+```shell
+$ chmod -R 755 /exports/fedora_kubevirt
+$ chmod 666 /exports/fedora_kubevirt/disk.img
+```
+
 - Update the NFS service by running the following command:
 
 ```shell
@@ -98,9 +106,9 @@ fedoravm-pvc   Bound     pv0002    5Gi        RWO                           1m
 ```
 
 - Run the tests as follows:
+  - [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
 ```shell
-$ pip install kubernetes
 $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```

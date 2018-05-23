@@ -15,28 +15,33 @@
 
 ## Installation and usage
 
-Use the Galaxy client to install the role:
+* Using Git
 
 ```
-$ ansible-galaxy install kubevirt.kubevirt-modules
+$ git clone https://github.com/kubevirt/ansible-kubevirt-modules
 ```
 
-Once installed, add it to a playbook:
+* Once installed, add it to a playbook:
 
 ```
 ---
 - hosts: localhost
   remote_user: root
   roles:
-    - role: kubevirt.kubevirt-modules
+    - role: ansible-kubevirt-modules
       install_python_requirements: no
     - role: hello-underworld
 ```
-> **NOTE:** Set `install_python_reqirememnts: yes` to install Kubernetes Python module
 
 Because the role is referenced, the `hello-underworld` role is able to make use of the kubevirt modules
 
-## LOCAL TESTING
+## Playbook examples
+
+* [Virtual Machine](tests/raw_vm.yml)
+* [Offline Virtual Machine](tests/raw_ovm.yml)
+* [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
+
+## Local testing
 
 - Download [Fedora cloud raw image](https://alt.fedoraproject.org/cloud/)
 - Create `fedoravm-pvc`, if using NFS, the following snippets can be used:
@@ -113,7 +118,7 @@ $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```
 
-- Virtual machines created by `tests/vm.yml` and `tests/ovm.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
+- All three playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
 
 ```shell
 $ kubectl get all

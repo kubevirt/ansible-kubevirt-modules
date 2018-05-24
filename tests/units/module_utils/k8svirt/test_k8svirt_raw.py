@@ -55,6 +55,23 @@ class TestMyModule(object):
         k.execute_module()
         mock_exit_json.assert_called_once_with(changed=False, result={})
 
+    @patch('helper.VirtualMachineHelper.replace')
+    @patch('helper.VirtualMachineHelper.exists')
+    @patch('raw.KubeVirtRawModule.exit_json')
+    def test_execute_module_with_present_existing_with_force(self,
+                                                             mock_exit_json,
+                                                             mock_exists,
+                                                             mock_replace,
+                                                             args_present):
+        args_present['force'] = 'yes'
+        set_module_args(args_present)
+        mock_exists.return_value = dict(name='testvm', namespace='vms')
+        mock_replace.return_value = dict()
+        k = raw.KubeVirtRawModule()
+        k.execute_module()
+        mock_replace.assert_called_once_with(None, 'vms', 'testvm')
+        mock_exit_json.assert_called_once_with(changed=True, result={})
+
     @patch('helper.VirtualMachineHelper.delete')
     @patch('helper.VirtualMachineHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')

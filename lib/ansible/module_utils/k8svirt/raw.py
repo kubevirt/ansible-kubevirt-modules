@@ -85,7 +85,10 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
         existing = self.__get_object()
 
         if state == 'present':
-            if existing:
+            if existing and self.params.get('force'):
+                self.__replace()
+                self.exit_json(changed=True, result=dict())
+            elif existing:
                 self.exit_json(changed=False, result=dict())
             else:
                 self.__create()
@@ -134,6 +137,16 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
                 self.resource_definition, self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to create requested resource',
+                           error=exc.reason)
+
+    def __replace(self):
+        try:
+            helper = get_helper(self._api_client, self.kind)
+            helper.replace(
+                self.resource_definition, self.params.get('namespace'),
+                self.params.get('name'))
+        except KubeVirtApiException as exc:
+            self.fail_json(msg='Failed to replace requested resource',
                            error=exc.reason)
 
     def __delete(self):

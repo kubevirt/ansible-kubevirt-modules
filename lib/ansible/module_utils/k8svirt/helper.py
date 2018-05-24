@@ -107,6 +107,13 @@ class VirtualMachineHelper(object):
         """ Return VirtualMachine resource, if exists """
         return self.__client.read_namespaced_virtual_machine(name, namespace)
 
+    def replace(self, body, namespace, name):
+        """ Replace VirtualMachine resource """
+        vm_body = sdk.V1VirtualMachine().to_dict()
+        vm_body.update(copy.deepcopy(body))
+        return self.__client.replace_namespaced_virtual_machine(
+            vm_body, namespace, name)
+
 
 class OfflineVirtualMachineHelper(object):
     """ Helper class for OfflineVirtualMachine resources """

@@ -138,6 +138,13 @@ class OfflineVirtualMachineHelper(object):
         return self.__client.read_namespaced_offline_virtual_machine(
             name, namespace)
 
+    def replace(self, body, namespace, name):
+        """ Replace OfflineVirtualMachine resource """
+        ovm_body = sdk.V1OfflineVirtualMachine().to_dict()
+        ovm_body.update(copy.deepcopy(body))
+        return self.__client.replace_namespaced_offline_virtual_machine(
+            ovm_body, namespace, name)
+
 
 class VirtualMachineReplicaSetHelper(object):
     """ Helper class for VirtualMachineReplicaSet resources """
@@ -161,3 +168,10 @@ class VirtualMachineReplicaSetHelper(object):
         """ Return VirtualMachine resource, if exists """
         return self.__client.read_namespaced_virtual_machine_replica_set(
             name, namespace)
+
+    def replace(self, body, name, namespace):
+        """ Replace Virtual Machine ReplicaSet """
+        vmrs_body = sdk.V1VirtualMachineReplicaSet().to_dict()
+        vmrs_body.update(copy.deepcopy(body))
+        return self.__client.replace_namespaced_virtual_machine_replica_set(
+            vmrs_body, namespace, name)

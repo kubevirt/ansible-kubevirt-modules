@@ -21,6 +21,8 @@
 $ git clone https://github.com/kubevirt/ansible-kubevirt-modules
 ```
 
+* [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
+
 * Once installed, add it to a playbook:
 
 ```
@@ -111,7 +113,6 @@ fedoravm-pvc   Bound     pv0002    5Gi        RWO                           1m
 ```
 
 - Run the tests as follows:
-  - [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
 ```shell
 $ export ANSIBLE_CONFIG=tests/ansible.cfg

@@ -15,6 +15,11 @@ HELPER_CLASS = {
     'virtual_machine': "VirtualMachineHelper"
 }
 
+FACTS_ARG_SPEC = dict(
+    name=dict(type='str', required=True),
+    namespace=dict(type='str', required=True)
+)
+
 COMMON_ARG_SPEC = {
     'state': {
         'default': 'present',

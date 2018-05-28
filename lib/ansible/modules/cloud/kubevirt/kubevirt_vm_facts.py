@@ -46,44 +46,17 @@ kubevirt_vm:
     type: dict
 '''
 
-import os
-import kubevirt
-
-from kubernetes.config import kube_config
-from kubevirt.rest import ApiException
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.k8svirt.helper import VirtualMachineHelper
+from ansible.module_utils.k8svirt.facts import KubeVirtFacts
 
 
 def main():
     """ Entry point. """
-    argument_spec = dict(
-        name=dict(type='str', required=True),
-        namespace=dict(type='str', required=True),
-        verify_ssl=dict(type='bool', required=False, default='no')
+    facts = KubeVirtFacts(kind='virtual_machine')
+    vm = facts.execute_module()
+    facts.exit_json(
+        changed=False,
+        ansible_facts=dict(kubevirt_vm=vm)
     )
-
-    module = AnsibleModule(argument_spec)
-    if os.path.exists(
-            os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
-        if not module.params.get('verify_ssl'):
-            kubevirt.configuration.verify_ssl = False
-        kube_config.load_kube_config(
-            client_configuration=kubevirt.configuration)
-
-    client = kubevirt.DefaultApi()
-    api = VirtualMachineHelper(client)
-    try:
-        vm = api.exists(
-            module.params.get('name'), module.params.get('namespace'))
-
-        if vm is not None:
-            module.exit_json(
-                changed=False,
-                ansible_facts=dict(kubevirt_vm=vm.to_dict())
-            )
-    except ApiException as exc:
-        module.fail_json(msg=str(exc))
 
 
 if __name__ == '__main__':

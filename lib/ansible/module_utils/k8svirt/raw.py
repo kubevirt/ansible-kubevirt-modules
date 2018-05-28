@@ -81,7 +81,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     def execute_module(self):
         """ Method for handling module's actions """
         state = self.params.get('state')
-        self.__authenticate()
+        self._api_client = self.authenticate()
         existing = self.__get_object()
 
         if state == 'present':
@@ -112,23 +112,6 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
                 self.fail_json(msg='Failed to retrieve requested object',
                                error=exc.reason)
         return kubevirt_obj
-
-    def __authenticate(self):
-        auth_options = {}
-        # FIXME: removed kubeconfig, context
-        auth_args = ('host', 'api_key', 'username', 'password', 'cert_file',
-                     'key_file', 'ssl_ca_cert', 'verify_ssl')
-        for key, value in iteritems(self.params):
-            if key in auth_args and value is not None:
-                auth_options[key] = value
-
-        if os.path.exists(
-                os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
-            if not self.params.get('verify_ssl'):
-                sdk.configuration.verify_ssl = False
-            kube_config.load_kube_config(
-                client_configuration=sdk.configuration)
-            self._api_client = KubeVirtDefaultApi()
 
     def __create(self):
         try:

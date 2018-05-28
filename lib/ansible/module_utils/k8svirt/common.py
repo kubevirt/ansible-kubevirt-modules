@@ -7,9 +7,12 @@
 
 import os
 import yaml
+import kubevirt as sdk
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six import iteritems
+from kubevirt import DefaultApi as KubeVirtDefaultApi
+from kubernetes.config import kube_config
 
 
 class K8sVirtAnsibleModule(AnsibleModule):
@@ -39,3 +42,20 @@ class K8sVirtAnsibleModule(AnsibleModule):
             self.fail_json(
                 msg="Error loading resource_definition: {0}".format(exc))
         return result
+
+    def authenticate(self):
+        auth_options = {}
+        # FIXME: removed kubeconfig, context
+        auth_args = ('host', 'api_key', 'username', 'password', 'cert_file',
+                     'key_file', 'ssl_ca_cert', 'verify_ssl')
+        for key, value in iteritems(self.params):
+            if key in auth_args and value is not None:
+                auth_options[key] = value
+
+        if os.path.exists(
+                os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
+            if not self.params.get('verify_ssl'):
+                sdk.configuration.verify_ssl = False
+            kube_config.load_kube_config(
+                client_configuration=sdk.configuration)
+            return KubeVirtDefaultApi()

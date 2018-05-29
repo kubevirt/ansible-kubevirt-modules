@@ -6,11 +6,19 @@
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
 import copy
+import sys
 
 from kubevirt.rest import ApiException
-from ansible.module_utils.k8svirt.helper import get_helper, AUTH_ARG_SPEC, \
-    FACTS_ARG_SPEC
-from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
+# TODO: This is ugly, either find a way to make it always work or clean it up
+# before sending PR to Ansible
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils/k8svirt')
+    from common import K8sVirtAnsibleModule
+    from helper import AUTH_ARG_SPEC, FACTS_ARG_SPEC, get_helper
+else:
+    from ansible.module_utils.k8svirt.helper import get_helper, AUTH_ARG_SPEC,\
+        FACTS_ARG_SPEC
+    from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
 
 
 class KubeVirtFacts(K8sVirtAnsibleModule):

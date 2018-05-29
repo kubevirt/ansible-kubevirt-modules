@@ -1,14 +1,19 @@
 import pytest
 import sys
+import json
+import kubevirt
 
 from ansible.compat.tests.mock import patch
+from ansible.module_utils import basic
+from ansible.module_utils._text import to_bytes
+
 
 sys.path.append('lib/ansible/module_utils/k8svirt')
 
 import facts
 
 VM_BODY = '''
-"kubevirt_vm": {
+{
     "api_version": "kubevirt.io/v1alpha1",
     "kind": "VirtualMachine",
     "metadata": {
@@ -74,7 +79,26 @@ VM_BODY = '''
 }
 '''
 
+
+def set_module_args(args):
+    args = json.dumps({'ANSIBLE_MODULE_ARGS': args})
+    basic._ANSIBLE_ARGS = to_bytes(args)
+
+
 class TestFacts(object):
     @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine')
-    def test_execute_module(mock_read):
-        pass
+    def test_execute_module(self, mock_read):
+        args = dict(name='testvm', namespace='vms')
+        set_module_args(args)
+        json_dict = json.loads(VM_BODY)
+        vm = kubevirt.V1VirtualMachine(
+            api_version=json_dict.get('api_version'),
+            kind=json_dict.get('kind'),
+            metadata=json_dict.get('metadata'),
+            spec=json_dict.get('spec'),
+            status=json_dict.get('status')
+        )
+        vm_facts = facts.KubeVirtFacts(kind='virtual_machine')
+        vm_facts.execute_module()
+        mock_read.return_value = vm
+        mock_read.assert_called_once_with('testvm', 'vms')

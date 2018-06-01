@@ -1,0 +1,32 @@
+---
+- name: Deploy a VM Preset for small VMs
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_raw:
+       state: present
+       name: vmps-small
+       namespace: vms
+       verify_ssl: no
+       force: yes
+       inline:
+         apiVersion: kubevirt.io/v1alpha1
+         kind: VirtualMachinePreset
+         metadata:
+           name: vmps-small
+         spec:
+           domain:
+             resources:
+               requests:
+                 memory: 1024M
+             devices:
+               disks:
+               - volumeName: myvolume
+                 name: mydisk
+                 disk:
+                   bus: virtio
+           selector:
+             matchLabels:
+               kubevirt.io/vmPreset: vmps-small

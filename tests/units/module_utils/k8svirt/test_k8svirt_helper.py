@@ -2,7 +2,7 @@ import pytest
 import sys
 
 from kubevirt import DefaultApi, V1DeleteOptions, V1VirtualMachine, \
-    V1OfflineVirtualMachine, V1VirtualMachineReplicaSet
+    V1OfflineVirtualMachine, V1VirtualMachineReplicaSet, V1VirtualMachinePreset
 
 from ansible.compat.tests.mock import patch
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
@@ -196,4 +196,54 @@ class TestHelper(object):
         vmrs.replace(defined.to_dict(), 'freyja', 'vms')
         defined.metadata['resourceVersion'] = '272140'
         defined.status = dict(replicas=2)
-        mock_replace.assert_called_once_with(defined, 'vms', 'freyja')
+        mock_replace.assert_called_once_with(defined, 'freyja', 'vms')
+
+    @patch('kubevirt.DefaultApi.create_namespaced_virtual_machine_preset')
+    def test_virtualmachinepresethelper_create(self, mock_create):
+        body = dict(
+            kind='VirtualMachinePreset',
+            spec=dict(),
+            api_version='kubevirt.io/v1alpha',
+            metadata=dict(name='vmps-small', namespace='vms')
+        )
+        called_body = V1VirtualMachinePreset().to_dict()
+        called_body.update(body)
+        client = DefaultApi()
+        vmrs = helper.VirtualMachinePreSetHelper(client)
+        vmrs.create(body, 'vms')
+
+        mock_create.assert_called_once_with(called_body, 'vms')
+
+    @patch('kubevirt.DefaultApi.delete_namespaced_virtual_machine_preset')
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_preset')
+    def test_virtualmachinepresethelper_delete(self, mock_read, mock_delete):
+        body = dict(
+            kind='VirtualMachinePreset',
+            spec=dict(),
+            api_version='kubevirt.io/v1alpha',
+            metadata=dict(name='vmps-small', namespace='vms')
+        )
+        existing = V1VirtualMachinePreset().to_dict()
+        existing.update(body)
+        client = DefaultApi()
+        mock_read.return_value = existing
+        vmrs = helper.VirtualMachinePreSetHelper(client)
+        vmrs.delete('vmps-small', 'vms')
+
+        mock_delete.assert_called_once_with(
+            V1DeleteOptions(), 'vms', 'vmps-small')
+
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_preset')
+    @patch('kubevirt.DefaultApi.replace_namespaced_virtual_machine_preset')
+    def test_virtualmachinepresethelper_replace(self,
+                                                mock_replace,
+                                                mock_read,
+                                                json_to_vmps,
+                                                user_vmps):
+        defined = user_vmps
+        client = DefaultApi()
+        mock_read.return_value = json_to_vmps
+        vmrs = helper.VirtualMachinePreSetHelper(client)
+        vmrs.replace(defined.to_dict(), 'vmps-small', 'vms')
+        defined.metadata['resourceVersion'] = '20928'
+        mock_replace.assert_called_once_with(defined, 'vmps-small', 'vms')

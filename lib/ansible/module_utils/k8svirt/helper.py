@@ -87,6 +87,8 @@ def get_helper(client, kind):
         return OfflineVirtualMachineHelper(client)
     elif kind == 'virtual_machine_replica_set':
         return VirtualMachineReplicaSetHelper(client)
+    elif kind == 'virtual_machine_preset':
+        return VirtualMachinePreSetHelper(client)
     # FIXME: find/create a better exception (AnsibleModuleError?)
     raise Exception('Unknown kind %s' % kind)
 
@@ -211,3 +213,41 @@ class VirtualMachineReplicaSetHelper(object):
         vmrs_body.status = current.status
         return self.__client.replace_namespaced_virtual_machine_replica_set(
             vmrs_body, namespace, name)
+
+
+class VirtualMachinePreSetHelper(object):
+    """ Helper class for VirtualMachinePreSet resources """
+    def __init__(self, client):
+        """ Class constructor """
+        self.__client = client
+
+    def create(self, body, namespace):
+        """ Create VirtualMachinePreset resource """
+        vmps_body = sdk.V1VirtualMachinePreset().to_dict()
+        vmps_body.update(copy.deepcopy(body))
+        return self.__client.create_namespaced_virtual_machine_preset(
+            vmps_body, namespace)
+
+    def delete(self, name, namespace):
+        """ Delete VirtualMachine resource """
+        return self.__client.delete_namespaced_virtual_machine_preset(
+            V1DeleteOptions(), namespace, name)
+
+    def exists(self, name, namespace):
+        """ Return VirtualMachinePreset resource, if exists """
+        return self.__client.read_namespaced_virtual_machine_preset(
+            name, namespace, exact=True)
+
+    def replace(self, body, namespace, name):
+        """ Replace VirtualMachinePreSet """
+        current = self.exists(name, namespace)
+        vmps_body = sdk.V1VirtualMachinePreset(
+            api_version=body.get('apiVersion'),
+            kind=body.get('kind'),
+            metadata=body.get('metadata'),
+            spec=body.get('spec')
+        )
+        res_version = _resource_version(current)
+        vmps_body.metadata['resourceVersion'] = res_version
+        return self.__client.replace_namespaced_virtual_machine_preset(
+            vmps_body, namespace, name)

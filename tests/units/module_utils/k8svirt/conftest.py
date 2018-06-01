@@ -414,6 +414,82 @@ VMRS_BODY = '''
 }
 '''
 
+USER_VMPS = '''
+{
+    "apiVersion": "kubevirt.io/v1alpha1",
+    "kind": "VirtualMachinePreset",
+    "metadata": {
+        "name": "vmps-small"
+    },
+    "spec": {
+        "domain": {
+            "resources": {
+                "requests": {
+                    "memory": "1024M"
+                }
+            },
+            "devices": {
+                "disks": [
+                    {
+                        "volumeName": "myvolume",
+                        "name": "mydisk",
+                        "disk": {
+                            "bus": "virtio"
+                        }
+                    }
+                ]
+            }
+        },
+        "selector": {
+            "matchLabels": {
+                "kubevirt.io/vmPreset": "vmps-small"
+            }
+        }
+    }
+}
+'''
+
+VMPS_BODY = '''
+{
+    "api_version": "kubevirt.io/v1alpha1",
+    "kind": "VirtualMachinePreset",
+    "metadata": {
+        "creation_timestamp": "2018-06-01T17:13:03Z",
+        "generation": 1,
+        "name": "vmps-small",
+        "namespace": "vms",
+        "resource_version": "20928",
+        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachinepresets/vmps-small",
+        "uid": "0ad9edf0-65bf-11e8-b964-52540024b209"
+    },
+    "spec": {
+        "domain": {
+            "devices": {
+                "disks": [
+                    {
+                        "disk": {
+                            "bus": "virtio"
+                        },
+                        "name": "mydisk",
+                        "volume_name": "myvolume"
+                    }
+                ]
+            },
+            "resources": {
+                "requests": {
+                    "memory": "512M"
+                }
+            }
+        },
+        "selector": {
+            "match_labels": {
+                "kubevirt.io/vmPreset": "vmps-small"
+            }
+        }
+    }
+}
+'''
+
 
 @pytest.fixture(scope='module')
 def args_present():
@@ -476,6 +552,19 @@ def user_vmrs():
 
 
 @pytest.fixture(scope='module')
+def user_vmps():
+    json_dict = json.loads(USER_VMPS)
+    vmps = kubevirt.V1VirtualMachinePreset(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec')
+    )
+    yield vmps
+    del vmps
+
+
+@pytest.fixture(scope='module')
 def json_to_vm():
     json_dict = json.loads(VM_BODY)
     vm = kubevirt.V1VirtualMachine(
@@ -515,6 +604,19 @@ def json_to_vmrs():
     )
     yield vmrs
     del vmrs
+
+
+@pytest.fixture(scope='module')
+def json_to_vmps():
+    json_dict = json.loads(VMPS_BODY)
+    vmps = kubevirt.V1VirtualMachinePreset(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec')
+    )
+    yield vmps
+    del vmps
 
 
 def pytest_configure(config):

@@ -209,6 +209,5 @@ class VirtualMachineReplicaSetHelper(object):
         res_version = _resource_version(current)
         vmrs_body.metadata['resourceVersion'] = res_version
         vmrs_body.status = current.status
-        import q; q.q(name)
         return self.__client.replace_namespaced_virtual_machine_replica_set(
             vmrs_body, namespace, name)

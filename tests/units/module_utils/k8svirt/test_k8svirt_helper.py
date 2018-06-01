@@ -32,14 +32,10 @@ class TestHelper(object):
         assert 'Unknown kind non_existent_resource' in str(excinfo.value)
 
     @patch('kubevirt.DefaultApi.create_namespaced_virtual_machine')
-    @patch('kubevirt.DefaultApi.delete_namespaced_virtual_machine')
     @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine')
-    @patch('kubevirt.DefaultApi.replace_namespaced_virtual_machine')
-    def test_virtualmachinehelper_class(self,
-                                        mock_replace,
-                                        mock_read,
-                                        mock_delete,
-                                        mock_create):
+    def test_virtualmachinehelper_create(self,
+                                         mock_read,
+                                         mock_create):
         body = dict(
             kind='VirtualMachine',
             spec=dict(),
@@ -49,24 +45,52 @@ class TestHelper(object):
         called_body = V1VirtualMachine().to_dict()
         called_body.update(body)
         client = DefaultApi()
+        mock_read.return_value = None
         vm = helper.VirtualMachineHelper(client)
         vm.create(body, 'vms')
-        vm.delete('testvm', 'vms')
-        vm.replace(body, 'vms', 'testvm')
-
         mock_create.assert_called_once_with(called_body, 'vms')
+
+    @patch('kubevirt.DefaultApi.delete_namespaced_virtual_machine')
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine')
+    def test_virtualmachinehelper_delete(self,
+                                         mock_read,
+                                         mock_delete):
+        body = dict(
+            kind='VirtualMachine',
+            spec=dict(),
+            api_version='kubevirt.io/v1alpha',
+            metadata=dict(name='testvm', namespace='vms')
+        )
+        called_body = V1VirtualMachine().to_dict()
+        called_body.update(body)
+        client = DefaultApi()
+        mock_read.return_value = None
+        vm = helper.VirtualMachineHelper(client)
+        vm.delete('testvm', 'vms')
+
         mock_delete.assert_called_once_with(V1DeleteOptions(), 'vms', 'testvm')
-        mock_replace.assert_called_once_with(called_body, 'vms', 'testvm')
+
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine')
+    @patch('kubevirt.DefaultApi.replace_namespaced_virtual_machine')
+    def test_virtualmachinehelper_replace(self,
+                                          mock_replace,
+                                          mock_read,
+                                          json_to_vm,
+                                          user_vm):
+        defined = user_vm
+        client = DefaultApi()
+        mock_read.return_value = json_to_vm
+        vm = helper.VirtualMachineHelper(client)
+        vm.replace(defined.to_dict(), 'vms', 'jhendrix')
+        defined.metadata['resourceVersion'] = '177913'
+        defined.status = dict(phase='Scheduling')
+        mock_replace.assert_called_once_with(defined, 'vms', 'jhendrix')
 
     @patch('kubevirt.DefaultApi.create_namespaced_offline_virtual_machine')
-    @patch('kubevirt.DefaultApi.delete_namespaced_offline_virtual_machine')
     @patch('kubevirt.DefaultApi.read_namespaced_offline_virtual_machine')
-    @patch('kubevirt.DefaultApi.replace_namespaced_offline_virtual_machine')
-    def test_offlinevirtualmachinehelper_class(self,
-                                               mock_replace,
-                                               mock_read,
-                                               mock_delete,
-                                               mock_create):
+    def test_offlinevirtualmachinehelper_create(self,
+                                                mock_read,
+                                                mock_create):
         body = dict(
             kind='OfflineVirtualMachine',
             spec=dict(),
@@ -76,25 +100,52 @@ class TestHelper(object):
         called_body = V1OfflineVirtualMachine().to_dict()
         called_body.update(body)
         client = DefaultApi()
+        mock_read.return_value = None
         ovm = helper.OfflineVirtualMachineHelper(client)
         ovm.create(body, 'vms')
-        ovm.delete('testovm', 'vms')
-        ovm.replace(body, 'vms', 'testovm')
 
         mock_create.assert_called_once_with(called_body, 'vms')
+
+    @patch('kubevirt.DefaultApi.delete_namespaced_offline_virtual_machine')
+    @patch('kubevirt.DefaultApi.read_namespaced_offline_virtual_machine')
+    def test_offlinevirtualmachinehelper_delete(self,
+                                                mock_read,
+                                                mock_delete):
+        body = dict(
+            kind='OfflineVirtualMachine',
+            spec=dict(),
+            api_version='kubevirt.io/v1alpha',
+            metadata=dict(name='testovm', namespace='vms')
+        )
+        existing = V1OfflineVirtualMachine().to_dict()
+        existing.update(body)
+        client = DefaultApi()
+        mock_read.return_value = existing
+        ovm = helper.OfflineVirtualMachineHelper(client)
+        ovm.delete('testovm', 'vms')
+
         mock_delete.assert_called_once_with(
             V1DeleteOptions(), 'vms', 'testovm')
-        mock_replace.assert_called_once_with(called_body, 'vms', 'testovm')
+
+    @patch('kubevirt.DefaultApi.read_namespaced_offline_virtual_machine')
+    @patch('kubevirt.DefaultApi.replace_namespaced_offline_virtual_machine')
+    def test_offlinevirtualmachinehelper_replace(self,
+                                                 mock_replace,
+                                                 mock_read,
+                                                 json_to_ovm,
+                                                 user_ovm):
+        defined = user_ovm
+        client = DefaultApi()
+        mock_read.return_value = json_to_ovm
+        ovm = helper.OfflineVirtualMachineHelper(client)
+        ovm.replace(defined.to_dict(), 'vms', 'baldr')
+        defined.metadata['resourceVersion'] = '270363'
+        defined.status = dict(created=True, ready=True)
+        mock_replace.assert_called_once_with(defined, 'vms', 'baldr')
 
     @patch('kubevirt.DefaultApi.create_namespaced_virtual_machine_replica_set')
-    @patch('kubevirt.DefaultApi.delete_namespaced_virtual_machine_replica_set')
-    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_replica_set')
-    @patch('kubevirt.DefaultApi.replace_namespaced_virtual_machine_replica_set')
-    def test_virtualmachinereplicasethelper_class(self,
-                                                  mock_replace,
-                                                  mock_read,
-                                                  mock_delete,
-                                                  mock_create):
+    def test_virtualmachinereplicasethelper_create(self,
+                                                   mock_create):
         body = dict(
             kind='VirtualMachineReplicaSet',
             spec=dict(),
@@ -106,10 +157,43 @@ class TestHelper(object):
         client = DefaultApi()
         vmrs = helper.VirtualMachineReplicaSetHelper(client)
         vmrs.create(body, 'vms')
-        vmrs.delete('testvmrs', 'vms')
-        vmrs.replace(body, 'testvmrs', 'vms')
 
         mock_create.assert_called_once_with(called_body, 'vms')
+
+    @patch('kubevirt.DefaultApi.delete_namespaced_virtual_machine_replica_set')
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_replica_set')
+    def test_virtualmachinereplicasethelper_delete(self,
+                                                   mock_read,
+                                                   mock_delete):
+        body = dict(
+            kind='VirtualMachineReplicaSet',
+            spec=dict(),
+            api_version='kubevirt.io/v1alpha',
+            metadata=dict(name='testvmrs', namespace='vms')
+        )
+        existing = V1VirtualMachineReplicaSet().to_dict()
+        existing.update(body)
+        client = DefaultApi()
+        mock_read.return_value = existing
+        vmrs = helper.VirtualMachineReplicaSetHelper(client)
+        vmrs.delete('testvmrs', 'vms')
+
         mock_delete.assert_called_once_with(
             V1DeleteOptions(), 'vms', 'testvmrs')
-        mock_replace.assert_called_once_with(called_body, 'vms', 'testvmrs')
+
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_replica_set')
+    @patch(
+        'kubevirt.DefaultApi.replace_namespaced_virtual_machine_replica_set')
+    def test_virtualmachinereplicasethelper_replace(self,
+                                                    mock_replace,
+                                                    mock_read,
+                                                    json_to_vmrs,
+                                                    user_vmrs):
+        defined = user_vmrs
+        client = DefaultApi()
+        mock_read.return_value = json_to_vmrs
+        vmrs = helper.VirtualMachineReplicaSetHelper(client)
+        vmrs.replace(defined.to_dict(), 'freyja', 'vms')
+        defined.metadata['resourceVersion'] = '272140'
+        defined.status = dict(replicas=2)
+        mock_replace.assert_called_once_with(defined, 'vms', 'freyja')

@@ -26,7 +26,7 @@ class TestFacts(object):
         vm_facts = facts.KubeVirtFacts(kind='virtual_machine')
         vm_facts.execute_module()
         mock_read.return_value = json_to_vm
-        mock_read.assert_called_once_with('testvm', 'vms')
+        mock_read.assert_called_once_with('testvm', 'vms', exact=True)
 
     @patch('kubevirt.DefaultApi.read_namespaced_offline_virtual_machine')
     def test_facts_for_offline_virtual_machine(self,
@@ -37,7 +37,7 @@ class TestFacts(object):
         ovm_facts = facts.KubeVirtFacts(kind='offline_virtual_machine')
         ovm_facts.execute_module()
         mock_read.return_value = json_to_ovm
-        mock_read.assert_called_once_with('testovm', 'vms')
+        mock_read.assert_called_once_with('testovm', 'vms', exact=True)
 
     @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_replica_set')
     def test_facts_for_virtual_machine_replica_set(self,
@@ -48,7 +48,7 @@ class TestFacts(object):
         vm_facts = facts.KubeVirtFacts(kind='virtual_machine_replica_set')
         vm_facts.execute_module()
         mock_read.return_value = json_to_vmrs
-        mock_read.assert_called_once_with('testvmrs', 'vms')
+        mock_read.assert_called_once_with('testvmrs', 'vms', exact=True)
 
     def test_private_resource_and_list_cleanup(self):
         subdict = dict(

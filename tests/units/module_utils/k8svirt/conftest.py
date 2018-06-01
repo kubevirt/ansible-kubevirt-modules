@@ -5,6 +5,60 @@ import kubevirt
 from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
+
+USER_VM = '''
+{
+    "apiVersion": "kubevirt.io/v1alpha1",
+    "kind": "VirtualMachine",
+    "metadata": {
+        "name": "jhendrix",
+        "namespace": "vms"
+    },
+    "spec": {
+        "domain": {
+            "resources": {
+                "requests": {
+                    "memory": "1024M"
+                }
+            },
+            "devices": {
+                "disks": [
+                    {
+                        "volumeName": "myvolume",
+                        "name": "mydisk",
+                        "disk": {
+                            "bus": "virtio"
+                        }
+                    },
+                    {
+                        "name": "cloudinitdisk",
+                        "volumeName": "cloudinitvolume",
+                        "disk": {
+                            "bus": "virtio"
+                        }
+                    }
+                ]
+            }
+        },
+        "volumes": [
+            {
+                "volumeName": "myvolume",
+                "name": "myvolume",
+                "persistentVolumeClaim": {
+                    "claimName": "fedoravm-pvc"
+                }
+            },
+            {
+                "cloudInitNoCloud": {
+                    "userDataBase64": "ICNjbG91ZC1jb25maWcKICAgICAgICAgICBob3N0bmFtZTogamhlbmRyaXgKICAgICAgICAgICB1c2VyczoKICAgICAgICAgICAgIC0gbmFtZToga3ViZXZpcnQKICAgICAgICAgICAgICAgZ2Vjb3M6IEt1YmVWaXJ0IFByb2plY3QKICAgICAgICAgICAgICAgc3VkbzogQUxMPShBTEwpIE5PUEFTU1dEOkFMTAogICAgICAgICAgICAgICBzc2hfYXV0aG9yaXplZF9rZXlzOgogICAgICAgICAgICAgICAgICAgLSBzc2gtcnNhIEFBQUFCM056YUMxeWMyRUFBQUFEQVFBQkFBQUJBUUMrS01wMUY0U3JLaXR2Z0lMZjhRMkdRYmNPc2xJZzRzZnFVT2YrbTgzMnp3b1MyWjJuZG1wci8zRitOdExxNTZjVGFFeks5SVBCSWtOTEpmc1BxUnNUb0xCWVpEK2w0UzVGZnVaMnh3Q3hHQkgrVFZYQXBPK1NpRDZjODRybWpPeDQ3NjY1aVF2TUhLTCtuLzVnVnZTZFlEdWVnTktuajRyUnIvZUhuRzJ5QzRUVlpsM29ISTdUUE9VSlQra0tqU1dQMVVlc1dUWm1tY2szOUlhRlNtb3JnMzFYN2c5aEpId3E5SkVEUWlsY2JuSXlxRFpLaUg2SnU0R2pPVThtcWhhekJGQjRxdS9RRERiMjVwRHBQZDJwUUdCaWxHdm03Z3dKQ1ZueURrOVlaUVU3Z1lFNzM0S0xEZjV0Q0tNbUVRU2p3RngyVGo5bWZadmVDSUprYWozVCBrdWJldmlydAogICAgICAg"
+                },
+                "name": "cloudinitvolume"
+            }
+        ]
+    }
+}
+'''
+
 VM_BODY = '''
 {
     "api_version": "kubevirt.io/v1alpha1",
@@ -68,6 +122,72 @@ VM_BODY = '''
     },
     "status": {
         "phase": "Scheduling"
+    }
+}
+'''
+
+USER_OVM = '''
+{
+    "apiVersion": "kubevirt.io/v1alpha1",
+    "kind": "OfflineVirtualMachine",
+    "metadata": {
+        "name": "baldr",
+        "namespace": "vms",
+        "labels": {
+            "kubevirt.io/ovm": "baldr"
+        }
+    },
+    "spec": {
+        "running": true,
+        "template": {
+            "metadata": {
+                "labels": {
+                    "kubevirt.io/ovm": "baldr"
+                }
+            },
+            "spec": {
+                "domain": {
+                    "resources": {
+                        "requests": {
+                            "memory": "512M"
+                        }
+                    },
+                    "devices": {
+                        "disks": [
+                            {
+                                "volumeName": "myvolume",
+                                "name": "mydisk",
+                                "disk": {
+                                    "bus": "virtio"
+                                }
+                            },
+                            {
+                                "name": "cloudinitdisk",
+                                "volumeName": "cloudinitvolume",
+                                "disk": {
+                                    "bus": "virtio"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "volumes": [
+                    {
+                        "volumeName": "myvolume",
+                        "name": "myvolume",
+                        "persistentVolumeClaim": {
+                            "claimName": "fedoravm-pvc"
+                        }
+                    },
+                    {
+                        "cloudInitNoCloud": {
+                            "userDataBase64": "ICNjbG91ZC1jb25maWcKICAgICAgICAgICBob3N0bmFtZTogamhlbmRyaXgKICAgICAgICAgICB1c2VyczoKICAgICAgICAgICAgIC0gbmFtZToga3ViZXZpcnQKICAgICAgICAgICAgICAgZ2Vjb3M6IEt1YmVWaXJ0IFByb2plY3QKICAgICAgICAgICAgICAgc3VkbzogQUxMPShBTEwpIE5PUEFTU1dEOkFMTAogICAgICAgICAgICAgICBzc2hfYXV0aG9yaXplZF9rZXlzOgogICAgICAgICAgICAgICAgICAgLSBzc2gtcnNhIEFBQUFCM056YUMxeWMyRUFBQUFEQVFBQkFBQUJBUUMrS01wMUY0U3JLaXR2Z0lMZjhRMkdRYmNPc2xJZzRzZnFVT2YrbTgzMnp3b1MyWjJuZG1wci8zRitOdExxNTZjVGFFeks5SVBCSWtOTEpmc1BxUnNUb0xCWVpEK2w0UzVGZnVaMnh3Q3hHQkgrVFZYQXBPK1NpRDZjODRybWpPeDQ3NjY1aVF2TUhLTCtuLzVnVnZTZFlEdWVnTktuajRyUnIvZUhuRzJ5QzRUVlpsM29ISTdUUE9VSlQra0tqU1dQMVVlc1dUWm1tY2szOUlhRlNtb3JnMzFYN2c5aEpId3E5SkVEUWlsY2JuSXlxRFpLaUg2SnU0R2pPVThtcWhhekJGQjRxdS9RRERiMjVwRHBQZDJwUUdCaWxHdm03Z3dKQ1ZueURrOVlaUVU3Z1lFNzM0S0xEZjV0Q0tNbUVRU2p3RngyVGo5bWZadmVDSUprYWozVCBrdWJldmlydAogICAgICAg"
+                        },
+                        "name": "cloudinitvolume"
+                    }
+                ]
+            }
+        }
     }
 }
 '''
@@ -147,6 +267,75 @@ OVM_BODY = '''
 }
 '''
 
+
+USER_VMRS = '''
+{
+    "apiVersion": "kubevirt.io/v1alpha1",
+    "kind": "VirtualMachineReplicaSet",
+    "metadata": {
+        "name": "freyja",
+        "namespace": "vms"
+    },
+    "spec": {
+        "replicas": 2,
+        "selector": {
+            "matchLabels": {
+                "rs": "freyjars"
+            }
+        },
+        "template": {
+            "metadata": {
+                "name": "freyja",
+                "labels": {
+                    "rs": "freyjars"
+                }
+            },
+            "spec": {
+                "domain": {
+                    "resources": {
+                        "requests": {
+                            "memory": "512M"
+                        }
+                    },
+                    "devices": {
+                        "disks": [
+                            {
+                                "volumeName": "myvolume",
+                                "name": "mydisk",
+                                "disk": {
+                                    "bus": "virtio"
+                                }
+                            },
+                            {
+                                "name": "cloudinitdisk",
+                                "volumeName": "cloudinitvolume",
+                                "disk": {
+                                    "bus": "virtio"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "volumes": [
+                    {
+                        "volumeName": "myvolume",
+                        "name": "myvolume",
+                        "persistentVolumeClaim": {
+                            "claimName": "fedoravm-pvc"
+                        }
+                    },
+                    {
+                        "name": "cloudinitvolume",
+                        "cloudInitNoCloud": {
+                            "userDataBase64": "ICNjbG91ZC1jb25maWcKICAgICAgICAgICBob3N0bmFtZTogamhlbmRyaXgKICAgICAgICAgICB1c2VyczoKICAgICAgICAgICAgIC0gbmFtZToga3ViZXZpcnQKICAgICAgICAgICAgICAgZ2Vjb3M6IEt1YmVWaXJ0IFByb2plY3QKICAgICAgICAgICAgICAgc3VkbzogQUxMPShBTEwpIE5PUEFTU1dEOkFMTAogICAgICAgICAgICAgICBzc2hfYXV0aG9yaXplZF9rZXlzOgogICAgICAgICAgICAgICAgICAgLSBzc2gtcnNhIEFBQUFCM056YUMxeWMyRUFBQUFEQVFBQkFBQUJBUUMrS01wMUY0U3JLaXR2Z0lMZjhRMkdRYmNPc2xJZzRzZnFVT2YrbTgzMnp3b1MyWjJuZG1wci8zRitOdExxNTZjVGFFeks5SVBCSWtOTEpmc1BxUnNUb0xCWVpEK2w0UzVGZnVaMnh3Q3hHQkgrVFZYQXBPK1NpRDZjODRybWpPeDQ3NjY1aVF2TUhLTCtuLzVnVnZTZFlEdWVnTktuajRyUnIvZUhuRzJ5QzRUVlpsM29ISTdUUE9VSlQra0tqU1dQMVVlc1dUWm1tY2szOUlhRlNtb3JnMzFYN2c5aEpId3E5SkVEUWlsY2JuSXlxRFpLaUg2SnU0R2pPVThtcWhhekJGQjRxdS9RRERiMjVwRHBQZDJwUUdCaWxHdm03Z3dKQ1ZueURrOVlaUVU3Z1lFNzM0S0xEZjV0Q0tNbUVRU2p3RngyVGo5bWZadmVDSUprYWozVCBrdWJldmlydAogICAgICAg"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
+'''
 
 VMRS_BODY = '''
 {
@@ -242,6 +431,48 @@ def args_absent():
         state='absent', kind='VirtualMachine', name='testvm', namespace='vms')
     yield args
     del args
+
+
+@pytest.fixture(scope='module')
+def user_vm():
+    json_dict = json.loads(USER_VM)
+    vm = kubevirt.V1VirtualMachine(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec'),
+        status=json_dict.get('status')
+    )
+    yield vm
+    del vm
+
+
+@pytest.fixture(scope='module')
+def user_ovm():
+    json_dict = json.loads(USER_OVM)
+    ovm = kubevirt.V1OfflineVirtualMachine(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec'),
+        status=json_dict.get('status')
+    )
+    yield ovm
+    del ovm
+
+
+@pytest.fixture(scope='module')
+def user_vmrs():
+    json_dict = json.loads(USER_VMRS)
+    vmrs = kubevirt.V1VirtualMachineReplicaSet(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec'),
+        status=json_dict.get('status')
+    )
+    yield vmrs
+    del vmrs
 
 
 @pytest.fixture(scope='module')

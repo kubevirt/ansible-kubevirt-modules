@@ -41,12 +41,12 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 
 ## Playbook examples
 
-1. [Virtual Machine](tests/raw_vm.yml)
-2. [Offline Virtual Machine](tests/raw_ovm.yml)
-3. [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
-4. [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
-5. [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
-6. [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)
+* [Virtual Machine](tests/raw_vm.yml)
+* [Offline Virtual Machine](tests/raw_ovm.yml)
+* [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
+* [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
+* [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
+* [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)
 
 ## Local testing
 

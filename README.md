@@ -50,8 +50,8 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 
 ## Local testing
 
-- Download [Fedora cloud raw image](https://alt.fedoraproject.org/cloud/)
-- Create `fedoravm-pvc`, if using NFS, the following snippets can be used:
+1. Download [Fedora cloud raw image](https://alt.fedoraproject.org/cloud/)
+2. Create `fedoravm-pvc`, if using NFS, the following snippets can be used:
 
 ```yaml
 apiVersion: v1
@@ -82,34 +82,34 @@ spec:
       storage: 5Gi
 ```
 
-- Place the uncompressed Fedora cloud raw image in `/exports/fedora_kubevirt/disk.img`
-- Add the following entry to the NFS exports file (usually `/etc/exports`):
+3. Place the uncompressed Fedora cloud raw image in `/exports/fedora_kubevirt/disk.img`
+4. Add the following entry to the NFS exports file (usually `/etc/exports`):
 
 ```
 /exports/fedora_kubevirt *(rw,root_squash)
 ```
 
-- Make sure KubeVirt can access the `disk.img` file:
+5. Make sure KubeVirt can access the `disk.img` file:
 
 ```shell
 $ chmod -R 755 /exports/fedora_kubevirt
 $ chmod 666 /exports/fedora_kubevirt/disk.img
 ```
 
-- Update the NFS service by running the following command:
+6. Update the NFS service by running the following command:
 
 ```shell
 $ exportfs -av
 ```
 
-- Save the snippets to `fedora-pv.yml` and `fedora-pvc.yml` respectively and create the resources as follows:
+7. Save the snippets to `fedora-pv.yml` and `fedora-pvc.yml` respectively and create the resources as follows:
 
 ```shell
 $ kubectl create -f fedora-pv.yml
 $ kubectl create -f fedora-pvc.yml
 ```
 
-- Verify the PV and PVC have bound properly:
+8. Verify the PV and PVC have bound properly:
 
 ```shell
 $ kubectl get pvc
@@ -117,14 +117,14 @@ NAME           STATUS    VOLUME    CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 fedoravm-pvc   Bound     pv0002    5Gi        RWO                           1m
 ```
 
-- Run the tests as follows:
+9. Run the tests as follows:
 
 ```shell
 $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```
 
-- All three playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
+10. All three playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
 
 ```shell
 $ kubectl get all

@@ -41,7 +41,7 @@ kubevirt_vmrs:
     description: "Dictionary describing the virtual machine. Virtual Machine
                   attributes are mapped to dictionary keys, which can be found
                   at the following URL:
-                  http://www.kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachinereplicaset"
+                  U(http://www.kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachinereplicaset)"
     returned: On success.
     type: dict
 '''

@@ -74,7 +74,7 @@ AUTH_ARG_SPEC = {
 
 
 def to_snake(name):
-    """ Convert a tring from camel to snake """
+    """ Convert a string from camel to snake """
     return re.sub(
         '((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
 

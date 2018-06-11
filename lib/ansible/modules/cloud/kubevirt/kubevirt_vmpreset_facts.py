@@ -41,7 +41,7 @@ kubevirt_vmpreset:
     description: "Dictionary describing the virtual machine. Virtual Machine
                   attributes are mapped to dictionary keys, which can be found
                   at the following URL:
-                  http://www.kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachinepreset"
+                  U(http://www.kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachinepreset)"
     returned: On success.
     type: dict
 '''

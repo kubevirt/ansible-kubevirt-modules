@@ -15,15 +15,17 @@
 
 ## Installation and usage
 
-* Using Git
+### Using Git
+
+1. Clone the repository:
 
 ```
 $ git clone https://github.com/kubevirt/ansible-kubevirt-modules
 ```
 
-* [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
+2. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
-* Once installed, add it to a playbook:
+3. Once installed, add it to a playbook:
 
 ```
 ---
@@ -39,12 +41,12 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 
 ## Playbook examples
 
-* [Virtual Machine](tests/raw_vm.yml)
-* [Offline Virtual Machine](tests/raw_ovm.yml)
-* [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
-* [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
-* [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
-* [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)
+1. [Virtual Machine](tests/raw_vm.yml)
+2. [Offline Virtual Machine](tests/raw_ovm.yml)
+3. [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
+4. [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
+5. [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
+6. [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)
 
 ## Local testing
 
@@ -147,71 +149,4 @@ $ ssh -i tests/kubevirt_rsa -p 27017 kubevirt@172.30.133.9
 $ ansible-playbook tests/kubevirt_vm_facts.yml
 ```
 
-The above command, will gather the information for the VM stated in the playbook and produce the following ouput:
-
-```json
-"kubevirt_vm": {
-    "api_version": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachine",
-    "metadata": {
-        "annotations": {
-            "presets.virtualmachines.kubevirt.io/presets-applied": "kubevirt.io/v1alpha1"
-        },
-        "creation_timestamp": "2018-05-28T16:29:00Z",
-        "finalizers": [
-            "foregroundDeleteVirtualMachine"
-        ],
-        "generation": 1,
-        "name": "jhendrix",
-        "namespace": "vms",
-        "resource_version": "177913",
-        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachines/jhendrix",
-        "uid": "3a3e401f-6294-11e8-b0c9-5254009a8783"
-    },
-    "spec": {
-        "domain": {
-            "devices": {
-                "disks": [
-                    {
-                        "disk": {
-                            "bus": "virtio"
-                        },
-                        "name": "mydisk", 
-                        "volume_name": "myvolume"
-                    }, 
-                    {
-                        "disk": {
-                            "bus": "virtio"
-                        }, 
-                        "name": "cloudinitdisk", 
-                        "volume_name": "cloudinitvolume"
-                    }
-                ]
-            }, 
-            "machine": {}, 
-            "resources": {
-                "requests": {
-                    "memory": "512M"
-                }
-            }
-        }, 
-        "volumes": [
-            {
-                "name": "myvolume", 
-                "persistent_volume_claim": {
-                    "claim_name": "fedoravm-pvc"
-                }
-            }, 
-            {
-                "cloud_init_no_cloud": {
-                    "user_data_base64": "ICNjbG91ZC1jb25maWcKICAgICAgICAgICBob3N0bmFtZTogamhlbmRyaXgKICAgICAgICAgICB1c2VyczoKICAgICAgICAgICAgIC0gbmFtZToga3ViZXZpcnQKICAgICAgICAgICAgICAgZ2Vjb3M6IEt1YmVWaXJ0IFByb2plY3QKICAgICAgICAgICAgICAgc3VkbzogQUxMPShBTEwpIE5PUEFTU1dEOkFMTAogICAgICAgICAgICAgICBzc2hfYXV0aG9yaXplZF9rZXlzOgogICAgICAgICAgICAgICAgICAgLSBzc2gtcnNhIEFBQUFCM056YUMxeWMyRUFBQUFEQVFBQkFBQUJBUUMrS01wMUY0U3JLaXR2Z0lMZjhRMkdRYmNPc2xJZzRzZnFVT2YrbTgzMnp3b1MyWjJuZG1wci8zRitOdExxNTZjVGFFeks5SVBCSWtOTEpmc1BxUnNUb0xCWVpEK2w0UzVGZnVaMnh3Q3hHQkgrVFZYQXBPK1NpRDZjODRybWpPeDQ3NjY1aVF2TUhLTCtuLzVnVnZTZFlEdWVnTktuajRyUnIvZUhuRzJ5QzRUVlpsM29ISTdUUE9VSlQra0tqU1dQMVVlc1dUWm1tY2szOUlhRlNtb3JnMzFYN2c5aEpId3E5SkVEUWlsY2JuSXlxRFpLaUg2SnU0R2pPVThtcWhhekJGQjRxdS9RRERiMjVwRHBQZDJwUUdCaWxHdm03Z3dKQ1ZueURrOVlaUVU3Z1lFNzM0S0xEZjV0Q0tNbUVRU2p3RngyVGo5bWZadmVDSUprYWozVCBrdWJldmlydAogICAgICAg"
-                }, 
-                "name": "cloudinitvolume"
-            }
-        ]
-    }, 
-    "status": {
-        "phase": "Scheduling"
-    }
-}
-```
+The above command, will gather the information for the VM stated in the playbook and print out a JSON document based on [KubeVirt VM spec](https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine).

@@ -42,7 +42,7 @@ kubevirt_ovm:
     description: "Dictionary describing the offline virtual machine.
                   Offline Virtual Machine attributes are mapped to dictionary
                   keys, which can be found at the following URL:
-                  http://www.kubevirt.io/api-reference/master/definitions.html#_v1_offlinevirtualmachine"
+                  U(http://www.kubevirt.io/api-reference/master/definitions.html#_v1_offlinevirtualmachine)"
     returned: On success.
     type: dict
 '''

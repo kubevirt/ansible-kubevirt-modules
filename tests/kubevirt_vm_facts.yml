@@ -1,0 +1,12 @@
+---
+- name: Gather facts for jhendrix VirtualMachine
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_vm_facts:
+        name: jhendrix
+        namespace: vms
+    - debug:
+        var: kubevirt_vm

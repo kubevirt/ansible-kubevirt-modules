@@ -1,0 +1,12 @@
+---
+- name: Gather facts for baldr OfflineVirtualMachine
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_ovm_facts:
+        name: baldr
+        namespace: vms
+    - debug:
+        var: kubevirt_ovm

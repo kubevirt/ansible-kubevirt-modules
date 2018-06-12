@@ -11,6 +11,7 @@
 
 - Ansible >= 2.4.3.0
 - [KubeVirt Python SDK](https://github.com/kubevirt/client-python)
+- [Kubernetes Python client](https://github.com/kubernetes-client/python)
 - [KubeVirt](https://github.com/kubevirt/kubevirt)
 
 ## Installation and usage
@@ -25,7 +26,9 @@ $ git clone https://github.com/kubevirt/ansible-kubevirt-modules
 
 2. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
-3. Once installed, add it to a playbook:
+3. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
+
+4. Once installed, add it to a playbook:
 
 ```
 ---
@@ -44,6 +47,7 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 * [Virtual Machine](tests/raw_vm.yml)
 * [Offline Virtual Machine](tests/raw_ovm.yml)
 * [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
+* [Stop Offline Virtual Machine](tests/kubevirt_ovm_stopped.yml)
 * [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
 * [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
 * [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)

@@ -1,0 +1,11 @@
+---
+- name: Scale freyja replicaset to three
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_scale_vmrs:
+        replicas: 3
+        name: freyja
+        namespace: vms

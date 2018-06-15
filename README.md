@@ -48,6 +48,7 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 * [Offline Virtual Machine](tests/raw_ovm.yml)
 * [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
 * [Stop Offline Virtual Machine](tests/kubevirt_ovm_stopped.yml)
+* [Scale Virtual Machine Replica Set](tests/kubevirt_scale_vmrs.yml)
 * [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
 * [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
 * [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)

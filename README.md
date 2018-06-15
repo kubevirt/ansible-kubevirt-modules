@@ -5,6 +5,13 @@
 ## Contents
 
 - `lib`: Ansible modules files for KubeVirt management
+    - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachine, OfflineVirtualMachine, VirtualMachineReplicaSet and VirtualMachinePresets.
+    - `kubevirt_vm_facts`: Gather information about a given VirtualMachine and store it on `kubevirt_vm` variable.
+    - `kubevirt_ovm_facts`: Gather information about a given OfflineVirtualMachine and store it on `kubevirt_ovm` variable.
+    - `kubevirt_vmrs_facts`: Gather information about a given VirtualMachineReplicaSet and store it on `kubevirt_vmrs` variable.
+    - `kubevirt_vmpreset_facts`: Gather information about a given VirtualMachine and store it on `kubevirt_vmpreset` variable.
+    - `kubevirt_ovm_status`: Set an OfflineVirtualMachine to either `running` or `stopped`.
+    - `kubevirt_scale_vmrs`: Scale up or down a VirtualMachineReplilcaSet.
 - `tests`: Ansible playbook examples and unit tests
 
 ## Requirements
@@ -16,31 +23,44 @@
 
 ## Installation and usage
 
-### Using Git
+1. Install the modules:
+  1. From GitHub:
 
-1. Clone the repository:
+  ```shell
+  $ git clone https://github.com/kubevirt/ansible-kubevirt-modules
+  ```
 
+  2. From [Ansible Galaxy](https://galaxy.ansible.com/kubevirt/kubevirt-modules/)
+
+  ```shell
+  $ ansible-galaxy install -p <roles_path> kubevirt.kubevirt-modules
+  ```
+
+2. Setting up the environment
+
+```shell
+$ export ANSIBLE_MODULE_UTILS=<module_path>/lib/ansible/module_utils
+$ export ANSIBLE_LIBRARY=<module_path>/lib/ansible/modules
 ```
-$ git clone https://github.com/kubevirt/ansible-kubevirt-modules
-```
 
-2. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
+> **NOTE:** These settings can instead be added to *ansible.cfg* as done in [test/ansible.cfg](tests/ansible.cfg)
 
-3. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
+3. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
-4. Once installed, add it to a playbook:
+4. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
 
-```
+5. Once installed, add it to a playbook:
+
+```yaml
 ---
 - hosts: localhost
-  remote_user: root
   roles:
     - role: ansible-kubevirt-modules
       install_python_requirements: no
     - role: hello-underworld
 ```
 
-Because the role is referenced, the `hello-underworld` role is able to make use of the kubevirt modules
+Because the role is referenced, the `hello-underworld` role is able to make use of the kubevirt modules.
 
 ## Playbook examples
 
@@ -129,7 +149,7 @@ $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```
 
-10. All three playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
+10. The playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
 
 ```shell
 $ kubectl get all

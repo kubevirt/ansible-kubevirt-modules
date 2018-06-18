@@ -1,0 +1,20 @@
+---
+language: python
+python:
+  - "2.7"
+cache: pip
+env:
+  - KUBECONFIG=tests/k8s/config
+before_install:
+  - sudo apt-get update -qq
+install:
+  - pip install -r requirements-dev.txt
+script:
+  - pytest
+  - flake8 --ignore=E402 lib/ansible/modules
+  - flake8 --ignore=E402 lib/ansible/module_utils
+branches:
+  only:
+    - master
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/

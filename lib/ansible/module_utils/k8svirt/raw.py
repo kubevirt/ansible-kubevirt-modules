@@ -4,12 +4,8 @@
 # Apache License, Version 2.0
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
-import os
 import copy
 import sys
-import kubevirt as sdk
-
-from ansible.module_utils.six import iteritems
 
 # TODO: This is ugly, either find a way to make it always work or clean it up
 # before sending PR to Ansible
@@ -24,8 +20,6 @@ else:
         AUTH_ARG_SPEC, get_helper
 
 
-from kubernetes.config import kube_config
-from kubevirt import DefaultApi as KubeVirtDefaultApi
 from kubevirt.rest import ApiException as KubeVirtApiException
 
 

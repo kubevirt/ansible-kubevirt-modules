@@ -9,7 +9,7 @@ from ansible.module_utils._text import to_bytes
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/cloud/kubevirt')
 
-import kubevirt_scale_vmrs as mymodule
+import kubevirt_vm_status as mymodule
 
 
 def set_module_args(args):
@@ -29,45 +29,45 @@ def exit_json(*args, **kwargs):
     raise AnsibleExitJson(kwargs)
 
 
-class TestKubeVirtScaleVMRS(object):
+class TestKubeVirtVMStatus(object):
     @patch('kubernetes.client.ApiClient')
     @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
     @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_scale_vmrs_main(self,
-                             mock_crd_get,
-                             mock_crd_patch,
-                             mock_client,
-                             monkeypatch):
+    def test_run_vm_main(self,
+                         mock_crd_get,
+                         mock_crd_patch,
+                         mock_client,
+                         monkeypatch):
 
         monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
-        args = dict(name='freyja', namespace='vms', replicas=2)
+        args = dict(name='baldr', namespace='vms', state='stopped')
         set_module_args(args)
 
         mock_client.return_value = dict()
-        mock_crd_get.return_value = dict(spec=dict(replicas=1))
+        mock_crd_get.return_value = dict(spec=dict(running=True))
         mock_crd_patch.return_value = dict()
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.main()
         assert result.value[0]['changed']
         mock_crd_patch.assert_called_once_with(
-            'kubevirt.io', 'v1alpha1', 'vms', 'virtualmachinereplicasets',
-            'freyja', dict(spec=dict(replicas=2)))
+            'kubevirt.io', 'v1alpha2', 'vms', 'virtualmachines',
+            'baldr', dict(spec=dict(running=False)))
 
     @patch('kubernetes.client.ApiClient')
     @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
     @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_scale_vmrs_same_replica_number(self,
-                                            mock_crd_get,
-                                            mock_crd_patch,
-                                            mock_client,
-                                            monkeypatch):
+    def test_run_vm_same_state(self,
+                               mock_crd_get,
+                               mock_crd_patch,
+                               mock_client,
+                               monkeypatch):
 
         monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
-        args = dict(name='freyja', namespace='vms', replicas=2)
+        args = dict(name='baldr', namespace='vms', state='stopped')
         set_module_args(args)
 
         mock_client.return_value = dict()
-        mock_crd_get.return_value = dict(spec=dict(replicas=2))
+        mock_crd_get.return_value = dict(spec=dict(running=False))
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.main()
         assert not result.value[0]['changed']

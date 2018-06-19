@@ -1,12 +1,12 @@
 ---
-- name: Gather facts for baldr OfflineVirtualMachine
+- name: Gather facts for freyja VirtualMachineReplicaSet
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_ovm_facts:
-        name: baldr
+    - kubevirt_vmirs_facts:
+        name: freyja
         namespace: vms
     - debug:
-        var: kubevirt_ovm
+        var: kubevirt_vmirs

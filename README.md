@@ -5,13 +5,13 @@
 ## Contents
 
 - `lib`: Ansible modules files for KubeVirt management
-    - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachine, OfflineVirtualMachine, VirtualMachineReplicaSet and VirtualMachinePresets.
+    - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
+    - `kubevirt_vmi_facts`: Gather information about a given VirtualMachineInstance and store it on `kubevirt_vmi` variable.
     - `kubevirt_vm_facts`: Gather information about a given VirtualMachine and store it on `kubevirt_vm` variable.
-    - `kubevirt_ovm_facts`: Gather information about a given OfflineVirtualMachine and store it on `kubevirt_ovm` variable.
-    - `kubevirt_vmrs_facts`: Gather information about a given VirtualMachineReplicaSet and store it on `kubevirt_vmrs` variable.
-    - `kubevirt_vmpreset_facts`: Gather information about a given VirtualMachine and store it on `kubevirt_vmpreset` variable.
-    - `kubevirt_ovm_status`: Set an OfflineVirtualMachine to either `running` or `stopped`.
-    - `kubevirt_scale_vmrs`: Scale up or down a VirtualMachineReplilcaSet.
+    - `kubevirt_vmirs_facts`: Gather information about a given VirtualMachineInstanceReplicaSet and store it on `kubevirt_vmirs` variable.
+    - `kubevirt_vmipreset_facts`: Gather information about a given VirtualMachineInstancePreset and store it on `kubevirt_vmipreset` variable.
+    - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
+    - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
 - `tests`: Ansible playbook examples and unit tests
 
 ## Requirements
@@ -64,14 +64,14 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 
 ## Playbook examples
 
+* [Virtual Machine Instance](tests/raw_vmi.yml)
 * [Virtual Machine](tests/raw_vm.yml)
-* [Offline Virtual Machine](tests/raw_ovm.yml)
-* [Virtual Machine ReplicaSet](tests/raw_vmrs.yml)
-* [Stop Offline Virtual Machine](tests/kubevirt_ovm_stopped.yml)
-* [Scale Virtual Machine Replica Set](tests/kubevirt_scale_vmrs.yml)
+* [Virtual Machine Instance ReplicaSet](tests/raw_vmirs.yml)
+* [Stop Virtual Machine](tests/kubevirt_vm_stopped.yml)
+* [Scale Virtual Machine Instance Replica Set](tests/kubevirt_scale_vmirs.yml)
+* [Virtual Machine Instance facts](tests/kubevirt_vmi_facts.yml)
 * [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
-* [Offline Virtual Machine facts](tests/kubevirt_ovm_facts.yml)
-* [Virtual Machine Replica Set facts](tests/kubevirt_vmrs_facts.yml)
+* [Virtual Machine Instance ReplicaSet facts](tests/kubevirt_vmirs_facts.yml)
 
 ## Local testing
 
@@ -149,7 +149,7 @@ $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/*yml
 ```
 
-10. The playbook examples, `tests/raw_vm.yml`, `tests/raw_ovm.yml` and `tests/raw_vmrs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
+10. The playbook examples, `tests/raw_vmi.yml`, `tests/raw_vm.yml` and `tests/raw_vmirs.yml` include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration and can be accessed by SSH as follows:
 
 ```shell
 $ kubectl get all

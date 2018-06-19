@@ -11,35 +11,33 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: kubevirt_ovm_status
+module: kubevirt_vm_status
 
-short_description: Manage KubeVirt Offline VM state
+short_description: Manage KubeVirt VM state
 
 version_added: "2.5"
 
 author: KubeVirt Team (@kubevirt)
 
 description:
-  - "Use Kubernets Python SDK to manage the state of KubeVirt Offline
-     VirtualMachines."
+  - Use Kubernets Python SDK to manage the state of KubeVirt VirtualMachines.
 
 options:
     state:
         description:
-            - "Set the Offline VirtualMachine to either (C(running)) or
-            (C(stopped))."
+            - Set the VirtualMachine to either (C(running)) or (C(stopped)).
         required: false
         default: "running"
         choices: ["running", "stopped"]
         type: str
     name:
         description:
-            - Name of the Offline VirtualMachine.
+            - Name of the VirtualMachine.
         required: true
         type: str
     namespace:
         description:
-            - Namespace where the Offline VirtualMachine exists.
+            - Namespace where the VirtualMachine exists.
         required: true
         type: str
     api_version:
@@ -47,7 +45,7 @@ options:
             - KubeVirt API version to use.
         required: false
         type: str
-        default: v1alpha1
+        default: v1alpha2
     verify_ssl:
         description:
             - Whether to verify SSL certificate.
@@ -61,8 +59,8 @@ requirements:
 '''
 
 EXAMPLES = '''
-- name: Set baldr OVM running
-  kubevirt_ovm_status:
+- name: Set baldr VM running
+  kubevirt_vm_status:
     state: running
     name: baldr
     namespace: vms
@@ -89,7 +87,7 @@ def main():
         'namespace': dict({'required': True, 'type': 'str'}),
         'api_version': dict({
             'required': False,
-            'default': 'v1alpha1',
+            'default': 'v1alpha2',
             'type': 'str'
         }),
         'verify_ssl': dict({
@@ -109,7 +107,7 @@ def main():
     api_client = kubernetes.client.ApiClient(configuration=configuration)
     api_instance = kubernetes.client.CustomObjectsApi(api_client=api_client)
     group = 'kubevirt.io'
-    plural = 'offlinevirtualmachines'
+    plural = 'virtualmachines'
     version = module.params.get('api_version')
     namespace = module.params.get('namespace')
     name = module.params.get('name')

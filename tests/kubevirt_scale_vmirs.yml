@@ -1,11 +1,11 @@
 ---
-- name: Stop baldr OVM in vms namespace
+- name: Scale freyja replicaset to three
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_ovm_status:
-        state: stopped
-        name: baldr
+    - kubevirt_scale_vmirs:
+        replicas: 3
+        name: freyja
         namespace: vms

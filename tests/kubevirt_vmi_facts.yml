@@ -1,12 +1,12 @@
 ---
-- name: Gather facts for freyja VirtualMachineReplicaSet
+- name: Gather facts for jhendrix VirtualMachine
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_vmrs_facts:
-        name: freyja
+    - kubevirt_vmi_facts:
+        name: jhendrix
         namespace: vms
     - debug:
-        var: kubevirt_vmrs
+        var: kubevirt_vmi

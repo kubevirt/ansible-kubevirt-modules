@@ -24,11 +24,11 @@ class TestMyModule(object):
         mock_raw.return_value = {'params': args_present}
         set_module_args(args_present)
         k = raw.KubeVirtRawModule()
-        assert k.kind == 'virtual_machine'
+        assert k.kind == 'virtual_machine_instance'
         assert isinstance(k.params, dict)
 
-    @patch('helper.VirtualMachineHelper.create')
-    @patch('helper.VirtualMachineHelper.exists')
+    @patch('helper.VirtualMachineInstanceHelper.create')
+    @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
     def test_execute_module_with_present(self,
                                          mock_exit_json,
@@ -43,7 +43,7 @@ class TestMyModule(object):
         mock_create.assert_called_once_with(None, 'vms')
         mock_exit_json.assert_called_once_with(changed=True, result={})
 
-    @patch('helper.VirtualMachineHelper.exists')
+    @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
     def test_execute_module_with_present_existing(self,
                                                   mock_exit_json,
@@ -55,8 +55,8 @@ class TestMyModule(object):
         k.execute_module()
         mock_exit_json.assert_called_once_with(changed=False, result={})
 
-    @patch('helper.VirtualMachineHelper.replace')
-    @patch('helper.VirtualMachineHelper.exists')
+    @patch('helper.VirtualMachineInstanceHelper.replace')
+    @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
     def test_execute_module_with_present_existing_with_force(self,
                                                              mock_exit_json,
@@ -72,8 +72,8 @@ class TestMyModule(object):
         mock_replace.assert_called_once_with(None, 'vms', 'testvm')
         mock_exit_json.assert_called_once_with(changed=True, result={})
 
-    @patch('helper.VirtualMachineHelper.delete')
-    @patch('helper.VirtualMachineHelper.exists')
+    @patch('helper.VirtualMachineInstanceHelper.delete')
+    @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
     def test_execute_module_with_absent(self,
                                         mock_exit_json,
@@ -88,7 +88,7 @@ class TestMyModule(object):
         mock_delete.assert_called_once_with('testvm', 'vms')
         mock_exit_json.assert_called_once_with(changed=True, result={})
 
-    @patch('helper.VirtualMachineHelper.exists')
+    @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
     def test_execute_module_with_absent_non_existing(self,
                                                      mock_exit_json,

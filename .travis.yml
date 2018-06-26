@@ -5,8 +5,6 @@ python:
 cache: pip
 env:
   - KUBECONFIG=tests/k8s/config
-before_install:
-  - sudo apt-get update -qq
 install:
   - pip install -r requirements-dev.txt
 script:
@@ -14,7 +12,10 @@ script:
   - flake8 --ignore=E402 lib/ansible/modules
   - flake8 --ignore=E402 lib/ansible/module_utils
 branches:
+  # Build only tags matching vX.Y.Z-something, PRs should still be tested as it's configured directly on Travis-CI
+  # https://docs.travis-ci.com/user/customizing-the-build/#Safelisting-or-blocklisting-branches
+  # https://docs.travis-ci.com/user/customizing-the-build/#Using-regular-expressions
   only:
-    - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/

@@ -6,10 +6,10 @@ from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
 
-USER_VM = '''
+USER_VMI = '''
 {
-    "apiVersion": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachine",
+    "apiVersion": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstance",
     "metadata": {
         "name": "jhendrix",
         "namespace": "vms"
@@ -59,13 +59,13 @@ USER_VM = '''
 }
 '''
 
-VM_BODY = '''
+VMI_BODY = '''
 {
-    "api_version": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachine",
+    "api_version": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstance",
     "metadata": {
         "annotations": {
-            "presets.virtualmachines.kubevirt.io/presets-applied": "kubevirt.io/v1alpha1"
+            "presets.virtualmachineinstances.kubevirt.io/presets-applied": "kubevirt.io/v1alpha2"
         },
         "creation_timestamp": "2018-05-28T16:29:00Z",
         "finalizers": [
@@ -75,7 +75,7 @@ VM_BODY = '''
         "name": "jhendrix",
         "namespace": "vms",
         "resource_version": "177913",
-        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachines/jhendrix",
+        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachineinstances/jhendrix",
         "uid": "3a3e401f-6294-11e8-b0c9-5254009a8783"
     },
     "spec": {
@@ -126,15 +126,15 @@ VM_BODY = '''
 }
 '''
 
-USER_OVM = '''
+USER_VM = '''
 {
-    "apiVersion": "kubevirt.io/v1alpha1",
-    "kind": "OfflineVirtualMachine",
+    "apiVersion": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachine",
     "metadata": {
         "name": "baldr",
         "namespace": "vms",
         "labels": {
-            "kubevirt.io/ovm": "baldr"
+            "kubevirt.io/vm": "baldr"
         }
     },
     "spec": {
@@ -142,7 +142,7 @@ USER_OVM = '''
         "template": {
             "metadata": {
                 "labels": {
-                    "kubevirt.io/ovm": "baldr"
+                    "kubevirt.io/vm": "baldr"
                 }
             },
             "spec": {
@@ -192,20 +192,20 @@ USER_OVM = '''
 }
 '''
 
-OVM_BODY = '''
+VM_BODY = '''
 {
-    "api_version": "kubevirt.io/v1alpha1",
-    "kind": "OfflineVirtualMachine",
+    "api_version": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachine",
     "metadata": {
         "creation_timestamp": "2018-05-29T16:20:14Z",
         "generation": 1,
         "labels": {
-            "kubevirt.io/ovm": "baldr"
+            "kubevirt.io/vm": "baldr"
         },
         "name": "baldr",
         "namespace": "vms",
         "resource_version": "270363",
-        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/offlinevirtualmachines/baldr",
+        "self_link": "/apis/kubevirt.io/v1alpha2/namespaces/vms/virtualmachines/baldr",
         "uid": "2b2e31cc-635c-11e8-9b52-5254009a8783"
     },
     "spec": {
@@ -213,7 +213,7 @@ OVM_BODY = '''
         "template": {
             "metadata": {
                 "labels": {
-                    "kubevirt.io/ovm": "baldr"
+                    "kubevirt.io/vm": "baldr"
                 }
             },
             "spec": {
@@ -268,10 +268,10 @@ OVM_BODY = '''
 '''
 
 
-USER_VMRS = '''
+USER_VMIRS = '''
 {
-    "apiVersion": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachineReplicaSet",
+    "apiVersion": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstanceReplicaSet",
     "metadata": {
         "name": "freyja",
         "namespace": "vms"
@@ -337,17 +337,17 @@ USER_VMRS = '''
 }
 '''
 
-VMRS_BODY = '''
+VMIRS_BODY = '''
 {
-    "api_version": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachineReplicaSet",
+    "api_version": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstanceReplicaSet",
     "metadata": {
         "creation_timestamp": "2018-05-29T16:37:20Z",
         "generation": 1,
         "name": "freyja",
         "namespace": "vms",
         "resource_version": "272140",
-        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachinereplicasets/freyja",
+        "self_link": "/apis/kubevirt.io/v1alpha2/namespaces/vms/virtualmachineinstancereplicasets/freyja",
         "uid": "8eac7d2c-635e-11e8-9b52-5254009a8783"
     },
     "spec": {
@@ -414,10 +414,10 @@ VMRS_BODY = '''
 }
 '''
 
-USER_VMPS = '''
+USER_VMIPS = '''
 {
-    "apiVersion": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachinePreset",
+    "apiVersion": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstancePreset",
     "metadata": {
         "name": "vmps-small"
     },
@@ -449,17 +449,17 @@ USER_VMPS = '''
 }
 '''
 
-VMPS_BODY = '''
+VMIPS_BODY = '''
 {
-    "api_version": "kubevirt.io/v1alpha1",
-    "kind": "VirtualMachinePreset",
+    "api_version": "kubevirt.io/v1alpha2",
+    "kind": "VirtualMachineInstancePreset",
     "metadata": {
         "creation_timestamp": "2018-06-01T17:13:03Z",
         "generation": 1,
         "name": "vmps-small",
         "namespace": "vms",
         "resource_version": "20928",
-        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachinepresets/vmps-small",
+        "self_link": "/apis/kubevirt.io/v1alpha1/namespaces/vms/virtualmachineinstancepresets/vmps-small",
         "uid": "0ad9edf0-65bf-11e8-b964-52540024b209"
     },
     "spec": {
@@ -495,7 +495,8 @@ VMPS_BODY = '''
 def args_present():
     """ yield basic argument_spec for state present """
     args = dict(
-        state='present', kind='VirtualMachine', name='testvm', namespace='vms')
+        state='present', kind='VirtualMachineInstance',
+        name='testvm', namespace='vms')
     yield args
     del args
 
@@ -504,9 +505,24 @@ def args_present():
 def args_absent():
     """ yield basic argument_spec for state absent """
     args = dict(
-        state='absent', kind='VirtualMachine', name='testvm', namespace='vms')
+        state='absent', kind='VirtualMachineInstance',
+        name='testvm', namespace='vms')
     yield args
     del args
+
+
+@pytest.fixture(scope='module')
+def user_vmi():
+    json_dict = json.loads(USER_VMI)
+    vm = kubevirt.V1VirtualMachineInstance(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec'),
+        status=json_dict.get('status')
+    )
+    yield vm
+    del vm
 
 
 @pytest.fixture(scope='module')
@@ -524,44 +540,44 @@ def user_vm():
 
 
 @pytest.fixture(scope='module')
-def user_ovm():
-    json_dict = json.loads(USER_OVM)
-    ovm = kubevirt.V1OfflineVirtualMachine(
+def user_vmirs():
+    json_dict = json.loads(USER_VMIRS)
+    vmirs = kubevirt.V1VirtualMachineInstanceReplicaSet(
         api_version=json_dict.get('api_version'),
         kind=json_dict.get('kind'),
         metadata=json_dict.get('metadata'),
         spec=json_dict.get('spec'),
         status=json_dict.get('status')
     )
-    yield ovm
-    del ovm
+    yield vmirs
+    del vmirs
 
 
 @pytest.fixture(scope='module')
-def user_vmrs():
-    json_dict = json.loads(USER_VMRS)
-    vmrs = kubevirt.V1VirtualMachineReplicaSet(
-        api_version=json_dict.get('api_version'),
-        kind=json_dict.get('kind'),
-        metadata=json_dict.get('metadata'),
-        spec=json_dict.get('spec'),
-        status=json_dict.get('status')
-    )
-    yield vmrs
-    del vmrs
-
-
-@pytest.fixture(scope='module')
-def user_vmps():
-    json_dict = json.loads(USER_VMPS)
-    vmps = kubevirt.V1VirtualMachinePreset(
+def user_vmips():
+    json_dict = json.loads(USER_VMIPS)
+    vmips = kubevirt.V1VirtualMachineInstancePreset(
         api_version=json_dict.get('api_version'),
         kind=json_dict.get('kind'),
         metadata=json_dict.get('metadata'),
         spec=json_dict.get('spec')
     )
-    yield vmps
-    del vmps
+    yield vmips
+    del vmips
+
+
+@pytest.fixture(scope='module')
+def json_to_vmi():
+    json_dict = json.loads(VMI_BODY)
+    vmi = kubevirt.V1VirtualMachineInstance(
+        api_version=json_dict.get('api_version'),
+        kind=json_dict.get('kind'),
+        metadata=json_dict.get('metadata'),
+        spec=json_dict.get('spec'),
+        status=json_dict.get('status')
+    )
+    yield vmi
+    del vmi
 
 
 @pytest.fixture(scope='module')
@@ -579,44 +595,30 @@ def json_to_vm():
 
 
 @pytest.fixture(scope='module')
-def json_to_ovm():
-    json_dict = json.loads(OVM_BODY)
-    ovm = kubevirt.V1OfflineVirtualMachine(
+def json_to_vmirs():
+    json_dict = json.loads(VMIRS_BODY)
+    vmirs = kubevirt.V1VirtualMachineInstanceReplicaSet(
         api_version=json_dict.get('api_version'),
         kind=json_dict.get('kind'),
         metadata=json_dict.get('metadata'),
         spec=json_dict.get('spec'),
         status=json_dict.get('status')
     )
-    yield ovm
-    del ovm
+    yield vmirs
+    del vmirs
 
 
 @pytest.fixture(scope='module')
-def json_to_vmrs():
-    json_dict = json.loads(VMRS_BODY)
-    vmrs = kubevirt.V1VirtualMachineReplicaSet(
-        api_version=json_dict.get('api_version'),
-        kind=json_dict.get('kind'),
-        metadata=json_dict.get('metadata'),
-        spec=json_dict.get('spec'),
-        status=json_dict.get('status')
-    )
-    yield vmrs
-    del vmrs
-
-
-@pytest.fixture(scope='module')
-def json_to_vmps():
-    json_dict = json.loads(VMPS_BODY)
-    vmps = kubevirt.V1VirtualMachinePreset(
+def json_to_vmips():
+    json_dict = json.loads(VMIPS_BODY)
+    vmips = kubevirt.V1VirtualMachineInstancePreset(
         api_version=json_dict.get('api_version'),
         kind=json_dict.get('kind'),
         metadata=json_dict.get('metadata'),
         spec=json_dict.get('spec')
     )
-    yield vmps
-    del vmps
+    yield vmips
+    del vmips
 
 
 def pytest_configure(config):

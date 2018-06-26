@@ -11,9 +11,9 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: kubevirt_scale_vmrs
+module: kubevirt_scale_vmirs
 
-short_description: Scale up or down KubeVirt VM ReplicaSet
+short_description: Scale up or down KubeVirt VMI ReplicaSet
 
 version_added: "2.5"
 
@@ -21,17 +21,17 @@ author: KubeVirt Team (@kubevirt)
 
 description:
   - "Use Kubernets Python SDK to scale up or down KubeVirt
-     VirtualMachine ReplicaSet."
+     VirtualMachineInstance ReplicaSet."
 
 options:
     name:
         description:
-            - Name of the VirtualMachine ReplicaSet.
+            - Name of the VirtualMachineInstance ReplicaSet.
         required: true
         type: str
     namespace:
         description:
-            - Namespace where the VirtualMachine ReplicaSet exists.
+            - Namespace where the VirtualMachineInstance ReplicaSet exists.
         required: true
         type: str
     replicas:
@@ -44,7 +44,7 @@ options:
             - KubeVirt API version to use.
         required: false
         type: str
-        default: v1alpha1
+        default: v1alpha2
     verify_ssl:
         description:
             - Whether to verify SSL certificate.
@@ -59,7 +59,7 @@ requirements:
 
 EXAMPLES = '''
 - name: Set freyja replicas to 2
-  kubevirt_scale_vmrs:
+  kubevirt_scale_vmirs:
     name: baldr
     namespace: vms
     replicas: 2
@@ -82,7 +82,7 @@ def main():
         'replicas': dict({'required': True, 'type': 'int'}),
         'api_version': dict({
             'required': False,
-            'default': 'v1alpha1',
+            'default': 'v1alpha2',
             'type': 'str'
         }),
         'verify_ssl': dict({
@@ -102,7 +102,7 @@ def main():
     api_client = kubernetes.client.ApiClient(configuration=configuration)
     api_instance = kubernetes.client.CustomObjectsApi(api_client=api_client)
     group = 'kubevirt.io'
-    plural = 'virtualmachinereplicasets'
+    plural = 'virtualmachineinstancereplicasets'
     version = module.params.get('api_version')
     namespace = module.params.get('namespace')
     name = module.params.get('name')

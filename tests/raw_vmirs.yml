@@ -1,5 +1,5 @@
 ---
-- name: Deploy an OVM with cloud-init data
+- name: Deploy a VMRS with cloud-init data
   hosts: localhost
   connection: local
   vars:
@@ -7,23 +7,25 @@
   tasks:
     - kubevirt_raw:
        state: present
-       name: baldr
+       name: freyja
        namespace: vms
        verify_ssl: no
        inline:
-         apiVersion: kubevirt.io/v1alpha1
-         kind: OfflineVirtualMachine
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachineInstanceReplicaSet
          metadata:
-           name: baldr
+           name: freyja
            namespace: vms
-           labels:
-             kubevirt.io/ovm: baldr
          spec:
-           running: true
+           replicas: 2
+           selector:
+             matchLabels:
+               rs: freyjars
            template:
              metadata:
+               name: freyja
                labels:
-                 kubevirt.io/ovm: baldr
+                 rs: freyjars
              spec:
                domain:
                  resources:

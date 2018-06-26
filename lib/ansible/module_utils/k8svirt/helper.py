@@ -81,14 +81,14 @@ def to_snake(name):
 
 def get_helper(client, kind):
     """ Factory method for KubeVirt resources """
-    if kind == 'virtual_machine':
+    if kind == 'virtual_machine_instance':
+        return VirtualMachineInstanceHelper(client)
+    elif kind == 'virtual_machine':
         return VirtualMachineHelper(client)
-    elif kind == 'offline_virtual_machine':
-        return OfflineVirtualMachineHelper(client)
-    elif kind == 'virtual_machine_replica_set':
-        return VirtualMachineReplicaSetHelper(client)
-    elif kind == 'virtual_machine_preset':
-        return VirtualMachinePreSetHelper(client)
+    elif kind == 'virtual_machine_instance_replica_set':
+        return VirtualMachineInstanceReplicaSetHelper(client)
+    elif kind == 'virtual_machine_instance_preset':
+        return VirtualMachineInstancePreSetHelper(client)
     # FIXME: find/create a better exception (AnsibleModuleError?)
     raise Exception('Unknown kind %s' % kind)
 
@@ -99,9 +99,48 @@ def _resource_version(current):
     return current.metadata.resource_version
 
 
+class VirtualMachineInstanceHelper(object):
+    """ Helper class for VirtualMachineInstance resources """
+    def __init__(self, client):
+        self.__client = client
+
+    def create(self, body, namespace):
+        """ Create VirtualMachineInstance resource """
+        vmi_body = sdk.V1VirtualMachineInstance().to_dict()
+        vmi_body.update(copy.deepcopy(body))
+        return self.__client.create_namespaced_virtual_machine_instance(
+            vmi_body, namespace)
+
+    def delete(self, name, namespace):
+        """ Delete VirtualMachineInstance resource """
+        return self.__client.delete_namespaced_virtual_machine_instance(
+            V1DeleteOptions(), namespace, name)
+
+    def exists(self, name, namespace):
+        """ Return VirtualMachineInstance resource, if exists """
+        return self.__client.read_namespaced_virtual_machine_instance(
+            name, namespace, exact=True)
+
+    def replace(self, body, namespace, name):
+        """ Replace VirtualMachineInstance resource """
+        current = self.exists(name, namespace)
+        vmi_body = sdk.V1VirtualMachineInstance(
+            api_version=body.get('apiVersion'),
+            kind=body.get('kind'),
+            metadata=body.get('metadata'),
+            spec=body.get('spec')
+        )
+        res_version = _resource_version(current)
+        vmi_body.metadata['resourceVersion'] = res_version
+        vmi_body.status = current.status
+        return self.__client.replace_namespaced_virtual_machine_instance(
+            vmi_body, namespace, name)
+
+
 class VirtualMachineHelper(object):
     """ Helper class for VirtualMachine resources """
     def __init__(self, client):
+        """ Class constructor """
         self.__client = client
 
     def create(self, body, namespace):
@@ -137,117 +176,83 @@ class VirtualMachineHelper(object):
             vm_body, namespace, name)
 
 
-class OfflineVirtualMachineHelper(object):
-    """ Helper class for OfflineVirtualMachine resources """
+class VirtualMachineInstanceReplicaSetHelper(object):
+    """ Helper class for VirtualMachineInstanceReplicaSet resources """
     def __init__(self, client):
         """ Class constructor """
         self.__client = client
 
     def create(self, body, namespace):
-        """ Create OfflineVirtualMachine resource """
-        ovm_body = sdk.V1OfflineVirtualMachine().to_dict()
-        ovm_body.update(copy.deepcopy(body))
-        return self.__client.create_namespaced_offline_virtual_machine(
-            ovm_body, namespace)
+        """ Create VirtualMachineInstanceReplicaSet resource """
+        vmirs_body = sdk.V1VirtualMachineInstanceReplicaSet().to_dict()
+        vmirs_body.update(copy.deepcopy(body))
+        return (self.__client.
+                create_namespaced_virtual_machine_instance_replica_set(
+                    vmirs_body, namespace))
 
     def delete(self, name, namespace):
-        """ Delete OfflineVirtualMachine resource """
-        return self.__client.delete_namespaced_offline_virtual_machine(
-            V1DeleteOptions(), namespace, name)
+        """ Delete VirtualMachineInstanceReplicaSet resource """
+        return (self.__client.
+                delete_namespaced_virtual_machine_instance_replica_set(
+                    V1DeleteOptions(), namespace, name))
 
     def exists(self, name, namespace):
-        """ Return OfflineVirtualMachine resource, if exists """
-        return self.__client.read_namespaced_offline_virtual_machine(
-            name, namespace, exact=True)
+        """ Return VirtualMachineInstanceReplicaSet resource, if exists """
+        return (self.__client.
+                read_namespaced_virtual_machine_instance_replica_set(
+                    name, namespace, exact=True))
 
     def replace(self, body, namespace, name):
-        """ Replace OfflineVirtualMachine resource """
+        """ Replace VirtualMachineInstanceReplicaSet """
         current = self.exists(name, namespace)
-        ovm_body = sdk.V1OfflineVirtualMachine(
+        vmirs_body = sdk.V1VirtualMachineInstanceReplicaSet(
             api_version=body.get('apiVersion'),
             kind=body.get('kind'),
             metadata=body.get('metadata'),
             spec=body.get('spec')
         )
         res_version = _resource_version(current)
-        ovm_body.metadata['resourceVersion'] = res_version
-        ovm_body.status = current.status
-        return self.__client.replace_namespaced_offline_virtual_machine(
-            ovm_body, namespace, name)
+        vmirs_body.metadata['resourceVersion'] = res_version
+        vmirs_body.status = current.status
+        return (self.__client.
+                replace_namespaced_virtual_machine_instance_replica_set(
+                    vmirs_body, namespace, name))
 
 
-class VirtualMachineReplicaSetHelper(object):
-    """ Helper class for VirtualMachineReplicaSet resources """
+class VirtualMachineInstancePreSetHelper(object):
+    """ Helper class for VirtualMachineInstancePreSet resources """
     def __init__(self, client):
         """ Class constructor """
         self.__client = client
 
     def create(self, body, namespace):
-        """ Create VirtualMachine resource """
-        ovm_body = sdk.V1VirtualMachineReplicaSet().to_dict()
-        ovm_body.update(copy.deepcopy(body))
-        return self.__client.create_namespaced_virtual_machine_replica_set(
-            ovm_body, namespace)
-
-    def delete(self, name, namespace):
-        """ Delete VirtualMachine resource """
-        return self.__client.delete_namespaced_virtual_machine_replica_set(
-            V1DeleteOptions(), namespace, name)
-
-    def exists(self, name, namespace):
-        """ Return VirtualMachine resource, if exists """
-        return self.__client.read_namespaced_virtual_machine_replica_set(
-            name, namespace, exact=True)
-
-    def replace(self, body, namespace, name):
-        """ Replace Virtual Machine ReplicaSet """
-        current = self.exists(name, namespace)
-        vmrs_body = sdk.V1VirtualMachineReplicaSet(
-            api_version=body.get('apiVersion'),
-            kind=body.get('kind'),
-            metadata=body.get('metadata'),
-            spec=body.get('spec')
-        )
-        res_version = _resource_version(current)
-        vmrs_body.metadata['resourceVersion'] = res_version
-        vmrs_body.status = current.status
-        return self.__client.replace_namespaced_virtual_machine_replica_set(
-            vmrs_body, namespace, name)
-
-
-class VirtualMachinePreSetHelper(object):
-    """ Helper class for VirtualMachinePreSet resources """
-    def __init__(self, client):
-        """ Class constructor """
-        self.__client = client
-
-    def create(self, body, namespace):
-        """ Create VirtualMachinePreset resource """
-        vmps_body = sdk.V1VirtualMachinePreset().to_dict()
+        """ Create VirtualMachineInstancePreset resource """
+        vmps_body = sdk.V1VirtualMachineInstancePreset().to_dict()
         vmps_body.update(copy.deepcopy(body))
-        return self.__client.create_namespaced_virtual_machine_preset(
+        return self.__client.create_namespaced_virtual_machine_instance_preset(
             vmps_body, namespace)
 
     def delete(self, name, namespace):
-        """ Delete VirtualMachine resource """
-        return self.__client.delete_namespaced_virtual_machine_preset(
+        """ Delete VirtualMachineInstancePreset resource """
+        return self.__client.delete_namespaced_virtual_machine_instance_preset(
             V1DeleteOptions(), namespace, name)
 
     def exists(self, name, namespace):
-        """ Return VirtualMachinePreset resource, if exists """
-        return self.__client.read_namespaced_virtual_machine_preset(
+        """ Return VirtualMachineInstancePreset resource, if exists """
+        return self.__client.read_namespaced_virtual_machine_instance_preset(
             name, namespace, exact=True)
 
     def replace(self, body, namespace, name):
-        """ Replace VirtualMachinePreSet """
+        """ Replace VirtualMachineInstancePreSet """
         current = self.exists(name, namespace)
-        vmps_body = sdk.V1VirtualMachinePreset(
+        vmips_body = sdk.V1VirtualMachineInstancePreset(
             api_version=body.get('apiVersion'),
             kind=body.get('kind'),
             metadata=body.get('metadata'),
             spec=body.get('spec')
         )
         res_version = _resource_version(current)
-        vmps_body.metadata['resourceVersion'] = res_version
-        return self.__client.replace_namespaced_virtual_machine_preset(
-            vmps_body, namespace, name)
+        vmips_body.metadata['resourceVersion'] = res_version
+        return (self.__client.
+                replace_namespaced_virtual_machine_instance_preset(
+                    vmips_body, namespace, name))

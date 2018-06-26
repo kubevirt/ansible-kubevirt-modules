@@ -17,6 +17,17 @@ def set_module_args(args):
 
 
 class TestFacts(object):
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_instance')
+    def test_facts_for_virtual_machine_instance(self,
+                                                mock_read,
+                                                json_to_vmi):
+        args = dict(name='testvmi', namespace='vms')
+        set_module_args(args)
+        vmi_facts = facts.KubeVirtFacts(kind='virtual_machine_instance')
+        vmi_facts.execute_module()
+        mock_read.return_value = json_to_vmi
+        mock_read.assert_called_once_with('testvmi', 'vms', exact=True)
+
     @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine')
     def test_facts_for_virtual_machine(self,
                                        mock_read,
@@ -28,27 +39,17 @@ class TestFacts(object):
         mock_read.return_value = json_to_vm
         mock_read.assert_called_once_with('testvm', 'vms', exact=True)
 
-    @patch('kubevirt.DefaultApi.read_namespaced_offline_virtual_machine')
-    def test_facts_for_offline_virtual_machine(self,
-                                               mock_read,
-                                               json_to_ovm):
-        args = dict(name='testovm', namespace='vms')
+    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_instance_replica_set')
+    def test_facts_for_virtual_machine_instance_replica_set(self,
+                                                            mock_read,
+                                                            json_to_vmirs):
+        args = dict(name='testvmirs', namespace='vms')
         set_module_args(args)
-        ovm_facts = facts.KubeVirtFacts(kind='offline_virtual_machine')
-        ovm_facts.execute_module()
-        mock_read.return_value = json_to_ovm
-        mock_read.assert_called_once_with('testovm', 'vms', exact=True)
-
-    @patch('kubevirt.DefaultApi.read_namespaced_virtual_machine_replica_set')
-    def test_facts_for_virtual_machine_replica_set(self,
-                                                   mock_read,
-                                                   json_to_vmrs):
-        args = dict(name='testvmrs', namespace='vms')
-        set_module_args(args)
-        vm_facts = facts.KubeVirtFacts(kind='virtual_machine_replica_set')
-        vm_facts.execute_module()
-        mock_read.return_value = json_to_vmrs
-        mock_read.assert_called_once_with('testvmrs', 'vms', exact=True)
+        vmirs_facts = facts.KubeVirtFacts(
+            kind='virtual_machine_instance_replica_set')
+        vmirs_facts.execute_module()
+        mock_read.return_value = json_to_vmirs
+        mock_read.assert_called_once_with('testvmirs', 'vms', exact=True)
 
     def test_private_resource_and_list_cleanup(self):
         subdict = dict(

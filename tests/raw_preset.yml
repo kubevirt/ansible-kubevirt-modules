@@ -12,8 +12,8 @@
        verify_ssl: no
        force: yes
        inline:
-         apiVersion: kubevirt.io/v1alpha1
-         kind: VirtualMachinePreset
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachineInstancePreset
          metadata:
            name: vmps-small
          spec:

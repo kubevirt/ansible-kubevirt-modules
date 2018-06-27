@@ -14,19 +14,18 @@ from kubevirt.rest import ApiException
 if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils/k8svirt')
     from common import K8sVirtAnsibleModule
-    from helper import AUTH_ARG_SPEC, FACTS_ARG_SPEC, get_helper
+    from helper import AUTH_ARG_SPEC, FACTS_ARG_SPEC, get_helper, to_snake
 else:
     from ansible.module_utils.k8svirt.helper import get_helper, AUTH_ARG_SPEC,\
-        FACTS_ARG_SPEC
+        FACTS_ARG_SPEC, to_snake
     from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
 
 
 class KubeVirtFacts(K8sVirtAnsibleModule):
     """ KubeVirtFacts common class """
-    def __init__(self, kind, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """ Class constructor """
         self._api_client = None
-        self._kind = kind
         self._kubevirt_obj = None
         super(KubeVirtFacts, self).__init__(*args, **kwargs)
 
@@ -40,16 +39,20 @@ class KubeVirtFacts(K8sVirtAnsibleModule):
     def execute_module(self):
         """ Gather the actual facts """
         self._api_client = self.authenticate()
-        res_helper = get_helper(self._api_client, self._kind)
+        kind = to_snake(self.params.get('kind'))
+        res_helper = get_helper(self._api_client, kind)
         try:
-            self._kubevirt_obj = res_helper.exists(
-                self.params.get('name'), self.params.get('namespace')
+            self._kubevirt_obj = res_helper.list(
+                namespace=self.params.get('namespace'),
+                name=self.params.get('name'),
+                field_selectors=self.params['field_selectors'],
+                label_selectors=self.params['label_selectors']
             )
             self._kubevirt_obj = copy.deepcopy(self.__resource_cleanup())
             return self._kubevirt_obj
         except ApiException as exc:
             self.fail_json(msg='Failed to retrieve requested object',
-                           error=exc.reason)
+                           error=str(exc))
 
     def __resource_cleanup(self, subdict=None):
         """ Cleanup null keys """

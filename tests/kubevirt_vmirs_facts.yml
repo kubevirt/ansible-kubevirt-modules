@@ -1,12 +1,14 @@
 ---
-- name: Gather facts for freyja VirtualMachineReplicaSet
+- name: Gather facts for freyja VirtualMachineInstanceReplicaSet
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_vmirs_facts:
+    - kubevirt_facts:
         name: freyja
         namespace: vms
+        kind: VirtualMachineInstanceReplicaSet
+      register: freyja_vmirs
     - debug:
-        var: kubevirt_vmirs
+        var: freyja_vmirs

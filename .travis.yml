@@ -12,10 +12,12 @@ script:
   - flake8 --ignore=E402 lib/ansible/modules
   - flake8 --ignore=E402 lib/ansible/module_utils
 branches:
+  only:
+  # Build on master, otherwise PRs are not tested.
+    - master
   # Build only tags matching vX.Y.Z-something, PRs should still be tested as it's configured directly on Travis-CI
   # https://docs.travis-ci.com/user/customizing-the-build/#Safelisting-or-blocklisting-branches
   # https://docs.travis-ci.com/user/customizing-the-build/#Using-regular-expressions
-  only:
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/

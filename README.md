@@ -6,10 +6,7 @@
 
 - `lib`: Ansible modules files for KubeVirt management
     - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
-    - `kubevirt_vmi_facts`: Gather information about a given VirtualMachineInstance and store it on `kubevirt_vmi` variable.
-    - `kubevirt_vm_facts`: Gather information about a given VirtualMachine and store it on `kubevirt_vm` variable.
-    - `kubevirt_vmirs_facts`: Gather information about a given VirtualMachineInstanceReplicaSet and store it on `kubevirt_vmirs` variable.
-    - `kubevirt_vmipreset_facts`: Gather information about a given VirtualMachineInstancePreset and store it on `kubevirt_vmipreset` variable.
+    - `kubevirt_facts`: Gather facts about a given resource.
     - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
     - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
 - `tests`: Ansible playbook examples and unit tests
@@ -72,6 +69,7 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 * [Virtual Machine Instance facts](tests/kubevirt_vmi_facts.yml)
 * [Virtual Machine facts](tests/kubevirt_vm_facts.yml)
 * [Virtual Machine Instance ReplicaSet facts](tests/kubevirt_vmirs_facts.yml)
+* [All Virtual Machine Instance facts](tests/kubevirt_all_vmis_facts.yml)
 
 ## Local testing
 
@@ -168,7 +166,7 @@ $ ssh -i tests/kubevirt_rsa -p 27017 kubevirt@172.30.133.9
 
 ### Facts
 
-* Once one of the previous resources has been created, the fact modules can be tested as well as follows:
+* Once one of the previous resources has been created, the facts module can be tested as well as follows:
 
 ```shell
 $ ansible-playbook tests/kubevirt_vm_facts.yml

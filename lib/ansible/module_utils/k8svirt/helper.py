@@ -15,10 +15,28 @@ HELPER_CLASS = {
     'virtual_machine': "VirtualMachineHelper"
 }
 
-FACTS_ARG_SPEC = dict(
-    name=dict(type='str', required=True),
-    namespace=dict(type='str', required=True)
-)
+FACTS_ARG_SPEC = {
+    'name': {
+        'type': 'str',
+        'required': False
+    },
+    'namespace': {
+        'type': 'str',
+        'required': False
+    },
+    'kind': {
+        'type': 'str',
+        'required': False
+    },
+    'label_selectors': {
+        'type': 'list',
+        'default': []
+    },
+    'field_selectors': {
+        'type': 'list',
+        'default': []
+    }
+}
 
 COMMON_ARG_SPEC = {
     'state': {
@@ -121,6 +139,28 @@ class VirtualMachineInstanceHelper(object):
         return self.__client.read_namespaced_virtual_machine_instance(
             name, namespace, exact=True)
 
+    def list(self, namespace=None, name=None, field_selectors=None,
+             label_selectors=None):
+        """ Return a VirtualMachineInstancesList """
+        result = None
+        if name:
+            result = self.exists(name, namespace)
+        elif not namespace:
+            result = self.list_all(field_selectors, label_selectors)
+        else:
+            result = self.__client.list_namespaced_virtual_machine_instance(
+                namespace=namespace,
+                field_selectors=','.join(field_selectors),
+                label_selectors=','.join(label_selectors))
+        return result
+
+    def list_all(self, field_selectors=None, label_selectors=None):
+        """ Return all VirtualMachineInstances in a list """
+        return self.__client.list_virtual_machine_instance_for_all_namespaces(
+            field_selectors=','.join(field_selectors),
+            label_selectors=','.join(label_selectors)
+        )
+
     def replace(self, body, namespace, name):
         """ Replace VirtualMachineInstance resource """
         current = self.exists(name, namespace)
@@ -159,6 +199,28 @@ class VirtualMachineHelper(object):
         """ Return VirtualMachine resource, if exists """
         return self.__client.read_namespaced_virtual_machine(
             name, namespace, exact=True)
+
+    def list(self, namespace=None, name=None, field_selectors=None,
+             label_selectors=None):
+        """ Return a VirtualMachineList """
+        result = None
+        if name:
+            result = self.exists(name, namespace)
+        elif not namespace:
+            result = self.list_all(field_selectors, label_selectors)
+        else:
+            result = self.__client.list_namespaced_virtual_machine(
+                namespace=namespace,
+                field_selectors=','.join(field_selectors),
+                label_selectors=','.join(label_selectors))
+        return result
+
+    def list_all(self, field_selectors=None, label_selectors=None):
+        """ Return all VirtualMachines in a list """
+        return self.__client.list_virtual_machine_for_all_namespaces(
+            field_selectors=','.join(field_selectors),
+            label_selectors=','.join(label_selectors)
+        )
 
     def replace(self, body, namespace, name):
         """ Replace VirtualMachine resource """
@@ -202,6 +264,29 @@ class VirtualMachineInstanceReplicaSetHelper(object):
                 read_namespaced_virtual_machine_instance_replica_set(
                     name, namespace, exact=True))
 
+    def list(self, namespace=None, name=None, field_selectors=None,
+             label_selectors=None):
+        """ Return a VirtualMachineInstanceReplicaSetList """
+        result = None
+        if name:
+            result = self.exists(name, namespace)
+        elif not namespace:
+            result = self.list_all(field_selectors, label_selectors)
+        else:
+            result = (self.__client.
+                      list_namespaced_virtual_machine_instance_replica_set(
+                          namespace=namespace,
+                          field_selectors=','.join(field_selectors),
+                          label_selectors=','.join(label_selectors)))
+        return result
+
+    def list_all(self, field_selectors=None, label_selectors=None):
+        """ Return all VirtualMachineInstanceReplicaSets in a list """
+        return (self.__client.
+                list_virtual_machine_instance_replica_set_for_all_namespaces(
+                    field_selectors=','.join(field_selectors),
+                    label_selectors=','.join(label_selectors)))
+
     def replace(self, body, namespace, name):
         """ Replace VirtualMachineInstanceReplicaSet """
         current = self.exists(name, namespace)
@@ -241,6 +326,29 @@ class VirtualMachineInstancePreSetHelper(object):
         """ Return VirtualMachineInstancePreset resource, if exists """
         return self.__client.read_namespaced_virtual_machine_instance_preset(
             name, namespace, exact=True)
+
+    def list(self, namespace=None, name=None, field_selectors=None,
+             label_selectors=None):
+        """ Return a VirtualMachineInstancePresetList """
+        result = None
+        if name:
+            result = self.exists(name, namespace)
+        elif not namespace:
+            result = self.list_all(field_selectors, label_selectors)
+        else:
+            result = (self.__client.
+                      list_namespaced_virtual_machine_instance_preset(
+                          namespace=namespace,
+                          field_selectors=','.join(field_selectors),
+                          label_selectors=','.join(label_selectors)))
+        return result
+
+    def list_all(self, field_selectors=None, label_selectors=None):
+        """ Return all VirtualMachineInstancePresets in a list """
+        return (self.__client.
+                list_virtual_machine_instance_preset_for_all_namespaces(
+                    field_selectors=','.join(field_selectors),
+                    label_selectors=','.join(label_selectors)))
 
     def replace(self, body, namespace, name):
         """ Replace VirtualMachineInstancePreSet """

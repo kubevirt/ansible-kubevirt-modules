@@ -21,9 +21,10 @@ class TestFacts(object):
     def test_facts_for_virtual_machine_instance(self,
                                                 mock_read,
                                                 json_to_vmi):
-        args = dict(name='testvmi', namespace='vms')
+        args = dict(
+            name='testvmi', namespace='vms', kind='virtual_machine_instance')
         set_module_args(args)
-        vmi_facts = facts.KubeVirtFacts(kind='virtual_machine_instance')
+        vmi_facts = facts.KubeVirtFacts()
         vmi_facts.execute_module()
         mock_read.return_value = json_to_vmi
         mock_read.assert_called_once_with('testvmi', 'vms', exact=True)
@@ -32,9 +33,9 @@ class TestFacts(object):
     def test_facts_for_virtual_machine(self,
                                        mock_read,
                                        json_to_vm):
-        args = dict(name='testvm', namespace='vms')
+        args = dict(name='testvm', namespace='vms', kind='virtual_machine')
         set_module_args(args)
-        vm_facts = facts.KubeVirtFacts(kind='virtual_machine')
+        vm_facts = facts.KubeVirtFacts()
         vm_facts.execute_module()
         mock_read.return_value = json_to_vm
         mock_read.assert_called_once_with('testvm', 'vms', exact=True)
@@ -43,10 +44,11 @@ class TestFacts(object):
     def test_facts_for_virtual_machine_instance_replica_set(self,
                                                             mock_read,
                                                             json_to_vmirs):
-        args = dict(name='testvmirs', namespace='vms')
-        set_module_args(args)
-        vmirs_facts = facts.KubeVirtFacts(
+        args = dict(
+            name='testvmirs', namespace='vms',
             kind='virtual_machine_instance_replica_set')
+        set_module_args(args)
+        vmirs_facts = facts.KubeVirtFacts()
         vmirs_facts.execute_module()
         mock_read.return_value = json_to_vmirs
         mock_read.assert_called_once_with('testvmirs', 'vms', exact=True)
@@ -61,7 +63,7 @@ class TestFacts(object):
             key1='value1', key3=list([{'subkey1': 'subvalue1'}])
         )
 
-        vm_facts = facts.KubeVirtFacts(kind='')
+        vm_facts = facts.KubeVirtFacts()
         result = vm_facts._KubeVirtFacts__resource_cleanup(subdict=subdict)
 
         assert result == expected

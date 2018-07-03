@@ -1,12 +1,14 @@
 ---
-- name: Gather facts for jhendrix VirtualMachine
+- name: Gather facts for vmips-small VirtualMachineInstancePreset in vms namespace
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_vmpreset_facts:
-        name: vmps-small
+    - kubevirt_facts:
+        name: vmips-small
         namespace: vms
+        kind: VirtualMachineInstancePreset
+      register: kubevirt_vmips
     - debug:
-        var: kubevirt_vmpreset
+        var: kubevirt_vmips

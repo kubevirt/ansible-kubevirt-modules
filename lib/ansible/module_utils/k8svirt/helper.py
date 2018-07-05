@@ -237,6 +237,11 @@ class VirtualMachineHelper(object):
         return self.__client.replace_namespaced_virtual_machine(
             vm_body, namespace, name)
 
+    def patch(self, body, namespace, name):
+        """ Patch a VirtualMachine resource """
+        return self.__client.patch_namespaced_virtual_machine(
+            body, namespace, name)
+
 
 class VirtualMachineInstanceReplicaSetHelper(object):
     """ Helper class for VirtualMachineInstanceReplicaSet resources """

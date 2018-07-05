@@ -2,5 +2,5 @@ pytest >= 3.6.0, < 4.0.0
 mock >= 2.0.0, < 3.0.0
 flake8 >= 3.5.0, < 4.0.0
 ansible>=2.4.0, < 3.0.0
-git+https://github.com/kubevirt/client-python.git@3e355bd1bd88570377fb91da1251a6a5e7d1ad34
+git+https://github.com/kubevirt/client-python.git@1467e07d0649b1a9f1954f86c0fcd98a2fa2b8ff
 kubernetes >= 6.0.0, < 7.0.0

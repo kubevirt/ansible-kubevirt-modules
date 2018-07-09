@@ -42,11 +42,13 @@ $ export ANSIBLE_LIBRARY=<module_path>/lib/ansible/modules
 
 > **NOTE:** These settings can instead be added to *ansible.cfg* as done in [test/ansible.cfg](tests/ansible.cfg)
 
-3. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
+3. A working [Kubernetes configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is also required. It can also be created by issuing `oc login` if using KubeVirt with OpenShift.
 
-4. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
+4. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
-5. Once installed, add it to a playbook:
+5. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
+
+6. Once installed, add it to a playbook:
 
 ```yaml
 ---

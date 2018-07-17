@@ -14,8 +14,8 @@ from kubevirt.rest import ApiException
 if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils/k8svirt')
     from common import K8sVirtAnsibleModule
-    from helper import AUTH_ARG_SPEC, FACTS_ARG_SPEC, NAME_ARG_SPEC, get_helper,\
-     to_snake
+    from helper import AUTH_ARG_SPEC, FACTS_ARG_SPEC, NAME_ARG_SPEC, \
+        get_helper, to_snake
 else:
     from ansible.module_utils.k8svirt.helper import get_helper, AUTH_ARG_SPEC,\
         FACTS_ARG_SPEC, NAME_ARG_SPEC, to_snake

@@ -13,11 +13,12 @@ if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils/k8svirt')
     from common import K8sVirtAnsibleModule
     from helper import to_snake, RESOURCE_ARG_SPEC, \
-        AUTH_ARG_SPEC, NAME_ARG_SPEC, get_helper
+        AUTH_ARG_SPEC, NAME_ARG_SPEC, STATE_ARG_SPEC, get_helper
 else:
     from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
-    from ansible.module_utils.k8svirt.helper import to_snake,\
-        RESOURCE_ARG_SPEC, AUTH_ARG_SPEC, NAME_ARG_SPEC, get_helper
+    from ansible.module_utils.k8svirt.helper import to_snake, \
+        RESOURCE_ARG_SPEC, AUTH_ARG_SPEC, NAME_ARG_SPEC, \
+        STATE_ARG_SPEC, get_helper
 
 
 from kubevirt.rest import ApiException as KubeVirtApiException
@@ -68,8 +69,9 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     @property
     def argspec(self):
         """ Merge the initial module arguments """
-        argspec = copy.deepcopy(RESOURCE_ARG_SPEC)
+        argspec = copy.deepcopy(STATE_ARG_SPEC)
         argspec.update(copy.deepcopy(NAME_ARG_SPEC))
+        argspec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
         argspec.update(copy.deepcopy(AUTH_ARG_SPEC))
         return argspec
 

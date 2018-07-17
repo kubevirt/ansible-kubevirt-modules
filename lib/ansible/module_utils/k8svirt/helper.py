@@ -11,10 +11,6 @@ import kubevirt as sdk
 
 from kubevirt import V1DeleteOptions
 
-HELPER_CLASS = {
-    'virtual_machine': "VirtualMachineHelper"
-}
-
 NAME_ARG_SPEC = {
     'name': {
         'type': 'str',
@@ -46,6 +42,16 @@ FACTS_ARG_SPEC = {
 }
 
 RESOURCE_ARG_SPEC = {
+    'resource_definition': {
+        'type': 'dict',
+        'aliases': ['definition', 'inline']
+    },
+    'src': {
+        'type': 'path',
+    }
+}
+
+STATE_ARG_SPEC = {
     'state': {
         'default': 'present',
         'choices': ['present', 'absent'],
@@ -53,14 +59,7 @@ RESOURCE_ARG_SPEC = {
     'force': {
         'type': 'bool',
         'default': False,
-    },
-    'resource_definition': {
-        'type': 'dict',
-        'aliases': ['definition', 'inline']
-    },
-    'src': {
-        'type': 'path',
-    },
+    }
 }
 
 AUTH_ARG_SPEC = {

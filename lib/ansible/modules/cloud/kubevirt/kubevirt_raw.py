@@ -25,7 +25,9 @@ description:
   - Authenticate using either a config file, certificates, password or token.
 
 extends_documentation_fragment:
-
+   - kubevirt_name_options
+   - kubevirt_resource_options
+   - kubevirt_auth_options
 
 requirements:
   - python >= 2.7

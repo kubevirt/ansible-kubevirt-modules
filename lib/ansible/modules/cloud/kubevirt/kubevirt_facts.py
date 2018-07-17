@@ -22,6 +22,11 @@ author: KubeVirt Team (@kubevirt)
 description:
   - Retrieve facts about KubeVirt resources
 
+ extends_documentation_fragment:
+   - kubevirt_name_options
+   - kubevirt_facts_options
+   - kubevirt_auth_options
+
 requirements:
   - python >= 2.7
   - kubevirt-python >= v0.6.0-177-gd265c3c

@@ -11,11 +11,7 @@ import kubevirt as sdk
 
 from kubevirt import V1DeleteOptions
 
-HELPER_CLASS = {
-    'virtual_machine': "VirtualMachineHelper"
-}
-
-FACTS_ARG_SPEC = {
+NAME_ARG_SPEC = {
     'name': {
         'type': 'str',
         'required': False
@@ -28,6 +24,13 @@ FACTS_ARG_SPEC = {
         'type': 'str',
         'required': False
     },
+    'api_version': {
+        'default': 'v1',
+        'aliases': ['api', 'version'],
+    }
+}
+
+FACTS_ARG_SPEC = {
     'label_selectors': {
         'type': 'list',
         'default': []
@@ -38,7 +41,17 @@ FACTS_ARG_SPEC = {
     }
 }
 
-COMMON_ARG_SPEC = {
+RESOURCE_ARG_SPEC = {
+    'resource_definition': {
+        'type': 'dict',
+        'aliases': ['definition', 'inline']
+    },
+    'src': {
+        'type': 'path',
+    }
+}
+
+STATE_ARG_SPEC = {
     'state': {
         'default': 'present',
         'choices': ['present', 'absent'],
@@ -46,21 +59,7 @@ COMMON_ARG_SPEC = {
     'force': {
         'type': 'bool',
         'default': False,
-    },
-    'resource_definition': {
-        'type': 'dict',
-        'aliases': ['definition', 'inline']
-    },
-    'src': {
-        'type': 'path',
-    },
-    'kind': {},
-    'name': {},
-    'namespace': {},
-    'api_version': {
-        'default': 'v1',
-        'aliases': ['api', 'version'],
-    },
+    }
 }
 
 AUTH_ARG_SPEC = {

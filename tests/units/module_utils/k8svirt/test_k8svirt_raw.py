@@ -7,6 +7,7 @@ from ansible.compat.tests.mock import patch
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
+from kubevirt import V1VirtualMachineInstance
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/module_utils/k8svirt')
@@ -36,12 +37,13 @@ class TestMyModule(object):
                                          mock_create,
                                          args_present):
         set_module_args(args_present)
-        mock_create.return_value = {}
+        mock_create.return_value = V1VirtualMachineInstance()
         mock_exists.return_value = None
         k = raw.KubeVirtRawModule()
         k.execute_module()
         mock_create.assert_called_once_with(None, 'vms')
-        mock_exit_json.assert_called_once_with(changed=True, result={})
+        mock_exit_json.assert_called_once_with(
+            changed=True, result=V1VirtualMachineInstance().to_dict())
 
     @patch('helper.VirtualMachineInstanceHelper.exists')
     @patch('raw.KubeVirtRawModule.exit_json')
@@ -66,11 +68,12 @@ class TestMyModule(object):
         args_present['force'] = 'yes'
         set_module_args(args_present)
         mock_exists.return_value = dict(name='testvm', namespace='vms')
-        mock_replace.return_value = dict()
+        mock_replace.return_value = V1VirtualMachineInstance()
         k = raw.KubeVirtRawModule()
         k.execute_module()
         mock_replace.assert_called_once_with(None, 'vms', 'testvm')
-        mock_exit_json.assert_called_once_with(changed=True, result={})
+        mock_exit_json.assert_called_once_with(
+            changed=True, result=V1VirtualMachineInstance().to_dict())
 
     @patch('helper.VirtualMachineInstanceHelper.delete')
     @patch('helper.VirtualMachineInstanceHelper.exists')

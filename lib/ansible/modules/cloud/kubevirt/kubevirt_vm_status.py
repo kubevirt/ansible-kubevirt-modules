@@ -15,12 +15,12 @@ module: kubevirt_vm_status
 
 short_description: Manage KubeVirt VM state
 
+description:
+    - Use Kubernets Python SDK to manage the state of KubeVirt VirtualMachines.
+
 version_added: "2.5"
 
 author: KubeVirt Team (@kubevirt)
-
-description:
-  - Use Kubernets Python SDK to manage the state of KubeVirt VirtualMachines.
 
 options:
     state:
@@ -28,7 +28,9 @@ options:
             - Set the VirtualMachine to either (C(running)) or (C(stopped)).
         required: false
         default: "running"
-        choices: ["running", "stopped"]
+        choices:
+            - running
+            - stopped
         type: str
     name:
         description:
@@ -54,19 +56,48 @@ options:
         default: yes
 
 requirements:
-  - python >= 2.7
-  - kubernetes python client >= 6.0.0
+    - python >= 2.7
+    - kubernetes python client >= 6.0.0
 '''
 
 EXAMPLES = '''
 - name: Set baldr VM running
   kubevirt_vm_status:
-    state: running
-    name: baldr
-    namespace: vms
+      state: running
+      name: baldr
+      namespace: vms
 '''
 
-RETURN = ''' # '''
+RETURN = '''
+result:
+    description:
+        - When replica number is different, otherwise empty.
+    returned: success
+    type: complex
+    contains:
+        api_version:
+            description: "Version of the schema being used for managing
+                          the defined resource."
+            returned: success
+            type: str
+        kind:
+            description: The resource type being managed.
+            returned: success
+            type: str
+        metadata:
+            description: Standard resource metadata, e.g. name, namespace, etc.
+            returned: success
+            type: complex
+        spec:
+            description: "Set of resource attributes, can vary based
+                          on the I(api_version)."
+            returned: success
+            type: complex
+        status:
+            description: Current status details for the resource.
+            returned: success
+            type: complex
+'''
 
 import kubernetes.client
 from ansible.module_utils.basic import AnsibleModule
@@ -125,7 +156,7 @@ def main():
 
         api_response = api_instance.patch_namespaced_custom_object(
             group, version, namespace, plural, name, body)
-        module.exit_json(changed=True, meta=api_response)
+        module.exit_json(changed=True, result=api_response)
     except ApiException as exc:
         module.fail_json(msg='Failed to manage requested object',
                          error=exc.reason)

@@ -53,19 +53,48 @@ options:
         default: yes
 
 requirements:
-  - python >= 2.7
-  - kubernetes python client >= 6.0.0
+    - python >= 2.7
+    - kubernetes python client >= 6.0.0
 '''
 
 EXAMPLES = '''
 - name: Set freyja replicas to 2
   kubevirt_scale_vmirs:
-    name: baldr
-    namespace: vms
-    replicas: 2
+      name: baldr
+      namespace: vms
+      replicas: 2
 '''
 
-RETURN = ''' # '''
+RETURN = '''
+result:
+    description:
+        - When replica number is different, otherwise empty.
+    returned: success
+    type: complex
+    contains:
+        api_version:
+            description: "Version of the schema being used for scaling
+                          the defined resource."
+            returned: success
+            type: str
+        kind:
+            description: The resource type being scaled.
+            returned: success
+            type: str
+        metadata:
+            description: Standard resource metadata, e.g. name, namespace, etc.
+            returned: success
+            type: complex
+        spec:
+            description: "Set of resource attributes, can vary based
+                          on the I(api_version)."
+            returned: success
+            type: complex
+        status:
+            description: Current number of replicas.
+            returned: success
+            type: complex
+'''
 
 import kubernetes.client
 from ansible.module_utils.basic import AnsibleModule
@@ -119,7 +148,7 @@ def main():
 
         api_response = api_instance.patch_namespaced_custom_object(
             group, version, namespace, plural, name, body)
-        module.exit_json(changed=True, meta=api_response)
+        module.exit_json(changed=True, result=api_response)
     except ApiException as exc:
         module.fail_json(msg='Failed to manage requested object',
                          error=exc.reason)

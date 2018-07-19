@@ -12,12 +12,12 @@ import sys
 if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils/k8svirt')
     from common import K8sVirtAnsibleModule
-    from helper import to_snake, COMMON_ARG_SPEC, \
-        AUTH_ARG_SPEC, get_helper
+    from helper import to_snake, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, \
+        STATE_ARG_SPEC, AUTH_ARG_SPEC, get_helper
 else:
     from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
-    from ansible.module_utils.k8svirt.helper import to_snake, COMMON_ARG_SPEC,\
-        AUTH_ARG_SPEC, get_helper
+    from ansible.module_utils.k8svirt.helper import to_snake, NAME_ARG_SPEC,\
+        RESOURCE_ARG_SPEC, STATE_ARG_SPEC, AUTH_ARG_SPEC, get_helper
 
 
 from kubevirt.rest import ApiException as KubeVirtApiException
@@ -68,8 +68,10 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     @property
     def argspec(self):
         """ Merge the initial module arguments """
-        argspec = copy.deepcopy(COMMON_ARG_SPEC)
+        argspec = copy.deepcopy(NAME_ARG_SPEC)
         argspec.update(copy.deepcopy(AUTH_ARG_SPEC))
+        argspec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
+        argspec.update(copy.deepcopy(STATE_ARG_SPEC))
         return argspec
 
     def execute_module(self):
@@ -80,16 +82,16 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
 
         if state == 'present':
             if existing and self.params.get('force'):
-                self.__replace()
-                self.exit_json(changed=True, result=dict())
+                meta = self.__replace()
+                self.exit_json(changed=True, result=dict(meta.to_dict()))
             elif existing:
                 self.exit_json(changed=False, result=dict())
             else:
-                self.__create()
-                self.exit_json(changed=True, result=dict())
+                meta = self.__create()
+                self.exit_json(changed=True, result=dict(meta.to_dict()))
         elif state == 'absent':
             if existing:
-                self.__delete()
+                meta = self.__delete()
                 self.exit_json(changed=True, result=dict())
             else:
                 self.exit_json(changed=False, result=dict())
@@ -110,7 +112,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     def __create(self):
         try:
             helper = get_helper(self._api_client, self.kind)
-            helper.create(
+            return helper.create(
                 self.resource_definition, self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to create requested resource',
@@ -119,7 +121,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     def __replace(self):
         try:
             helper = get_helper(self._api_client, self.kind)
-            helper.replace(
+            return helper.replace(
                 self.resource_definition, self.params.get('namespace'),
                 self.params.get('name'))
         except KubeVirtApiException as exc:

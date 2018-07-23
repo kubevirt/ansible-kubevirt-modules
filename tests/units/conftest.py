@@ -2,10 +2,6 @@ import pytest
 import json
 import kubevirt
 
-from ansible.module_utils import basic
-from ansible.module_utils._text import to_bytes
-
-
 USER_VMI = '''
 {
     "apiVersion": "kubevirt.io/v1alpha2",

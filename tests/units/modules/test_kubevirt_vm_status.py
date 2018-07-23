@@ -29,20 +29,21 @@ def exit_json(*args, **kwargs):
     raise AnsibleExitJson(kwargs)
 
 
-class TestKubeVirtVMStatus(object):
-    @patch('kubernetes.client.ApiClient')
-    @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
-    @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_run_vm_main(self,
-                         mock_crd_get,
-                         mock_crd_patch,
-                         mock_client,
-                         monkeypatch):
-
-        monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
+class TestKubeVirtVMStatusModule(object):
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, monkeypatch):
+        monkeypatch.setattr(
+            mymodule.AnsibleModule, "exit_json", exit_json)
         args = dict(name='baldr', namespace='vms', state='stopped')
         set_module_args(args)
 
+    @patch('kubernetes.client.ApiClient')
+    @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
+    @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
+    def test_run_vm_main(
+        self, mock_crd_get, mock_crd_patch, mock_client
+    ):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(running=True))
         mock_crd_patch.return_value = dict()
@@ -56,16 +57,9 @@ class TestKubeVirtVMStatus(object):
     @patch('kubernetes.client.ApiClient')
     @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
     @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_run_vm_same_state(self,
-                               mock_crd_get,
-                               mock_crd_patch,
-                               mock_client,
-                               monkeypatch):
-
-        monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
-        args = dict(name='baldr', namespace='vms', state='stopped')
-        set_module_args(args)
-
+    def test_run_vm_same_state(
+        self, mock_crd_get, mock_crd_patch, mock_client
+    ):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(running=False))
         with pytest.raises(AnsibleExitJson) as result:

@@ -38,6 +38,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
             **kwargs)
 
         self._api_client = None
+        self._helper = None
         self.kind = self.params.pop('kind')
         self.api_version = self.params.pop('api_version')
         self.resource_definition = self.params.pop('resource_definition')
@@ -46,24 +47,10 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
             self.resource_definition = self.load_resource_definition(self.src)
 
         if self.resource_definition:
-            self.api_version = self.resource_definition.get('apiVersion')
-            self.kind = self.resource_definition.get('kind')
-
-        self.api_version = str(self.api_version).lower()
-        self.kind = to_snake(self.kind)
-
-        if not self.api_version:
-            self.fail_json(
-                msg=("Error: missing api_version. Use the api_version ",
-                     "parameter of specify it as part of a ",
-                     "resource_definition.")
-            )
-
-        if not self.kind:
-            self.fail_json(
-                msg=("Error: missing kind. Use the kind parameter ",
-                     "or specify it as part of a resource_definition.")
-            )
+            if not self.api_version:
+                self.api_version = self.resource_definition.get('apiVersion')
+            if not self.kind:
+                self.kind = self.resource_definition.get('kind')
 
     @property
     def argspec(self):
@@ -76,43 +63,55 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
 
     def execute_module(self):
         """ Method for handling module's actions """
-        state = self.params.get('state')
-        self._api_client = self.authenticate()
-        existing = self.__get_object()
+        if not self.api_version:
+            self.fail_json(
+                msg=("Error: missing api_version. Use the api_version ",
+                     "parameter of specify it as part of a ",
+                     "resource_definition.")
+            )
+        elif not self.kind:
+            self.fail_json(
+                msg=("Error: missing kind. Use the kind parameter ",
+                     "or specify it as part of a resource_definition."))
+        else:
+            self.api_version = str(self.api_version).lower()
+            self.kind = to_snake(self.kind)
+            state = self.params.get('state')
+            self._api_client = self.authenticate()
+            self._helper = get_helper(self._api_client, self.kind)
+            existing = self.__get_object()
 
-        if state == 'present':
-            if existing and self.params.get('force'):
-                meta = self.__replace()
-                self.exit_json(changed=True, result=dict(meta.to_dict()))
-            elif existing:
-                self.exit_json(changed=False, result=dict())
-            else:
-                meta = self.__create()
-                self.exit_json(changed=True, result=dict(meta.to_dict()))
-        elif state == 'absent':
-            if existing:
-                meta = self.__delete()
-                self.exit_json(changed=True, result=dict())
-            else:
-                self.exit_json(changed=False, result=dict())
+            if state == 'present':
+                if existing and self.params.get('force'):
+                    meta = self.__replace()
+                    self.exit_json(changed=True, result=dict(meta.to_dict()))
+                elif existing:
+                    self.exit_json(changed=False, result=dict())
+                else:
+                    meta = self.__create()
+                    self.exit_json(changed=True, result=dict(meta.to_dict()))
+            elif state == 'absent':
+                if existing:
+                    self.__delete()
+                    self.exit_json(changed=True, result=dict())
+                else:
+                    self.exit_json(changed=False, result=dict())
 
     def __get_object(self):
         kubevirt_obj = None
-        helper = get_helper(self._api_client, self.kind)
         try:
-            kubevirt_obj = helper.exists(
+            kubevirt_obj = self._helper.exists(
                 self.params.get('name'), self.params.get('namespace')
             )
+            return kubevirt_obj
         except KubeVirtApiException as exc:
             if exc.status != 404:
                 self.fail_json(msg='Failed to retrieve requested object',
                                error=exc.reason)
-        return kubevirt_obj
 
     def __create(self):
         try:
-            helper = get_helper(self._api_client, self.kind)
-            return helper.create(
+            return self._helper.create(
                 self.resource_definition, self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to create requested resource',
@@ -120,8 +119,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
 
     def __replace(self):
         try:
-            helper = get_helper(self._api_client, self.kind)
-            return helper.replace(
+            return self._helper.replace(
                 self.resource_definition, self.params.get('namespace'),
                 self.params.get('name'))
         except KubeVirtApiException as exc:
@@ -130,8 +128,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
 
     def __delete(self):
         try:
-            helper = get_helper(self._api_client, self.kind)
-            helper.delete(
+            self._helper.delete(
                 self.params.get('name'), self.params.get('namespace'))
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to delete requested resource',

@@ -29,20 +29,20 @@ def exit_json(*args, **kwargs):
     raise AnsibleExitJson(kwargs)
 
 
-class TestKubeVirtScaleVMIRS(object):
-    @patch('kubernetes.client.ApiClient')
-    @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
-    @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_scale_vmirs_main(self,
-                              mock_crd_get,
-                              mock_crd_patch,
-                              mock_client,
-                              monkeypatch):
-
-        monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
+class TestKubeVirtScaleVMIRSModule(object):
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, monkeypatch):
+        monkeypatch.setattr(
+            mymodule.AnsibleModule, "exit_json", exit_json)
         args = dict(name='freyja', namespace='vms', replicas=2)
         set_module_args(args)
 
+    @patch('kubernetes.client.ApiClient')
+    @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
+    @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
+    def test_scale_vmirs_main(
+        self, mock_crd_get, mock_crd_patch, mock_client
+    ):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(replicas=1))
         mock_crd_patch.return_value = dict()
@@ -57,16 +57,9 @@ class TestKubeVirtScaleVMIRS(object):
     @patch('kubernetes.client.ApiClient')
     @patch('kubernetes.client.CustomObjectsApi.patch_namespaced_custom_object')
     @patch('kubernetes.client.CustomObjectsApi.get_namespaced_custom_object')
-    def test_scale_vmirs_same_replica_number(self,
-                                             mock_crd_get,
-                                             mock_crd_patch,
-                                             mock_client,
-                                             monkeypatch):
-
-        monkeypatch.setattr(mymodule.AnsibleModule, "exit_json", exit_json)
-        args = dict(name='freyja', namespace='vms', replicas=2)
-        set_module_args(args)
-
+    def test_scale_vmirs_same_replica_number(
+        self, mock_crd_get, mock_crd_patch, mock_client
+    ):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(replicas=2))
         with pytest.raises(AnsibleExitJson) as result:

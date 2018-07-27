@@ -1,0 +1,60 @@
+---
+- name: Deploy a VMIRS with cloud-init data
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_raw:
+       state: absent
+       name: freyja
+       namespace: vms
+       verify_ssl: no
+       inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachineInstanceReplicaSet
+         metadata:
+           name: freyja
+           namespace: vms
+         spec:
+           replicas: 2
+           selector:
+             matchLabels:
+               rs: freyjars
+           template:
+             metadata:
+               labels:
+                 rs: freyjars
+             spec:
+               domain:
+                 resources:
+                   requests:
+                     memory: 512M
+                 devices:
+                   disks:
+                   - volumeName: myvolume
+                     name: mydisk
+                     disk:
+                       bus: virtio
+                   - name: cloudinitdisk
+                     volumeName: cloudinitvolume
+                     cdrom:
+                       bus: virtio
+               volumes:
+               - name: myvolume
+                 registryDisk:
+                   image: kubevirt/fedora-cloud-registry-disk-demo:v0.6.2
+               - cloudInitNoCloud:
+                   userData: |
+                     #cloud-config
+                     users:
+                       - name: kubevirt
+                         gecos: KubeVirt Project
+                         sudo: ALL=(ALL) NOPASSWD:ALL
+                         passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                         shell: /bin/bash
+                         home: /home/kubevirt
+                         lock_passwd: false
+                         ssh_authorized_keys:
+                             - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                 name: cloudinitvolume

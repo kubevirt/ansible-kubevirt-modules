@@ -6,7 +6,7 @@
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - kubevirt_raw:
-       state: absent
+       state: present
        name: freyja
        namespace: vms
        verify_ssl: no

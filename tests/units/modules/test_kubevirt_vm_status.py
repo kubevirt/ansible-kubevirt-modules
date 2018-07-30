@@ -34,7 +34,7 @@ class TestKubeVirtVMStatusModule(object):
     @pytest.fixture(autouse=True)
     def setup_class(cls, monkeypatch):
         monkeypatch.setattr(
-            mymodule.AnsibleModule, "exit_json", exit_json)
+            mymodule.K8sVirtAnsibleModule, "exit_json", exit_json)
         args = dict(name='baldr', namespace='vms', state='stopped')
         set_module_args(args)
 
@@ -48,7 +48,7 @@ class TestKubeVirtVMStatusModule(object):
         mock_crd_get.return_value = dict(spec=dict(running=True))
         mock_crd_patch.return_value = dict()
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.main()
+            mymodule.KubeVirtVMStatus().execute_module()
         assert result.value[0]['changed']
         mock_crd_patch.assert_called_once_with(
             'kubevirt.io', 'v1alpha2', 'vms', 'virtualmachines',
@@ -63,5 +63,5 @@ class TestKubeVirtVMStatusModule(object):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(running=False))
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.main()
+            mymodule.KubeVirtVMStatus().execute_module()
         assert not result.value[0]['changed']

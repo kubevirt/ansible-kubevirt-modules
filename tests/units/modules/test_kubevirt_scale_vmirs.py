@@ -33,7 +33,7 @@ class TestKubeVirtScaleVMIRSModule(object):
     @pytest.fixture(autouse=True)
     def setup_class(cls, monkeypatch):
         monkeypatch.setattr(
-            mymodule.AnsibleModule, "exit_json", exit_json)
+            mymodule.K8sVirtAnsibleModule, "exit_json", exit_json)
         args = dict(name='freyja', namespace='vms', replicas=2)
         set_module_args(args)
 
@@ -47,7 +47,7 @@ class TestKubeVirtScaleVMIRSModule(object):
         mock_crd_get.return_value = dict(spec=dict(replicas=1))
         mock_crd_patch.return_value = dict()
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.main()
+            mymodule.KubeVirtScaleVMIRS().execute_module()
         assert result.value[0]['changed']
         mock_crd_patch.assert_called_once_with(
             'kubevirt.io', 'v1alpha2', 'vms',
@@ -63,5 +63,5 @@ class TestKubeVirtScaleVMIRSModule(object):
         mock_client.return_value = dict()
         mock_crd_get.return_value = dict(spec=dict(replicas=2))
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.main()
+            mymodule.KubeVirtScaleVMIRS().execute_module()
         assert not result.value[0]['changed']

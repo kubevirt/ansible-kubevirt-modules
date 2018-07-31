@@ -9,3 +9,4 @@
         state: stopped
         name: baldr
         namespace: vms
+        verify_ssl: no

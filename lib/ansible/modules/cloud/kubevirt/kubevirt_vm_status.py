@@ -48,12 +48,46 @@ options:
         required: false
         type: str
         default: v1alpha2
+    kubeconfig:
+        description:
+            - "Path to an existing Kubernetes config file. If not provided,
+               and no other connection options are provided, the kubernetes
+               client will attempt to load the default configuration file
+               from C(~/.kube/config.json)."
+    context:
+        description:
+            - The name of a context found in the config file.
+    host:
+        description:
+            - Provide a URL for accessing the API.
+            - "Required if I(api_key) or I(username) and I(password) are
+               specified."
+    api_key:
+        description:
+            - Token used to authenticate with the API.
+            - To be used together with I(host).
+    username:
+        description:
+            - Provide a username for authenticating with the API.
+            - To be used together with I(host) and I(password).
+    password:
+        description:
+            - Provide a password for authenticating with the API.
+            - To be used together with I(host) and I(username).
     verify_ssl:
         description:
-            - Whether to verify SSL certificate.
-        required: false
+            - Whether or not to verify the API server's SSL certificates.
+        default: true
         type: bool
-        default: yes
+    ssl_ca_cert:
+        description:
+            - Path to a CA certificate used to authenticate with the API.
+    cert_file:
+        description:
+            - Path to a certificate used to authenticate with the API.
+    key_file:
+        description:
+            - Path to a key file used to authenticate with the API.
 
 requirements:
     - python >= 2.7
@@ -99,68 +133,126 @@ result:
             type: complex
 '''
 
+import copy
+import os
+import sys
 import kubernetes.client
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.six import iteritems
+
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils/k8svirt')
+    from helper import NAME_ARG_SPEC, AUTH_ARG_SPEC
+    from common import K8sVirtAnsibleModule
+else:
+    from ansible.module_utils.k8svirt.helper import NAME_ARG_SPEC, \
+        AUTH_ARG_SPEC
+    from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
+
 from kubernetes.client.rest import ApiException
-from kubernetes.config import kube_config
+from kubernetes.config import kube_config, ConfigException
 
 
-def main():
-    ''' Entry point. '''
+class KubeVirtVMStatus(K8sVirtAnsibleModule):
+    def __init__(self, *args, **kwargs):
+        super(KubeVirtVMStatus, self).__init__(*args, **kwargs)
+        self._api_client = None
 
-    args = dict({
-        'state': dict({
-            'default': 'running',
-            'choices': list(['running', 'stopped']),
-            'type': 'str'
-        }),
-        'name': dict({'required': True, 'type': 'str'}),
-        'namespace': dict({'required': True, 'type': 'str'}),
-        'api_version': dict({
-            'required': False,
-            'default': 'v1alpha2',
-            'type': 'str'
-        }),
-        'verify_ssl': dict({
-            'required': False,
-            'default': 'yes',
-            'type': 'bool'
+    @property
+    def argspec(self):
+        """ argspec property builder """
+        argspec = copy.deepcopy(NAME_ARG_SPEC)
+        argspec.update(copy.deepcopy(AUTH_ARG_SPEC))
+        argspec['name']['required'] = True
+        argspec['namespace']['required'] = True
+        argspec['api_version']['default'] = 'v1alpha2'
+        argspec['state'] = dict({
+            'required': False, 'type': 'str',
+            'choices': list(['running', 'stopped']), 'default': 'running'
         })
-    })
+        return argspec
 
-    module = AnsibleModule(argument_spec=args)
-    kube_config.load_kube_config()
-    configuration = kubernetes.client.Configuration()
+    def execute_module(self):
+        """ Module execution """
+        api_client = self.__authenticate()
+        api_instance = kubernetes.client.CustomObjectsApi(
+            api_client=api_client)
+        group = 'kubevirt.io'
+        plural = 'virtualmachines'
+        version = self.params.get('api_version')
+        namespace = self.params.get('namespace')
+        name = self.params.get('name')
+        state = True if self.params.get('state') == 'running' else False
+        body = dict()
+        body['spec'] = dict({'running': state})
 
-    if not module.params.get('verify_ssl'):
-        configuration.verify_ssl = False
+        try:
+            exists = api_instance.get_namespaced_custom_object(
+                group, version, namespace, plural, name)
+            current_state = exists.get('spec').get('running')
 
-    api_client = kubernetes.client.ApiClient(configuration=configuration)
-    api_instance = kubernetes.client.CustomObjectsApi(api_client=api_client)
-    group = 'kubevirt.io'
-    plural = 'virtualmachines'
-    version = module.params.get('api_version')
-    namespace = module.params.get('namespace')
-    name = module.params.get('name')
-    state = True if module.params.get('state') == 'running' else False
-    body = dict()
-    body['spec'] = dict({'running': state})
+            if current_state == state:
+                self.exit_json(changed=False)
 
-    try:
-        exists = api_instance.get_namespaced_custom_object(
-            group, version, namespace, plural, name)
-        current_state = exists.get('spec').get('running')
+            api_response = api_instance.patch_namespaced_custom_object(
+                group, version, namespace, plural, name, body)
+            self.exit_json(changed=True, result=api_response)
+        except ApiException as exc:
+            self.fail_json(msg='Failed to manage requested object',
+                           error=exc.reason)
 
-        if current_state == state:
-            module.exit_json(changed=False)
+    def __authenticate(self):
+        """ Build API client based on user's configuration """
+        host = self.params.get('host')
+        username = self.params.get('username')
+        password = self.params.get('password')
+        api_key = self.params.get('api_key')
 
-        api_response = api_instance.patch_namespaced_custom_object(
-            group, version, namespace, plural, name, body)
-        module.exit_json(changed=True, result=api_response)
-    except ApiException as exc:
-        module.fail_json(msg='Failed to manage requested object',
-                         error=exc.reason)
+        if (host and username and password) or (api_key and host):
+            return self.__configure_by_params()
+        return self.__configure_by_file()
+
+    def __configure_by_file(self):
+        """ Return API client from configuration file """
+        if not self.params.get('kubeconfig'):
+            config_file = os.path.expanduser(
+                kube_config.KUBE_CONFIG_DEFAULT_LOCATION)
+        else:
+            config_file = self.params.get('kubeconfig')
+
+        try:
+            kube_config.load_kube_config(
+                config_file=config_file,
+                context=self.params.get('context')
+            )
+            config = kubernetes.client.Configuration()
+            if not self.params.get('verify_ssl'):
+                setattr(config, 'verify_ssl', False)
+            return kubernetes.client.ApiClient(
+                configuration=config
+            )
+        except (IOError, ConfigException):
+            raise
+
+    def __configure_by_params(self):
+        """ Return API client from configuration file """
+        kube_config.load_kube_config()
+        config = kubernetes.client.Configuration()
+        auth_args = AUTH_ARG_SPEC.keys()
+
+        for key, value in iteritems(self.params):
+            if key in auth_args and value is not None:
+                if key == 'api_key':
+                    setattr(
+                        config,
+                        key, {'authorization': "Bearer {0}".format(value)})
+                else:
+                    setattr(config, key, value)
+
+        if not self.params.get('verify_ssl'):
+            setattr(config, 'verify_ssl', False)
+
+        return kubernetes.client.ApiClient(configuration=config)
 
 
 if __name__ == '__main__':
-    main()
+    KubeVirtVMStatus().execute_module()

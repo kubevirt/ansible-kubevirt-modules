@@ -6,13 +6,19 @@
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
 import os
+import sys
 import yaml
 import kubevirt as sdk
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six import iteritems
-from kubevirt import DefaultApi as KubeVirtDefaultApi
-from kubernetes.config import kube_config
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils/k8svirt')
+    from helper import AUTH_ARG_SPEC
+else:
+    from ansible.module_utils.k8svirt.helper import AUTH_ARG_SPEC
+
+from kubernetes.config import kube_config, ConfigException
 
 
 class K8sVirtAnsibleModule(AnsibleModule):
@@ -24,9 +30,11 @@ class K8sVirtAnsibleModule(AnsibleModule):
 
     @property
     def argspec(self):
+        """ arg_spec builder to be implemented on each subclass """
         raise NotImplementedError()
 
     def execute_module(self):
+        """ Module execution to be implemented on each subclass """
         raise NotImplementedError()
 
     def load_resource_definition(self, src):
@@ -44,18 +52,52 @@ class K8sVirtAnsibleModule(AnsibleModule):
         return result
 
     def authenticate(self):
-        auth_options = {}
-        # FIXME: removed kubeconfig, context
-        auth_args = ('host', 'api_key', 'username', 'password', 'cert_file',
-                     'key_file', 'ssl_ca_cert', 'verify_ssl')
-        for key, value in iteritems(self.params):
-            if key in auth_args and value is not None:
-                auth_options[key] = value
+        """ Build API client based on user's configuration """
+        host = self.params.get('host')
+        username = self.params.get('username')
+        password = self.params.get('password')
+        api_key = self.params.get('api_key')
 
-        if os.path.exists(
-                os.path.expanduser(kube_config.KUBE_CONFIG_DEFAULT_LOCATION)):
+        if (host and username and password) or (api_key and host):
+            return self.__configure_by_params()
+        return self.__configure_by_file()
+
+    def __configure_by_file(self):
+        """ Return API client from configuration file """
+        if not self.params.get('kubeconfig'):
+            config_file = os.path.expanduser(
+                kube_config.KUBE_CONFIG_DEFAULT_LOCATION)
+        else:
+            config_file = self.params.get('kubeconfig')
+
+        try:
             if not self.params.get('verify_ssl'):
                 sdk.configuration.verify_ssl = False
             kube_config.load_kube_config(
-                client_configuration=sdk.configuration)
-            return KubeVirtDefaultApi()
+                config_file=config_file,
+                context=self.params.get('context'),
+                client_configuration=sdk.configuration
+            )
+            return sdk.DefaultApi()
+        except (IOError, ConfigException):
+            raise
+
+    def __configure_by_params(self):
+        """ Return API client from configuration file """
+        auth_args = AUTH_ARG_SPEC.keys()
+
+        for key, value in iteritems(self.params):
+            if key in auth_args and value is not None:
+                if key == 'api_key':
+                    setattr(
+                        sdk.configuration,
+                        key, {'authorization': "Bearer {0}".format(value)})
+                else:
+                    setattr(sdk.configuration, key, value)
+
+        if not self.params.get('verify_ssl'):
+            sdk.configuration.verify_ssl = False
+
+        kube_config.load_kube_config(client_configuration=sdk.configuration)
+
+        return sdk.DefaultApi()

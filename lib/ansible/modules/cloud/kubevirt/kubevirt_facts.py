@@ -63,15 +63,20 @@ options:
     host:
         description:
             - Provide a URL for accessing the API.
+            - "Required if I(api_key) or I(username) and I(password) are
+               specified."
     api_key:
         description:
             - Token used to authenticate with the API.
+            - To be used together with I(host).
     username:
         description:
             - Provide a username for authenticating with the API.
+            - To be used together with I(host) and I(password).
     password:
         description:
             - Provide a password for authenticating with the API.
+            - To be used together with I(host) and I(username).
     verify_ssl:
         description:
             - Whether or not to verify the API server's SSL certificates.

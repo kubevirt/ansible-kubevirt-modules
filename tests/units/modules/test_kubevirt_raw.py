@@ -7,6 +7,7 @@ from ansible.module_utils._text import to_bytes
 from kubevirt import V1VirtualMachineInstance, V1VirtualMachine, \
     V1VirtualMachineInstanceReplicaSet, V1VirtualMachineInstancePreset, \
     V1DeleteOptions
+from kubernetes.client import V1PersistentVolumeClaim
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/module_utils/k8svirt')
@@ -237,3 +238,38 @@ class TestKubeVirtRawModule(object):
             msg=("Error: missing kind. Use the kind parameter ",
                  "or specify it as part of a resource_definition."))
 
+    @patch('kubernetes.client.CoreV1Api.create_namespaced_persistent_volume_claim')
+    @patch('kubernetes.client.CoreV1Api.read_namespaced_persistent_volume_claim')
+    @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
+    def test_persistent_volume_claim_present(
+        self, mock_exit_json, mock_k8s_read, mock_k8s_create
+    ):
+        args = dict(
+            state='present', kind='PersistentVolumeClaim',
+            name='pvc-demo', namespace='vms', api_version='v1',
+            resource_definition=V1PersistentVolumeClaim().to_dict())
+        set_module_args(args)
+        mock_k8s_read.return_value = None
+        mock_k8s_create.return_value = V1PersistentVolumeClaim()
+        k = raw.KubeVirtRawModule()
+        k.execute_module()
+        mock_exit_json.assert_called_once_with(
+            changed=True, result=V1PersistentVolumeClaim().to_dict())
+
+    @patch('kubernetes.client.CoreV1Api.delete_namespaced_persistent_volume_claim')
+    @patch('kubernetes.client.CoreV1Api.read_namespaced_persistent_volume_claim')
+    @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
+    def test_persistent_volume_claim_absent(
+        self, mock_exit_json, mock_k8s_read, mock_k8s_delete,
+    ):
+        args = dict(
+            state='absent', kind='PersistentVolumeClaim',
+            name='pvc-demo', namespace='vms', api_version='v1',
+            resource_definition=V1PersistentVolumeClaim().to_dict())
+        set_module_args(args)
+        mock_k8s_read.return_value = V1PersistentVolumeClaim()
+        k = raw.KubeVirtRawModule()
+        k.execute_module()
+        mock_k8s_delete.assert_called_once_with(
+            name='pvc-demo', namespace='vms', body={})
+        mock_exit_json.assert_called_once_with(changed=True, result={})

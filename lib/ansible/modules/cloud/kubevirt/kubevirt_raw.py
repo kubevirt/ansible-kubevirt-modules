@@ -195,6 +195,16 @@ result:
             description: Current status details for the resource.
             returned: success
             type: complex
+        wait:
+           description: Set to 'true' or 'yes' to block on the action
+                        till it completes.
+           returned: success
+           type: bool
+        timeout:
+           description: Specifies how much time in seconds to wait for an
+                        action to compelte if 'wait' option is enabled.
+           returned: success
+           type: int
 '''
 
 from ansible.module_utils.k8svirt.raw import KubeVirtRawModule

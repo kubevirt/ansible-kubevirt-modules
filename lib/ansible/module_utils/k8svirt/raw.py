@@ -21,6 +21,7 @@ else:
 
 
 from kubevirt.rest import ApiException as KubeVirtApiException
+from kubernetes.client.rest import ApiException as CoreApiException
 
 
 class KubeVirtRawModule(K8sVirtAnsibleModule):
@@ -38,6 +39,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
             **kwargs)
 
         self._api_client = None
+        self._core_api_client = None
         self._helper = None
         self.kind = self.params.pop('kind')
         self.api_version = self.params.pop('api_version')
@@ -77,8 +79,11 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
             self.api_version = str(self.api_version).lower()
             self.kind = to_snake(self.kind)
             state = self.params.get('state')
-            self._api_client = self.authenticate()
-            self._helper = get_helper(self._api_client, self.kind)
+            self.wait = self.params.pop('wait')
+            self.timeout = self.params.pop('timeout')
+            self._api_client, self._core_api_client = self.authenticate()
+            self._helper = get_helper(
+                self._api_client, self._core_api_client, self.kind)
             existing = self.__get_object()
 
             if state == 'present':
@@ -104,7 +109,7 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
                 self.params.get('name'), self.params.get('namespace')
             )
             return kubevirt_obj
-        except KubeVirtApiException as exc:
+        except (KubeVirtApiException, CoreApiException) as exc:
             if exc.status != 404:
                 self.fail_json(msg='Failed to retrieve requested object',
                                error=exc.reason)
@@ -112,7 +117,8 @@ class KubeVirtRawModule(K8sVirtAnsibleModule):
     def __create(self):
         try:
             return self._helper.create(
-                self.resource_definition, self.params.get('namespace'))
+                self.resource_definition, self.params.get('namespace'),
+                self.wait, self.timeout)
         except KubeVirtApiException as exc:
             self.fail_json(msg='Failed to create requested resource',
                            error=exc.reason)

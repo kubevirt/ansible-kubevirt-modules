@@ -27,6 +27,7 @@ class KubeVirtFacts(K8sVirtAnsibleModule):
     def __init__(self, *args, **kwargs):
         """ Class constructor """
         self._api_client = None
+        self._core_api_client = None
         self._kubevirt_obj = None
         super(KubeVirtFacts, self).__init__(*args, **kwargs)
 
@@ -40,9 +41,9 @@ class KubeVirtFacts(K8sVirtAnsibleModule):
 
     def execute_module(self):
         """ Gather the actual facts """
-        self._api_client = self.authenticate()
+        self._api_client, self._core_api_client = self.authenticate()
         kind = to_snake(self.params.get('kind'))
-        res_helper = get_helper(self._api_client, kind)
+        res_helper = get_helper(self._api_client, self._core_api_client, kind)
         try:
             self._kubevirt_obj = res_helper.list(
                 namespace=self.params.get('namespace'),

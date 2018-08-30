@@ -14,20 +14,22 @@ class TestHelperModuleUtils(object):
 
     def test_get_helper(self):
         client = dict()
-        k8svirt_obj = helper.get_helper(client, 'virtual_machine_instance')
+        core_client = dict()
+        k8svirt_obj = helper.get_helper(
+            client, core_client, 'virtual_machine_instance')
         assert isinstance(k8svirt_obj, helper.VirtualMachineInstanceHelper)
-        k8svirt_obj = helper.get_helper(client, 'virtual_machine')
+        k8svirt_obj = helper.get_helper(client, core_client, 'virtual_machine')
         assert isinstance(k8svirt_obj, helper.VirtualMachineHelper)
         k8svirt_obj = helper.get_helper(
-            client, 'virtual_machine_instance_replica_set')
+            client, core_client, 'virtual_machine_instance_replica_set')
         assert isinstance(
             k8svirt_obj, helper.VirtualMachineInstanceReplicaSetHelper)
         k8svirt_obj = helper.get_helper(
-            client, 'virtual_machine_instance_preset')
+            client, core_client, 'virtual_machine_instance_preset')
         assert isinstance(
             k8svirt_obj, helper.VirtualMachineInstancePreSetHelper)
 
     def test_get_helper_raise_exception(self):
         with pytest.raises(Exception) as excinfo:
-            helper.get_helper({}, 'non_existent_resource')
+            helper.get_helper({}, {}, 'non_existent_resource')
         assert 'Unknown kind non_existent_resource' in str(excinfo.value)

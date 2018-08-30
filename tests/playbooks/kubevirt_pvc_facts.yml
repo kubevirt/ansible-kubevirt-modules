@@ -1,0 +1,14 @@
+---
+- name: Gather facts for baldr VirtualMachine
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - kubevirt_facts:
+        kind: PersistentVolumeClaim
+        name: pvc-demo
+        namespace: vms
+      register: pvc_facts
+    - debug:
+        var: pvc_facts

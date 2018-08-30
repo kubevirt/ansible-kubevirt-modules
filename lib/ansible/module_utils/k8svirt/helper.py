@@ -7,8 +7,10 @@
 
 import copy
 import re
+import kubernetes.client as core_sdk
 import kubevirt as sdk
 
+from kubernetes import watch
 from kubevirt import V1DeleteOptions
 
 NAME_ARG_SPEC = {
@@ -61,6 +63,14 @@ STATE_ARG_SPEC = {
     'force': {
         'type': 'bool',
         'default': False,
+    },
+    'wait': {
+        'type': 'bool',
+        'default': False,
+    },
+    'timeout': {
+        'type': 'int',
+        'default': 300,
     }
 }
 
@@ -112,7 +122,7 @@ def to_snake(name):
         '((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
 
 
-def get_helper(client, kind):
+def get_helper(client, core_client, kind):
     """ Factory method for KubeVirt resources """
     if kind == 'virtual_machine_instance':
         return VirtualMachineInstanceHelper(client)
@@ -123,6 +133,8 @@ def get_helper(client, kind):
     elif kind == 'virtual_machine_instance_preset':
         return VirtualMachineInstancePreSetHelper(client)
     # FIXME: find/create a better exception (AnsibleModuleError?)
+    elif kind == 'persistent_volume_claim':
+        return PersistentVolumeClaimHelper(core_client)
     raise Exception('Unknown kind %s' % kind)
 
 
@@ -132,12 +144,19 @@ def _resource_version(current):
     return current.metadata.resource_version
 
 
+def _use_cdi(annotations, labels):
+    IMPORT_ENDPOINT_KEY = 'cdi.kubevirt.io/storage.import.endpoint'
+    endpoint = annotations.get(IMPORT_ENDPOINT_KEY)
+    app_label = labels.get('app')
+    return endpoint and app_label == 'containerized-data-importer'
+
+
 class VirtualMachineInstanceHelper(object):
     """ Helper class for VirtualMachineInstance resources """
     def __init__(self, client):
         self.__client = client
 
-    def create(self, body, namespace):
+    def create(self, body, namespace, wait=False, timeout=0):
         """ Create VirtualMachineInstance resource """
         vmi_body = sdk.V1VirtualMachineInstance().to_dict()
         vmi_body.update(copy.deepcopy(body))
@@ -198,7 +217,7 @@ class VirtualMachineHelper(object):
         """ Class constructor """
         self.__client = client
 
-    def create(self, body, namespace):
+    def create(self, body, namespace, wait=False, timeout=0):
         """ Create VirtualMachine resource """
         vm_body = sdk.V1VirtualMachine().to_dict()
         vm_body.update(copy.deepcopy(body))
@@ -259,7 +278,7 @@ class VirtualMachineInstanceReplicaSetHelper(object):
         """ Class constructor """
         self.__client = client
 
-    def create(self, body, namespace):
+    def create(self, body, namespace, wait=False, timeout=0):
         """ Create VirtualMachineInstanceReplicaSet resource """
         vmirs_body = sdk.V1VirtualMachineInstanceReplicaSet().to_dict()
         vmirs_body.update(copy.deepcopy(body))
@@ -325,7 +344,7 @@ class VirtualMachineInstancePreSetHelper(object):
         """ Class constructor """
         self.__client = client
 
-    def create(self, body, namespace):
+    def create(self, body, namespace, wait=False, timeout=0):
         """ Create VirtualMachineInstancePreset resource """
         vmps_body = sdk.V1VirtualMachineInstancePreset().to_dict()
         vmps_body.update(copy.deepcopy(body))
@@ -379,3 +398,91 @@ class VirtualMachineInstancePreSetHelper(object):
         return (self.__client.
                 replace_namespaced_virtual_machine_instance_preset(
                     vmips_body, namespace, name))
+
+
+class PersistentVolumeClaimHelper(object):
+    """ Helper class for PersistentVolumeClaim resources """
+
+    def __init__(self, client):
+        """ Class constructor """
+        self.__client = client
+
+    def create(self, body, namespace, wait=False, timeout=300):
+        """ Create PersistentVolumeClaim resource """
+        pvc_body = core_sdk.V1PersistentVolumeClaim().to_dict()
+        pvc_body.update(copy.deepcopy(body))
+        created_pvc = self.__client.create_namespaced_persistent_volume_claim(
+            namespace=namespace, body=pvc_body)
+        if not wait:
+            return created_pvc
+
+        w = watch.Watch()
+        for event in w.stream(
+            self.__client.list_namespaced_persistent_volume_claim,
+                namespace=namespace,
+                field_selector='metadata.name=' + pvc_body['metadata']['name'],
+                timeout_seconds=timeout):
+            entity = event['object']
+            metadata = entity.metadata
+            if entity.status.phase == 'Bound':
+                annotations = metadata.annotations if \
+                    metadata.annotations else {}
+                IMPORT_STATUS_KEY = 'cdi.kubevirt.io/storage.import.pod.phase'
+                import_status = annotations.get(IMPORT_STATUS_KEY)
+                labels = metadata.labels if metadata.labels else {}
+                if (not _use_cdi(annotations, labels) or
+                        import_status == 'Succeeded'):
+                    w.stop()
+                    return entity
+                elif entity.status.phase == 'Failed':
+                    w.stop()
+                    raise Exception("Failed to import PersistentVolumeClaim")
+        raise Exception("Timeout exceed while waiting on result state of the \
+                        entity.")
+
+    def delete(self, name, namespace):
+        """ Delete PersistentVolumeClaim resource """
+        return self.__client.delete_namespaced_persistent_volume_claim(
+            name=name, namespace=namespace, body={})
+
+    def exists(self, name, namespace):
+        """ Return PersistentVolumeClaim resource, if exists """
+        return self.__client.read_namespaced_persistent_volume_claim(
+            name, namespace, exact=True)
+
+    def list(self, namespace=None, name=None, field_selectors=None,
+             label_selectors=None):
+        """ Return a PersistentVolumeClaim """
+        result = None
+        if name:
+            result = self.exists(name, namespace)
+        elif not namespace:
+            result = self.list_all(field_selectors, label_selectors)
+        else:
+            result = self.__client.list_namespaced_persistent_volume_claim(
+                namespace=namespace,
+                field_selector=','.join(field_selectors),
+                label_selector=','.join(label_selectors))
+        return result
+
+    def list_all(self, field_selectors=None, label_selectors=None):
+        """ Return all PersistentVolumeClaim in a list """
+        return self.__client.list_persistent_volume_claim_for_all_namespaces(
+            field_selector=','.join(field_selectors),
+            label_selector=','.join(label_selectors)
+        )
+
+    def replace(self, body, namespace, name):
+        """ Replace PersistentVolumeClaim resource """
+        current = self.exists(name, namespace)
+        pvc_body = core_sdk.V1PersistentVolumeClaim(
+            api_version=body.get('apiVersion'),
+            kind=body.get('kind'),
+            metadata=body.get('metadata'),
+            spec=body.get('spec')
+        )
+        res_version = _resource_version(current)
+        pvc_body.metadata['resourceVersion'] = res_version
+        pvc_body.status = current.status
+        return self.__client.replace_namespaced_persistent_volume_claim(
+            pvc_body, namespace, name)

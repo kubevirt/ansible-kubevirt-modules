@@ -9,6 +9,9 @@ import os
 import sys
 import yaml
 import kubevirt as sdk
+from kubernetes import config, client as core_client
+from kubernetes.config import kube_config, ConfigException
+from kubernetes.client import Configuration
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six import iteritems
@@ -17,8 +20,6 @@ if hasattr(sys, '_called_from_test'):
     from helper import AUTH_ARG_SPEC
 else:
     from ansible.module_utils.k8svirt.helper import AUTH_ARG_SPEC
-
-from kubernetes.config import kube_config, ConfigException
 
 
 class K8sVirtAnsibleModule(AnsibleModule):
@@ -72,19 +73,42 @@ class K8sVirtAnsibleModule(AnsibleModule):
 
         try:
             if not self.params.get('verify_ssl'):
-                sdk.configuration.verify_ssl = False
-            kube_config.load_kube_config(
-                config_file=config_file,
-                context=self.params.get('context'),
-                client_configuration=sdk.configuration
-            )
-            return sdk.DefaultApi()
+                verify_ssl = False
+            else:
+                verify_ssl = self.params.get('verify_ssl')
+
+            kubevirt_client = self.__create_kubevirt_client(
+                config_file, verify_ssl, self.params.get('context'))
+            core_client = self.__create_core_client(
+                config_file, verify_ssl, self.params.get('context'))
+            return kubevirt_client, core_client
         except (IOError, ConfigException):
             raise
+
+    def __create_core_client(self, config_file, verify_ssl, context):
+        configuration = Configuration()
+        configuration.verify_ssl = verify_ssl
+        Configuration.set_default(configuration)
+        kube_config.load_kube_config(config_file=config_file)
+        if context:
+            return core_client.CoreV1Api(
+                api_client=config.new_client_from_config(context=context))
+
+        return core_client.CoreV1Api()
+
+    def __create_kubevirt_client(self, config_file, verify_ssl, context):
+        sdk.configuration.verify_ssl = verify_ssl
+        kube_config.load_kube_config(
+            config_file=config_file,
+            context=context,
+            client_configuration=sdk.configuration
+        )
+        return sdk.DefaultApi()
 
     def __configure_by_params(self):
         """ Return API client from configuration file """
         auth_args = AUTH_ARG_SPEC.keys()
+        core_configuration = Configuration()
 
         for key, value in iteritems(self.params):
             if key in auth_args and value is not None:
@@ -92,12 +116,17 @@ class K8sVirtAnsibleModule(AnsibleModule):
                     setattr(
                         sdk.configuration,
                         key, {'authorization': "Bearer {0}".format(value)})
+                    setattr(
+                        core_configuration,
+                        key, {'authorization': "Bearer {0}".format(value)})
                 else:
                     setattr(sdk.configuration, key, value)
+                    setattr(core_configuration, key, value)
 
         if not self.params.get('verify_ssl'):
             sdk.configuration.verify_ssl = False
+            core_configuration.verify_ssl = False
 
         kube_config.load_kube_config(client_configuration=sdk.configuration)
-
-        return sdk.DefaultApi()
+        Configuration.set_default(core_configuration)
+        return sdk.DefaultApi(), core_client.CoreV1Api()

@@ -1,5 +1,5 @@
 ---
-- name: Gather facts for baldr VirtualMachine
+- name: Gather facts for PersistentVolumeClaim of vms namespace
   hosts: localhost
   connection: local
   vars:
@@ -7,7 +7,7 @@
   tasks:
     - kubevirt_facts:
         kind: PersistentVolumeClaim
-        namespace: default
+        namespace: vms
       register: pvc_facts
     - debug:
         var: pvc_facts

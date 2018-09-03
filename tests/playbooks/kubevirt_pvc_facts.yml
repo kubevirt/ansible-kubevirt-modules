@@ -1,5 +1,5 @@
 ---
-- name: Gather facts for baldr VirtualMachine
+- name: Gather facts for pvc-demo PersistentVolumeClaim
   hosts: localhost
   connection: local
   vars:

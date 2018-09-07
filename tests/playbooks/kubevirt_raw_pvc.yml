@@ -9,7 +9,6 @@
        state: present
        namespace: vms
        name: pvc-demo
-       verify_ssl: no
        wait: yes
        timeout: 1000
        inline:

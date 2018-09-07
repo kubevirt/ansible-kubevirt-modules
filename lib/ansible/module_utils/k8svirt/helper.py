@@ -184,15 +184,15 @@ class VirtualMachineInstanceHelper(object):
         else:
             result = self.__client.list_namespaced_virtual_machine_instance(
                 namespace=namespace,
-                field_selectors=','.join(field_selectors),
-                label_selectors=','.join(label_selectors))
+                field_selector=','.join(field_selectors),
+                label_selector=','.join(label_selectors))
         return result
 
     def list_all(self, field_selectors=None, label_selectors=None):
         """ Return all VirtualMachineInstances in a list """
         return self.__client.list_virtual_machine_instance_for_all_namespaces(
-            field_selectors=','.join(field_selectors),
-            label_selectors=','.join(label_selectors)
+            field_selector=','.join(field_selectors),
+            label_selector=','.join(label_selectors)
         )
 
     def replace(self, body, namespace, name):
@@ -245,15 +245,15 @@ class VirtualMachineHelper(object):
         else:
             result = self.__client.list_namespaced_virtual_machine(
                 namespace=namespace,
-                field_selectors=','.join(field_selectors),
-                label_selectors=','.join(label_selectors))
+                field_selector=','.join(field_selectors),
+                label_selector=','.join(label_selectors))
         return result
 
     def list_all(self, field_selectors=None, label_selectors=None):
         """ Return all VirtualMachines in a list """
         return self.__client.list_virtual_machine_for_all_namespaces(
-            field_selectors=','.join(field_selectors),
-            label_selectors=','.join(label_selectors)
+            field_selector=','.join(field_selectors),
+            label_selector=','.join(label_selectors)
         )
 
     def replace(self, body, namespace, name):
@@ -310,16 +310,16 @@ class VirtualMachineInstanceReplicaSetHelper(object):
             result = (self.__client.
                       list_namespaced_virtual_machine_instance_replica_set(
                           namespace=namespace,
-                          field_selectors=','.join(field_selectors),
-                          label_selectors=','.join(label_selectors)))
+                          field_selector=','.join(field_selectors),
+                          label_selector=','.join(label_selectors)))
         return result
 
     def list_all(self, field_selectors=None, label_selectors=None):
         """ Return all VirtualMachineInstanceReplicaSets in a list """
         return (self.__client.
                 list_virtual_machine_instance_replica_set_for_all_namespaces(
-                    field_selectors=','.join(field_selectors),
-                    label_selectors=','.join(label_selectors)))
+                    field_selector=','.join(field_selectors),
+                    label_selector=','.join(label_selectors)))
 
     def replace(self, body, namespace, name):
         """ Replace VirtualMachineInstanceReplicaSet """
@@ -373,16 +373,16 @@ class VirtualMachineInstancePreSetHelper(object):
             result = (self.__client.
                       list_namespaced_virtual_machine_instance_preset(
                           namespace=namespace,
-                          field_selectors=','.join(field_selectors),
-                          label_selectors=','.join(label_selectors)))
+                          field_selector=','.join(field_selectors),
+                          label_selector=','.join(label_selectors)))
         return result
 
     def list_all(self, field_selectors=None, label_selectors=None):
         """ Return all VirtualMachineInstancePresets in a list """
         return (self.__client.
                 list_virtual_machine_instance_preset_for_all_namespaces(
-                    field_selectors=','.join(field_selectors),
-                    label_selectors=','.join(label_selectors)))
+                    field_selector=','.join(field_selectors),
+                    label_selector=','.join(label_selectors)))
 
     def replace(self, body, namespace, name):
         """ Replace VirtualMachineInstancePreSet """

@@ -81,6 +81,7 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/playbooks/<playbook>
 ```
+> If your cluser has a self-signed certificate, you can include `verify_ssl = false` in `tests/ansible.cfg`
 
 2. The playbook examples, include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration, for being able to access the VMIs created.
 

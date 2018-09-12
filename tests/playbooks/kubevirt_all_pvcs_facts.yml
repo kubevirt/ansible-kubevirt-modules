@@ -1,5 +1,5 @@
 ---
-- name: Gather facts for baldr VirtualMachine
+- name: Gather facts for all PersistentVolumeClaim on default namespace
   hosts: localhost
   connection: local
   vars:

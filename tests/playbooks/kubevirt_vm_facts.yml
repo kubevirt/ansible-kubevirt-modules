@@ -1,14 +1,21 @@
 ---
-- name: Gather facts for baldr VirtualMachine
+- name: Gather facts for VirtualMachine
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_facts:
-        name: baldr
+    - name: Gather facts for test-working vm in default namespaces
+      kubevirt_facts:
+        name: test-working
+        namespace: default
         kind: VirtualMachine
-        namespace: vms
-      register: baldr_facts
+      register: vm_facts
     - debug:
-        var: baldr_facts
+        var: vm_facts
+    - name: Gather facts for VirtualMachine in all namespaces
+      kubevirt_facts:
+        kind: VirtualMachine
+      register: vm_facts
+    - debug:
+        var: vm_facts 

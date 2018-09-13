@@ -1,14 +1,21 @@
 ---
-- name: Gather facts for jhendrix VirtualMachineInstance
+- name: Gather facts for VirtualMachineInstance
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_facts:
-        name: jhendrix
-        namespace: vms
+    - name: Gather facts for test-working VMI in default namespace
+      kubevirt_facts:
+        name: test-working
+        namespace: default
         kind: VirtualMachineInstance
-      register: jhendrix_vmi
+      register: vmi_facts
     - debug:
-        var: jhendrix_vmi
+        var: vmi_facts
+    - name: Gather facts for VMIs in all namespace
+      kubevirt_facts:
+        kind: VirtualMachineInstance
+      register: vmis_facts
+    - debug:
+        var: vmis_facts

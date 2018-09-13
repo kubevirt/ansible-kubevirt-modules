@@ -1,0 +1,19 @@
+---
+- name: Gather facts for VirtualMachine, VirtualMachineInstance & PersistantVolumeClaim
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: "Gather facts for {{item.kind}} in a namespaces"
+      kubevirt_facts:
+        kind: "{{ item.kind }}"
+        name: "{{ item.name }}"
+        namespace: "{{ item.ns }}"
+      with_items:
+      - { kind: VirtualMachine, name: test-working, ns: default }
+      - { kind: VirtualMachineInstance, name: test-working, ns: default}
+      - { kind: PersistantVolumeClaim, name: pvc-demo, ns: default}
+      register: item_facts
+    - debug:
+        var: item_facts

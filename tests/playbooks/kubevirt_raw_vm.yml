@@ -5,25 +5,25 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_raw:
+    - name: create test-fedora VM using kubevirt_raw
+      kubevirt_raw:
        state: present
-       name: baldr
-       namespace: vms
-       verify_ssl: no
+       name: test-fedora
+       namespace: default
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachine
          metadata:
-           name: baldr
-           namespace: vms
+           name: test-fedora
+           namespace: default
            labels:
-             kubevirt.io/vm: baldr
+             kubevirt.io/vm: test
          spec:
            running: true
            template:
              metadata:
                labels:
-                 kubevirt.io/vm: baldr
+                 kubevirt.io/vm: test
              spec:
                domain:
                  resources:
@@ -42,11 +42,11 @@
                volumes:
                - name: myvolume
                  registryDisk:
-                   image: kubevirt/fedora-cloud-registry-disk-demo:v0.6.2
+                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
                - cloudInitNoCloud:
                    userData: |
                      #cloud-config
-                     hostname: baldr
+                     hostname: test-fedora
                      users:
                        - name: kubevirt
                          gecos: KubeVirt Project
@@ -58,3 +58,14 @@
                          ssh_authorized_keys:
                              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
                  name: cloudinitvolume
+    - name: Remove test-fedora VM
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: test-fedora
+        inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: defaul

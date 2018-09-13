@@ -4,11 +4,12 @@
 
 ## Contents
 
-- `lib`: Ansible modules files for KubeVirt management
+- `library`: Ansible modules for KubeVirt management
     - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
     - `kubevirt_facts`: Gather facts about a given resource.
     - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
     - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
+- `module_utils`: Helper modules for Ansible modules
 - `tests`: Ansible playbook examples and unit tests
 
 ## Requirements
@@ -33,22 +34,13 @@
         $ ansible-galaxy install -p <roles_path> kubevirt.kubevirt-modules
         ```
 
-2. Setting up the environment
+2. A working [Kubernetes configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is also required. It can also be created by issuing `oc login` if using KubeVirt with OpenShift.
 
-```shell
-$ export ANSIBLE_MODULE_UTILS=<module_path>/lib/ansible/module_utils
-$ export ANSIBLE_LIBRARY=<module_path>/lib/ansible/modules
-```
+3. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
 
-> **NOTE:** These settings can instead be added to *ansible.cfg* as done in [test/ansible.cfg](tests/ansible.cfg)
+4. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
 
-3. A working [Kubernetes configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is also required. It can also be created by issuing `oc login` if using KubeVirt with OpenShift.
-
-4. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
-
-5. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
-
-6. Once installed, add it to a playbook:
+5. Once installed, add it to a playbook:
 
 ```yaml
 ---

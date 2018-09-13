@@ -139,7 +139,7 @@ import kubernetes.client
 from ansible.module_utils.six import iteritems
 
 if hasattr(sys, '_called_from_test'):
-    sys.path.append('lib/ansible/module_utils/k8svirt')
+    sys.path.append('module_utils/k8svirt')
     from helper import NAME_ARG_SPEC, AUTH_ARG_SPEC
     from common import K8sVirtAnsibleModule
 else:

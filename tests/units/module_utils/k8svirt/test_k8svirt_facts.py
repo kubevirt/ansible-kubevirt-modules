@@ -5,7 +5,7 @@ from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
 
-sys.path.append('lib/ansible/module_utils/k8svirt')
+sys.path.append('module_utils/k8svirt')
 
 import facts
 

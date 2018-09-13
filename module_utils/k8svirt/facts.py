@@ -12,7 +12,7 @@ from kubevirt.rest import ApiException
 # TODO: This is ugly, either find a way to make it always work or clean it up
 # before sending PR to Ansible
 if hasattr(sys, '_called_from_test'):
-    sys.path.append('lib/ansible/module_utils/k8svirt')
+    sys.path.append('module_utils/k8svirt')
     from common import K8sVirtAnsibleModule
     from helper import AUTH_ARG_SPEC, NAME_ARG_SPEC, FACTS_ARG_SPEC, \
         get_helper, to_snake

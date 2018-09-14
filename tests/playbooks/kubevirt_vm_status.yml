@@ -1,0 +1,17 @@
+---
+- name: Stop baldr OVM in vms namespace
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: shutdown test-working VM
+      kubevirt_vm_status:
+        state: stopped
+        name: test-working
+        namespace: default
+    - name: Power on test-working VM
+      kubevirt_vm_status:
+        state: running
+        name: test-working
+        namespace: default

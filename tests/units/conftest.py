@@ -1,6 +1,5 @@
 import pytest
 import json
-import kubevirt
 
 USER_VMI = '''
 {

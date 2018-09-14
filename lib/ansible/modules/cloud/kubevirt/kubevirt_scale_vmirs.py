@@ -15,12 +15,12 @@ module: kubevirt_scale_vmirs
 
 short_description: Scale up or down KubeVirt VMI ReplicaSet
 
-version_added: "2.5"
+version_added: "2.8"
 
 author: KubeVirt Team (@kubevirt)
 
 description:
-  - "Use Kubernets Python SDK to scale up or down KubeVirt
+  - "Use Openshift Python SDK to scale up or down KubeVirt
      VirtualMachineInstance ReplicaSet."
 
 options:
@@ -39,57 +39,13 @@ options:
             - Number of replicas to be currently present.
         required: true
         type: int
-    api_version:
-        description:
-            - KubeVirt API version to use.
-        required: false
-        type: str
-        default: v1alpha2
-    kubeconfig:
-        description:
-            - "Path to an existing Kubernetes config file. If not provided,
-               and no other connection options are provided, the kubernetes
-               client will attempt to load the default configuration file
-               from C(~/.kube/config.json)."
-    context:
-        description:
-            - The name of a context found in the config file.
-    host:
-        description:
-            - Provide a URL for accessing the API.
-            - "Required if I(api_key) or I(username) and I(password) are
-               specified."
-    api_key:
-        description:
-            - Token used to authenticate with the API.
-            - To be used together with I(host).
-    username:
-        description:
-            - Provide a username for authenticating with the API.
-            - To be used together with I(host) and I(password).
-    password:
-        description:
-            - Provide a password for authenticating with the API.
-            - To be used together with I(host) and I(username).
-    verify_ssl:
-        description:
-            - Whether or not to verify the API server's SSL certificates.
-        default: true
-        type: bool
-    ssl_ca_cert:
-        description:
-            - Path to a CA certificate used to authenticate with the API.
-    cert_file:
-        description:
-            - Path to a certificate used to authenticate with the API.
-    key_file:
-        description:
-            - Path to a key file used to authenticate with the API.
 
+extends_documentation_fragment:
+  - k8s_auth_options
 
 requirements:
-    - python >= 2.7
-    - kubernetes python client >= 6.0.0
+  - python >= 2.7
+  - openshift >= 0.6.2
 '''
 
 EXAMPLES = '''
@@ -132,117 +88,154 @@ result:
 '''
 
 import copy
-import os
-import sys
-import kubernetes.client
 
-from ansible.module_utils.six import iteritems
+from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
+from ansible.module_utils.k8s.raw import KubernetesRawModule
 
-if hasattr(sys, '_called_from_test'):
-    sys.path.append('lib/ansible/module_utils/k8svirt')
-    from helper import NAME_ARG_SPEC, AUTH_ARG_SPEC
-    from common import K8sVirtAnsibleModule
-else:
-    from ansible.module_utils.k8svirt.helper import NAME_ARG_SPEC, \
-        AUTH_ARG_SPEC
-    from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
-
-from kubernetes.client.rest import ApiException
-from kubernetes.config import kube_config, ConfigException
+try:
+    from openshift import watch
+    from openshift.dynamic.client import ResourceInstance
+    from openshift.helper.exceptions import KubernetesException
+except ImportError as exc:
+    class KubernetesException(Exception):
+        pass
 
 
-class KubeVirtScaleVMIRS(K8sVirtAnsibleModule):
+VMIR_ARG_SPEC = {
+    'replicas': {'type': 'int', 'required': True},
+    'resource_version': {},
+    'wait': {'type': 'bool', 'default': True},
+    'wait_timeout': {'type': 'int', 'default': 20}
+}
+
+
+class KubeVirtScaleVMIRS(KubernetesRawModule):
     def __init__(self, *args, **kwargs):
         super(KubeVirtScaleVMIRS, self).__init__(*args, **kwargs)
-        self._api_client = None
+
+    def execute_module(self):
+        definition = self.resource_definitions[0]
+
+        self.client = self.get_api_client()
+
+        name = definition['metadata']['name']
+        namespace = definition['metadata'].get('namespace')
+        current_replicas = None
+        replicas = self.params.get('replicas')
+        resource_version = self.params.get('resource_version')
+
+        wait = self.params.get('wait')
+        wait_time = self.params.get('wait_timeout')
+        existing = None
+        existing_count = None
+        return_attributes = dict(changed=False, result=dict())
+
+        resource = self.find_resource('virtualmachineinstancereplicasets', 'kubevirt.io/v1alpha2', fail=True)
+
+        try:
+            existing = resource.get(name=name, namespace=namespace)
+            return_attributes['result'] = existing.to_dict()
+        except KubernetesException as exc:
+            self.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc.message),
+                           error=exc.value.get('status'))
+
+        if hasattr(existing.spec, 'replicas'):
+            existing_count = existing.spec.replicas
+
+        if existing_count is None:
+            self.fail_json(msg='Failed to retrieve the available count for the requested object.')
+
+        if resource_version and resource_version != existing.metadata.resourceVersion:
+            self.exit_json(**return_attributes)
+
+        if current_replicas is not None and existing_count != current_replicas:
+            self.exit_json(**return_attributes)
+
+        if existing_count != replicas:
+            return_attributes['changed'] = True
+            if not self.check_mode:
+                k8s_obj = self.scale(resource, existing, replicas, wait, wait_time)
+                return_attributes['result'] = k8s_obj
+
+        self.exit_json(**return_attributes)
 
     @property
     def argspec(self):
-        argspec = copy.deepcopy(NAME_ARG_SPEC)
-        argspec.update(copy.deepcopy(AUTH_ARG_SPEC))
-        argspec['name']['required'] = True
-        argspec['namespace']['required'] = True
-        argspec['api_version']['default'] = 'v1alpha2'
-        argspec['replicas'] = dict({'required': True, 'type': 'int'})
-        return argspec
+        args = copy.deepcopy(COMMON_ARG_SPEC)
+        args.pop('state')
+        args.pop('force')
+        args.update(AUTH_ARG_SPEC)
+        args.update(VMIR_ARG_SPEC)
+        return args
 
-    def execute_module(self):
-        api_client = self.__authenticate()
-        api_instance = kubernetes.client.CustomObjectsApi(
-            api_client=api_client)
-        group = 'kubevirt.io'
-        plural = 'virtualmachineinstancereplicasets'
-        version = self.params.get('api_version')
-        namespace = self.params.get('namespace')
-        name = self.params.get('name')
-        body = dict()
-        body['spec'] = dict({'replicas': self.params.get('replicas')})
+    def scale(self, resource, existing_object, replicas, wait, wait_time):
+        name = existing_object.metadata.name
+        namespace = existing_object.metadata.namespace
 
-        try:
-            exists = api_instance.get_namespaced_custom_object(
-                group, version, namespace, plural, name)
-            current = exists.get('spec').get('replicas')
+        scale_obj = {'metadata': {'name': name, 'namespace': namespace}, 'spec': {'replicas': replicas}}
 
-            if current == self.params.get('replicas'):
-                self.exit_json(changed=False)
+        return_obj = None
+        stream = None
 
-            api_response = api_instance.patch_namespaced_custom_object(
-                group, version, namespace, plural, name, body)
-            self.exit_json(changed=True, result=api_response)
-        except ApiException as exc:
-            self.fail_json(msg='Failed to manage requested object',
-                           error=exc.reason)
-
-    def __authenticate(self):
-        """ Build API client based on user's configuration """
-        host = self.params.get('host')
-        username = self.params.get('username')
-        password = self.params.get('password')
-        api_key = self.params.get('api_key')
-
-        if (host and username and password) or (api_key and host):
-            return self.__configure_by_params()
-        return self.__configure_by_file()
-
-    def __configure_by_file(self):
-        if not self.params.get('kubeconfig'):
-            config_file = os.path.expanduser(
-                kube_config.KUBE_CONFIG_DEFAULT_LOCATION)
-        else:
-            config_file = self.params.get('kubeconfig')
+        if wait:
+            w, stream = self._create_stream(resource, namespace, wait_time)
 
         try:
-            kube_config.load_kube_config(
-                config_file=config_file,
-                context=self.params.get('context')
+            return_obj, err = self.patch_resource(
+                resource, scale_obj, existing_object, name, namespace, merge_type='merge'
             )
-            config = kubernetes.client.Configuration()
-            if not self.params.get('verify_ssl'):
-                setattr(config, 'verify_ssl', False)
-            return kubernetes.client.ApiClient(
-                configuration=config
+            if err:
+                raise Exception('Failed to patch resource: {}'.format(err))
+        except Exception as exc:
+            self.fail_json(
+                msg="Scale request failed: {0}".format(exc.message)
             )
-        except (IOError, ConfigException):
-            raise
 
-    def __configure_by_params(self):
-        kube_config.load_kube_config()
-        config = kubernetes.client.Configuration()
-        auth_args = AUTH_ARG_SPEC.keys()
+        if wait and stream is not None:
+            return_obj = self._read_stream(resource, w, stream, name, replicas)
 
-        for key, value in iteritems(self.params):
-            if key in auth_args and value is not None:
-                if key == 'api_key':
-                    setattr(
-                        config,
-                        key, {'authorization': "Bearer {0}".format(value)})
-                else:
-                    setattr(config, key, value)
+        return return_obj
 
-        if not self.params.get('verify_ssl'):
-            setattr(config, 'verify_ssl', False)
+    def _create_stream(self, resource, namespace, wait_time):
+        """ Create a stream of events for the object """
+        w = None
+        stream = None
+        try:
+            w = watch.Watch()
+            w._api_client = self.client.client
+            stream = w.stream(resource.get, serialize=False, namespace=namespace, timeout_seconds=wait_time)
+        except KubernetesException as exc:
+            self.fail_json(msg='Failed to initialize watch: {0}'.format(exc.message))
+        return w, stream
 
-        return kubernetes.client.ApiClient(configuration=config)
+    def _read_stream(self, resource, watcher, stream, name, replicas):
+        """ Wait for ready_replicas to equal the requested number of replicas. """
+        return_obj = None
+        try:
+            for event in stream:
+                if event.get('object'):
+                    obj = ResourceInstance(resource, event['object'])
+                    if obj.metadata.name == name and hasattr(obj, 'status'):
+                        if replicas == 0:
+                            if not hasattr(obj.status, 'readyReplicas') or not obj.status.readyReplicas:
+                                return_obj = obj
+                                watcher.stop()
+                                break
+                        if hasattr(obj.status, 'readyReplicas') and obj.status.readyReplicas == replicas:
+                            return_obj = obj
+                            watcher.stop()
+                            break
+        except Exception as exc:
+            self.fail_json(msg="Exception reading event stream: {0}".format(exc.message))
+
+        if not return_obj:
+            self.fail_json(msg="Error fetching the patched object. Try a higher wait_timeout value.")
+        if replicas and return_obj.status.readyReplicas is None:
+            self.fail_json(msg="Failed to fetch the number of ready replicas. Try a higher wait_timeout value.")
+        if replicas and return_obj.status.readyReplicas != replicas:
+            self.fail_json(msg="Number of ready replicas is {0}. Failed to reach {1} ready replicas within "
+                               "the wait_timeout period.".format(return_obj.status.ready_replicas, replicas))
+        return return_obj.to_dict()
 
 
 if __name__ == '__main__':

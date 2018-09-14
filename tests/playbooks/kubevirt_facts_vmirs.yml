@@ -5,7 +5,7 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_facts:
+    - k8s_facts:
         name: freyja
         namespace: vms
         kind: VirtualMachineInstanceReplicaSet

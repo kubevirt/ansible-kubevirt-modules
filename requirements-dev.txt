@@ -2,6 +2,7 @@ pytest >= 3.6.0, < 4.0.0
 pytest-cov >= 2.6.0, < 3.0.0
 mock >= 2.0.0, < 3.0.0
 flake8 >= 3.5.0, < 4.0.0
-ansible>=2.4.0, < 3.0.0
-git+https://github.com/kubevirt/client-python.git@v0.1.0
-kubernetes >= 6.0.0, < 7.0.0
+# Fixme, when Ansible 2.7 is released: ansible >= 2.7.0, < 3.0.0
+git+https://github.com/ansible/ansible.git@v2.7.0rc3
+# Openshift client installable by pip:
+openshift >= 0.6.2, < 1.0.0

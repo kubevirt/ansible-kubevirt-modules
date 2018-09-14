@@ -9,8 +9,8 @@ install:
   - pip install -r requirements-dev.txt
 script:
   - pytest --cov=lib tests
-  - flake8 --ignore=E402 lib/ansible/modules
-  - flake8 --ignore=E402 lib/ansible/module_utils
+  - flake8 --ignore=E402 --max-line-length=160 lib/ansible/modules
+  - flake8 --ignore=E402 --max-line-length=160 lib/ansible/module_utils
 branches:
   only:
   # Build on master, otherwise PRs are not tested.

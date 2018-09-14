@@ -1,14 +1,21 @@
 ---
-- name: Gather facts for pvc-demo PersistentVolumeClaim
+- name: Gather facts for PersistentVolumeClaim
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_facts:
+    - name: facts for PVC pvc-demo in default namespaces
+      kubevirt_facts:
         kind: PersistentVolumeClaim
         name: pvc-demo
-        namespace: vms
+        namespace: default
       register: pvc_facts
     - debug:
         var: pvc_facts
+    - name: facts for PVCs in all namespaces
+      kubevirt_facts:
+        kind: PersistentVolumeClaim
+      register: pvcs_facts
+    - debug:
+        var: pvcs_facts

@@ -1,0 +1,84 @@
+---
+- name: End-to-End flow for creating a VM using CDI
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: Create PVC with CDI annotations
+      kubevirt_raw:
+        state: present
+        namespace: default
+        name: e2e-pvc
+        wait: yes
+        timeout: 1000
+        inline:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: e2e-pvc
+            labels:
+              app: containerized-data-importer
+            annotations:
+              cdi.kubevirt.io/storage.import.endpoint: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Mi
+          storageClassName: default
+    - name: Create a VM with the CDI PVC that was created
+      kubevirt_raw:
+        state: present
+        namespace: default
+        name: e2e-vm
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachine
+          metadata:
+            creationTimestamp: null
+            labels:
+              kubevirt-vm: e2e-vm
+            name: e2e-vm
+          spec:
+            running: false
+            template:
+            metadata:
+              creationTimestamp: null
+            labels:
+              kubevirt-vm: cirros
+              special: e2e-key
+            spec:
+              domain:
+                cpu:
+                  cores: 1
+                devices:
+                  disks:
+                  - disk:
+                    bus: virtio
+                    name: disk0
+                    volumeName: disk0-pvc
+                  - disk:
+                    bus: virtio
+                    name: cloudinitdisk
+                    volumeName: cloudinitvolume
+                resources:
+                  requests:
+                    memory: 64Mi
+              terminationGracePeriodSeconds: 0
+              volumes:
+              - name: disk0-pvc
+                persistentVolumeClaim:
+                claimName: e2e-pvc
+              - name: cloudinitvolume
+                cloudInitNoCloud:
+                userData: |-
+                  #cloud-config
+                  password: "redhat"
+                  chpasswd: { expire: False }
+    - name: Change VM status to running
+      kubevirt_vm_status:
+        state: running
+        name: e2e-vm
+        namespace: default

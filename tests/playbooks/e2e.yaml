@@ -4,19 +4,21 @@
   connection: local
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
+    vm_name: e2e-vm
+    pvc_name: e2e-pvc
   tasks:
     - name: Create PVC with CDI annotations
       kubevirt_raw:
         state: present
         namespace: default
-        name: e2e-pvc
+        name: "{{ pvc_name }}"
         wait: yes
         timeout: 1000
         inline:
           apiVersion: v1
           kind: PersistentVolumeClaim
           metadata:
-            name: e2e-pvc
+            name: "{{ pvc_name }}"
             labels:
               app: containerized-data-importer
             annotations:
@@ -32,23 +34,23 @@
       kubevirt_raw:
         state: present
         namespace: default
-        name: e2e-vm
+        name: "{{ vm_name }}"
         inline:
           apiVersion: kubevirt.io/v1alpha2
           kind: VirtualMachine
           metadata:
             creationTimestamp: null
             labels:
-              kubevirt-vm: e2e-vm
-            name: e2e-vm
+              kubevirt-vm: e2e
+            name: "{{ vm_name }}"
           spec:
             running: false
             template:
-            metadata:
-              creationTimestamp: null
-            labels:
-              kubevirt-vm: cirros
-              special: e2e-key
+              metadata:
+                creationTimestamp: null
+              labels:
+                kubevirt-vm: cirros
+                special: e2e-key
             spec:
               domain:
                 cpu:
@@ -70,7 +72,7 @@
               volumes:
               - name: disk0-pvc
                 persistentVolumeClaim:
-                claimName: e2e-pvc
+                claimName: "{{ pvc_name }}"
               - name: cloudinitvolume
                 cloudInitNoCloud:
                 userData: |-
@@ -80,5 +82,5 @@
     - name: Change VM status to running
       kubevirt_vm_status:
         state: running
-        name: e2e-vm
+        name: "{{ vm_name }}"
         namespace: default

@@ -28,13 +28,3 @@
            resources:
              requests:
                storage: 20Mi
-    - name: Delete pvc-demo PVC
-      kubevirt_raw:
-       state: absent
-       namespace: default
-       name: pvc-demo
-       inline:
-         kind: PersistentVolumeClaim
-         apiVersion: v1
-         metadata:
-           name: pvc-demo

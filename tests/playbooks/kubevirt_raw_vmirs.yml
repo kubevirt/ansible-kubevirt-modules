@@ -58,14 +58,3 @@
                          ssh_authorized_keys:
                              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
                  name: cloudinitvolume
-    - name: Remove test-vmirs VMIRS
-      kubevirt_raw:
-        state: absent
-        name: test-vmirs
-        namespace: default
-        inline:
-          apiVersion: kubevirt.io/v1alpha2
-          kind: VirtualMachineInstanceReplicaSet
-          metadata:
-            name: test-vmirs
-            namespace: default

@@ -1,0 +1,23 @@
+---
+- name: Remove a persistent volume claim
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: Remove raw kind
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: "{{ item.name }}"
+        inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: "{{ item.kind }}"
+         metadata:
+           name: "{{ item.name }}"
+           namespace: default
+      with_items:
+        - { kind: VirtualMachine, name: test-fedora }
+        - { kind: VirtualMachineInstance, name: test-fedora-vmi }
+        - { kind: VirtualMachineInstanceReplicaSet, name: test-vmirs }
+        - { kind: VirtualMachineInstancePreset, name: test-vmps-small }

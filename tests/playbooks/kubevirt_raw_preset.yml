@@ -7,15 +7,14 @@
   tasks:
     - kubevirt_raw:
        state: present
-       name: vmps-small
-       namespace: vms
-       verify_ssl: no
+       name: test-vmps-small
+       namespace: default
        force: yes
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachineInstancePreset
          metadata:
-           name: vmps-small
+           name: test-vmps-small
          spec:
            domain:
              resources:

@@ -5,25 +5,25 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_raw:
+    - name: create test-fedora VM using kubevirt_raw
+      kubevirt_raw:
        state: present
-       name: baldr
-       namespace: vms
-       verify_ssl: no
+       name: test-fedora
+       namespace: default
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachine
          metadata:
-           name: baldr
-           namespace: vms
+           name: test-fedora
+           namespace: default
            labels:
-             kubevirt.io/vm: baldr
+             kubevirt.io/vm: test
          spec:
            running: true
            template:
              metadata:
                labels:
-                 kubevirt.io/vm: baldr
+                 kubevirt.io/vm: test
              spec:
                domain:
                  resources:
@@ -42,11 +42,11 @@
                volumes:
                - name: myvolume
                  registryDisk:
-                   image: kubevirt/fedora-cloud-registry-disk-demo:v0.6.2
+                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
                - cloudInitNoCloud:
                    userData: |
                      #cloud-config
-                     hostname: baldr
+                     hostname: test-fedora
                      users:
                        - name: kubevirt
                          gecos: KubeVirt Project

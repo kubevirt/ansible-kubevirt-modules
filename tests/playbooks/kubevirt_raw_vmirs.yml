@@ -5,26 +5,26 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_raw:
+    - name: Create test-vmirs VMIRS
+      kubevirt_raw:
        state: present
-       name: freyja
-       namespace: vms
-       verify_ssl: no
+       name: test-vmirs
+       namespace: default
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachineInstanceReplicaSet
          metadata:
-           name: freyja
-           namespace: vms
+           name: test-vmirs
+           namespace: default
          spec:
-           replicas: 2
+           replicas: 3
            selector:
              matchLabels:
-               rs: freyjars
+               rs: test-vmirs
            template:
              metadata:
                labels:
-                 rs: freyjars
+                 rs: test-vmirs
              spec:
                domain:
                  resources:
@@ -43,7 +43,7 @@
                volumes:
                - name: myvolume
                  registryDisk:
-                   image: kubevirt/fedora-cloud-registry-disk-demo:v0.6.2
+                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
                - cloudInitNoCloud:
                    userData: |
                      #cloud-config

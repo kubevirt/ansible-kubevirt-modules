@@ -5,11 +5,11 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_raw:
+    - name: Remove pvc-demo PVC
+      kubevirt_raw:
        state: absent
-       namespace: vms
+       namespace: default
        name: pvc-demo
-       verify_ssl: no
        inline:
          kind: PersistentVolumeClaim
          apiVersion: v1

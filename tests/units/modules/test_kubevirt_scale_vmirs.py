@@ -7,7 +7,7 @@ from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
-sys.path.append('lib/ansible/modules/cloud/kubevirt')
+sys.path.append('library')
 
 import kubevirt_scale_vmirs as mymodule
 

@@ -16,7 +16,7 @@ from kubernetes.client import Configuration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six import iteritems
 if hasattr(sys, '_called_from_test'):
-    sys.path.append('lib/ansible/module_utils/k8svirt')
+    sys.path.append('module_utils/k8svirt')
     from helper import AUTH_ARG_SPEC
 else:
     from ansible.module_utils.k8svirt.helper import AUTH_ARG_SPEC

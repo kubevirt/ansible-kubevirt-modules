@@ -2,7 +2,7 @@ import pytest
 import sys
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
-sys.path.append('lib/ansible/module_utils/k8svirt')
+sys.path.append('module_utils/k8svirt')
 
 import helper
 

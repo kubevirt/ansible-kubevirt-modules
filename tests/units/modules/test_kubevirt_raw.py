@@ -10,7 +10,7 @@ from kubevirt import V1VirtualMachineInstance, V1VirtualMachine, \
 from kubernetes.client import V1PersistentVolumeClaim
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
-sys.path.append('lib/ansible/module_utils/k8svirt')
+sys.path.append('module_utils/k8svirt')
 import raw
 
 

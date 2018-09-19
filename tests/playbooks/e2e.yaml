@@ -1,0 +1,86 @@
+---
+- name: End-to-End flow for creating a VM using CDI
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+    vm_name: e2e-vm
+    pvc_name: e2e-pvc
+  tasks:
+    - name: Create PVC with CDI annotations
+      kubevirt_raw:
+        state: present
+        namespace: default
+        name: "{{ pvc_name }}"
+        wait: yes
+        timeout: 1000
+        inline:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: "{{ pvc_name }}"
+            labels:
+              app: containerized-data-importer
+            annotations:
+              cdi.kubevirt.io/storage.import.endpoint: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Mi
+          storageClassName: default
+    - name: Create a VM with the CDI PVC that was created
+      kubevirt_raw:
+        state: present
+        namespace: default
+        name: "{{ vm_name }}"
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachine
+          metadata:
+            creationTimestamp: null
+            labels:
+              kubevirt-vm: e2e
+            name: "{{ vm_name }}"
+          spec:
+            running: false
+            template:
+              metadata:
+                creationTimestamp: null
+              labels:
+                kubevirt-vm: cirros
+                special: e2e-key
+            spec:
+              domain:
+                cpu:
+                  cores: 1
+                devices:
+                  disks:
+                  - disk:
+                    bus: virtio
+                    name: disk0
+                    volumeName: disk0-pvc
+                  - disk:
+                    bus: virtio
+                    name: cloudinitdisk
+                    volumeName: cloudinitvolume
+                resources:
+                  requests:
+                    memory: 64Mi
+              terminationGracePeriodSeconds: 0
+              volumes:
+              - name: disk0-pvc
+                persistentVolumeClaim:
+                claimName: "{{ pvc_name }}"
+              - name: cloudinitvolume
+                cloudInitNoCloud:
+                userData: |-
+                  #cloud-config
+                  password: "redhat"
+                  chpasswd: { expire: False }
+    - name: Change VM status to running
+      kubevirt_vm_status:
+        state: running
+        name: "{{ vm_name }}"
+        namespace: default

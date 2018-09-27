@@ -9,7 +9,7 @@ from ansible.module_utils._text import to_bytes
 from openshift.dynamic import ResourceContainer, ResourceInstance
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
-sys.path.append('lib/ansible/modules/cloud/kubevirt')
+sys.path.append('lib/ansible/modules/clustering/kubevirt')
 
 import kubevirt_vm_status as mymodule
 

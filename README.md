@@ -6,7 +6,6 @@
 
 - `lib`: Ansible modules files for KubeVirt management
     - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
-    - `kubevirt_facts`: Gather facts about a given resource.
     - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
     - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
 - `tests`: Ansible playbook examples and unit tests

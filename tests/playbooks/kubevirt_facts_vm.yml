@@ -6,7 +6,7 @@
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - name: Gather facts for test-working vm in default namespaces
-      kubevirt_facts:
+      k8s_facts:
         name: test-working
         namespace: default
         kind: VirtualMachine
@@ -14,7 +14,7 @@
     - debug:
         var: vm_facts
     - name: Gather facts for VirtualMachine in all namespaces
-      kubevirt_facts:
+      k8s_facts:
         kind: VirtualMachine
       register: vm_facts
     - debug:

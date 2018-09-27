@@ -5,10 +5,10 @@
   vars:
     ansible_python_interpreter: "/usr/bin/env python"
   tasks:
-    - kubevirt_facts:
+    - k8s_facts:
         name: vmips-small
         namespace: vms
         kind: VirtualMachineInstancePreset
-      register: kubevirt_vmips
+      register: k8s_vmips
     - debug:
-        var: kubevirt_vmips
+        var: k8s_vmips

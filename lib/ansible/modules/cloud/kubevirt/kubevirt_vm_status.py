@@ -13,12 +13,12 @@ DOCUMENTATION = '''
 ---
 module: kubevirt_vm_status
 
-short_description: Manage KubeVirt VM state
+short_description: Manage KubeVirt virtual machine state
 
 description:
-    - Use Kubernets Python SDK to manage the state of KubeVirt VirtualMachines.
+    - Use Openshift Python SDK to manage the state of KubeVirt VirtualMachines.
 
-version_added: "2.5"
+version_added: "2.8"
 
 author: KubeVirt Team (@kubevirt)
 
@@ -42,56 +42,13 @@ options:
             - Namespace where the VirtualMachine exists.
         required: true
         type: str
-    api_version:
-        description:
-            - KubeVirt API version to use.
-        required: false
-        type: str
-        default: v1alpha2
-    kubeconfig:
-        description:
-            - "Path to an existing Kubernetes config file. If not provided,
-               and no other connection options are provided, the kubernetes
-               client will attempt to load the default configuration file
-               from C(~/.kube/config.json)."
-    context:
-        description:
-            - The name of a context found in the config file.
-    host:
-        description:
-            - Provide a URL for accessing the API.
-            - "Required if I(api_key) or I(username) and I(password) are
-               specified."
-    api_key:
-        description:
-            - Token used to authenticate with the API.
-            - To be used together with I(host).
-    username:
-        description:
-            - Provide a username for authenticating with the API.
-            - To be used together with I(host) and I(password).
-    password:
-        description:
-            - Provide a password for authenticating with the API.
-            - To be used together with I(host) and I(username).
-    verify_ssl:
-        description:
-            - Whether or not to verify the API server's SSL certificates.
-        default: true
-        type: bool
-    ssl_ca_cert:
-        description:
-            - Path to a CA certificate used to authenticate with the API.
-    cert_file:
-        description:
-            - Path to a certificate used to authenticate with the API.
-    key_file:
-        description:
-            - Path to a key file used to authenticate with the API.
+
+extends_documentation_fragment:
+  - k8s_auth_options
 
 requirements:
-    - python >= 2.7
-    - kubernetes python client >= 6.0.0
+  - python >= 2.7
+  - openshift >= 0.6.2
 '''
 
 EXAMPLES = '''
@@ -132,126 +89,86 @@ result:
             returned: success
             type: complex
 '''
-
 import copy
-import os
-import sys
-import kubernetes.client
-from ansible.module_utils.six import iteritems
 
-if hasattr(sys, '_called_from_test'):
-    sys.path.append('lib/ansible/module_utils/k8svirt')
-    from helper import NAME_ARG_SPEC, AUTH_ARG_SPEC
-    from common import K8sVirtAnsibleModule
-else:
-    from ansible.module_utils.k8svirt.helper import NAME_ARG_SPEC, \
-        AUTH_ARG_SPEC
-    from ansible.module_utils.k8svirt.common import K8sVirtAnsibleModule
+from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
+from ansible.module_utils.k8s.raw import KubernetesRawModule
 
-from kubernetes.client.rest import ApiException
-from kubernetes.config import kube_config, ConfigException
+try:
+    from openshift.helper.exceptions import KubernetesException
+except ImportError as exc:
+    class KubernetesException(Exception):
+        pass
 
 
-class KubeVirtVMStatus(K8sVirtAnsibleModule):
+VM_ARG_SPEC = {
+    'state': {'type': 'str', 'required': True, 'choices': ['running', 'stopped']},
+}
+
+
+class KubeVirtVMStatus(KubernetesRawModule):
     def __init__(self, *args, **kwargs):
         super(KubeVirtVMStatus, self).__init__(*args, **kwargs)
-        self._api_client = None
 
     @property
     def argspec(self):
         """ argspec property builder """
-        argspec = copy.deepcopy(NAME_ARG_SPEC)
-        argspec.update(copy.deepcopy(AUTH_ARG_SPEC))
-        argspec['name']['required'] = True
-        argspec['namespace']['required'] = True
-        argspec['api_version']['default'] = 'v1alpha2'
-        argspec['state'] = dict({
-            'required': False, 'type': 'str',
-            'choices': list(['running', 'stopped']), 'default': 'running'
-        })
-        return argspec
+        argument_spec = copy.deepcopy(COMMON_ARG_SPEC)
+        argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
+        argument_spec.update(VM_ARG_SPEC)
+        return argument_spec
+
+    def _manage_state(self, running, name, namespace, resource, existing, return_attributes):
+        return_attributes['changed'] = True
+        if not self.check_mode:
+            definition = {'metadata': {'name': name, 'namespace': namespace}, 'spec': {'running': running}}
+            k8s_obj, error = self.patch_resource(resource, definition, existing, name,
+                                                 namespace, merge_type='merge')
+            if not error:
+                return_attributes['result'] = k8s_obj
 
     def execute_module(self):
         """ Module execution """
-        api_client = self.__authenticate()
-        api_instance = kubernetes.client.CustomObjectsApi(
-            api_client=api_client)
-        group = 'kubevirt.io'
-        plural = 'virtualmachines'
-        version = self.params.get('api_version')
-        namespace = self.params.get('namespace')
-        name = self.params.get('name')
-        state = True if self.params.get('state') == 'running' else False
-        body = dict()
-        body['spec'] = dict({'running': state})
+        definition = self.resource_definitions[0]
+        self.client = self.get_api_client()
+
+        state = self.params.get('state')
+        resource_version = self.params.get('resource_version')
+        name = definition['metadata']['name']
+        namespace = definition['metadata'].get('namespace')
+        api_version = self.params.get('apiVersion', 'kubevirt.io/v1alpha2')
+
+        existing = None
+        existing_running = None
+        return_attributes = dict(changed=False, result=dict())
+
+        resource = self.find_resource('VirtualMachine', api_version, fail=True)
 
         try:
-            exists = api_instance.get_namespaced_custom_object(
-                group, version, namespace, plural, name)
-            current_state = exists.get('spec').get('running')
+            existing = resource.get(name=name, namespace=namespace)
+            return_attributes['result'] = existing.to_dict()
+        except KubernetesException as exc:
+            self.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc.message),
+                           error=exc.value.get('status'))
 
-            if current_state == state:
-                self.exit_json(changed=False)
+        if hasattr(existing.spec, 'running'):
+            existing_running = existing.spec.running
 
-            api_response = api_instance.patch_namespaced_custom_object(
-                group, version, namespace, plural, name, body)
-            self.exit_json(changed=True, result=api_response)
-        except ApiException as exc:
-            self.fail_json(msg='Failed to manage requested object',
-                           error=exc.reason)
+        if resource_version and resource_version != existing.metadata.resourceVersion:
+            self.exit_json(**return_attributes)
 
-    def __authenticate(self):
-        """ Build API client based on user's configuration """
-        host = self.params.get('host')
-        username = self.params.get('username')
-        password = self.params.get('password')
-        api_key = self.params.get('api_key')
+        if state == 'running':
+            if existing_running:
+                self.exit_json(**return_attributes)
+            else:
+                self._manage_state(True, name, namespace, resource, existing, return_attributes)
+        elif state == 'stopped':
+            if not existing_running:
+                self.exit_json(**return_attributes)
+            else:
+                self._manage_state(False, name, namespace, resource, existing, return_attributes)
 
-        if (host and username and password) or (api_key and host):
-            return self.__configure_by_params()
-        return self.__configure_by_file()
-
-    def __configure_by_file(self):
-        """ Return API client from configuration file """
-        if not self.params.get('kubeconfig'):
-            config_file = os.path.expanduser(
-                kube_config.KUBE_CONFIG_DEFAULT_LOCATION)
-        else:
-            config_file = self.params.get('kubeconfig')
-
-        try:
-            kube_config.load_kube_config(
-                config_file=config_file,
-                context=self.params.get('context')
-            )
-            config = kubernetes.client.Configuration()
-            if not self.params.get('verify_ssl'):
-                setattr(config, 'verify_ssl', False)
-            return kubernetes.client.ApiClient(
-                configuration=config
-            )
-        except (IOError, ConfigException):
-            raise
-
-    def __configure_by_params(self):
-        """ Return API client from configuration file """
-        kube_config.load_kube_config()
-        config = kubernetes.client.Configuration()
-        auth_args = AUTH_ARG_SPEC.keys()
-
-        for key, value in iteritems(self.params):
-            if key in auth_args and value is not None:
-                if key == 'api_key':
-                    setattr(
-                        config,
-                        key, {'authorization': "Bearer {0}".format(value)})
-                else:
-                    setattr(config, key, value)
-
-        if not self.params.get('verify_ssl'):
-            setattr(config, 'verify_ssl', False)
-
-        return kubernetes.client.ApiClient(configuration=config)
+        self.exit_json(**return_attributes)
 
 
 if __name__ == '__main__':

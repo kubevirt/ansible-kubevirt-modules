@@ -250,7 +250,7 @@ class KubeVirtVM(KubernetesRawModule):
 
 def main():
     '''Entry point.'''
-    KubernetesRawModule().execute_module()
+    KubeVirtVM().execute_module()
 
 
 if __name__ == '__main__':

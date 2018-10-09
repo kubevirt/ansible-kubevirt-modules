@@ -1,34 +1,17 @@
-import json
 import sys
 import pytest
 
 from ansible.compat.tests.mock import patch
-from ansible.module_utils import basic
-from ansible.module_utils._text import to_bytes
 
 from openshift.dynamic import ResourceContainer, ResourceInstance
+
+from utils import set_module_args, AnsibleExitJson, exit_json
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/clustering/kubevirt')
 
 import kubevirt_scale_vmirs as mymodule
 
-
-def set_module_args(args):
-    args = json.dumps({'ANSIBLE_MODULE_ARGS': args})
-    basic._ANSIBLE_ARGS = to_bytes(args)
-
-
-class AnsibleExitJson(Exception):
-    """Exception class to be raised by module.exit_json and caught
-    by the test case"""
-    pass
-
-
-def exit_json(*args, **kwargs):
-    if 'changed' not in kwargs:
-        kwargs['changed'] = False
-    raise AnsibleExitJson(kwargs)
 
 
 class TestKubeVirtScaleVMIRSModule(object):

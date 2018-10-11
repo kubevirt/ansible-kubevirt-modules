@@ -88,6 +88,7 @@ result:
 '''
 
 import copy
+import traceback
 
 from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
 from ansible.module_utils.k8s.raw import KubernetesRawModule
@@ -211,22 +212,19 @@ class KubeVirtScaleVMIRS(KubernetesRawModule):
     def _read_stream(self, resource, watcher, stream, name, replicas):
         """ Wait for ready_replicas to equal the requested number of replicas. """
         return_obj = None
-        try:
-            for event in stream:
-                if event.get('object'):
-                    obj = ResourceInstance(resource, event['object'])
-                    if obj.metadata.name == name and hasattr(obj, 'status'):
-                        if replicas == 0:
-                            if not hasattr(obj.status, 'readyReplicas') or not obj.status.readyReplicas:
-                                return_obj = obj
-                                watcher.stop()
-                                break
-                        if hasattr(obj.status, 'readyReplicas') and obj.status.readyReplicas == replicas:
+        for event in stream:
+            if event.get('object'):
+                obj = ResourceInstance(resource, event['object'])
+                if obj.metadata.name == name and hasattr(obj, 'status'):
+                    if replicas == 0:
+                        if not hasattr(obj.status, 'readyReplicas') or not obj.status.readyReplicas:
                             return_obj = obj
                             watcher.stop()
                             break
-        except Exception as exc:
-            self.fail_json(msg="Exception reading event stream: {0}".format(exc.message))
+                    if hasattr(obj.status, 'readyReplicas') and obj.status.readyReplicas == replicas:
+                        return_obj = obj
+                        watcher.stop()
+                        break
 
         if not return_obj:
             self.fail_json(msg="Error fetching the patched object. Try a higher wait_timeout value.")
@@ -238,5 +236,13 @@ class KubeVirtScaleVMIRS(KubernetesRawModule):
         return return_obj.to_dict()
 
 
+def main():
+    module = KubeVirtScaleVMIRS()
+    try:
+        module.execute_module()
+    except Exception as e:
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
+
+
 if __name__ == '__main__':
-    KubeVirtScaleVMIRS().execute_module()
+    main()

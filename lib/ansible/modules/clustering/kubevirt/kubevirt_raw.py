@@ -162,7 +162,8 @@ except ImportError as exc:
 
 RAW_ARG_SPEC = {
     'wait': {'type': 'bool', 'default': True},
-    'wait_timeout': {'type': 'int', 'default': 20}
+    'wait_timeout': {'type': 'int', 'default': 20},
+    'merge_type': {'type': 'list', 'choices': ['json', 'merge', 'strategic-merge']},
 }
 
 

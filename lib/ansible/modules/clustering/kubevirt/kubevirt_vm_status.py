@@ -90,6 +90,7 @@ result:
             type: complex
 '''
 import copy
+import traceback
 
 from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
 from ansible.module_utils.k8s.raw import KubernetesRawModule
@@ -171,5 +172,13 @@ class KubeVirtVMStatus(KubernetesRawModule):
         self.exit_json(**return_attributes)
 
 
+def main():
+    module = KubeVirtVMStatus()
+    try:
+        module.execute_module()
+    except Exception as e:
+        module.fail_json(msg=str(e), exception=traceback.format_exc())
+
+
 if __name__ == '__main__':
-    KubeVirtVMStatus().execute_module()
+    main()

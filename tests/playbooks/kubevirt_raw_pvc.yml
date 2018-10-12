@@ -11,7 +11,7 @@
        namespace: default
        name: pvc-demo
        wait: yes
-       timeout: 1000
+       wait_timeout: 1000
        inline:
          apiVersion: v1
          kind: PersistentVolumeClaim

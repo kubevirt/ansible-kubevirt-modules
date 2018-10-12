@@ -140,9 +140,9 @@ result:
                         till it completes.
            returned: success
            type: bool
-        timeout:
+        wait_timeout:
            description: Specifies how much time in seconds to wait for an
-                        action to compelte if 'wait' option is enabled.
+                        action to complete if 'wait' option is enabled.
            returned: success
            type: int
 '''

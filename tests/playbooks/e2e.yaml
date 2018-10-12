@@ -13,7 +13,7 @@
         namespace: default
         name: "{{ pvc_name }}"
         wait: yes
-        timeout: 1000
+        wait_timeout: 1000
         inline:
           apiVersion: v1
           kind: PersistentVolumeClaim

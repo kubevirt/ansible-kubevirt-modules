@@ -178,6 +178,11 @@ class KubeVirtVM(KubernetesRawModule):
         argspec.update(copy.deepcopy(RAW_ARG_SPEC))
         return argspec
 
+    def fix_serialization(self, obj):
+        if obj and hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        return obj
+
     def execute_module(self):
         changed = False
         results = []
@@ -196,7 +201,7 @@ class KubeVirtVM(KubernetesRawModule):
             definition = self.set_defaults(resource, definition)
             result = self.perform_action(resource, definition)
             changed = changed or result['changed']
-            if wait and state == 'present' and kind == 'persistent_volume_claim':
+            if wait and state == 'present' and kind == 'PersistentVolumeClaim':
                 w, stream = self._create_stream(resource, namespace, wait_time)
                 result = self._read_stream(resource, w, stream)
             results.append(result)
@@ -225,6 +230,8 @@ class KubeVirtVM(KubernetesRawModule):
         return w, stream
 
     def _read_stream(self, resource, watcher, stream):
+        return_obj = None
+
         for event in stream:
             if event.get('object'):
                 entity = ResourceInstance(resource, event['object'])
@@ -238,10 +245,13 @@ class KubeVirtVM(KubernetesRawModule):
                     if (not self._use_cdi(annotations, labels) or
                             import_status == 'Succeeded'):
                         watcher.stop()
-                        return entity
+                        return_obj = entity
+                        break
                     elif entity.status.phase == 'Failed':
                         watcher.stop()
                         self.fail_json(msg="Failed to import PersistentVolumeClaim")
+
+        return self.fix_serialization(return_obj)
 
     def _use_cdi(self, annotations, labels):
         IMPORT_ENDPOINT_KEY = 'cdi.kubevirt.io/storage.import.endpoint'

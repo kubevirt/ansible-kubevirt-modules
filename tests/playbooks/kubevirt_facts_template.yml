@@ -1,0 +1,21 @@
+---
+- name: Gather facts for Templates
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: facts for Template in default namespaces
+      k8s_facts:
+        kind: Template
+        name: working
+        namespace: default
+      register: template_fact
+    - debug:
+        var: template_fact
+    - name: facts for Template in all namespaces
+      k8s_facts:
+        kind: Template
+      register: template_facts
+    - debug:
+        var: template_facts

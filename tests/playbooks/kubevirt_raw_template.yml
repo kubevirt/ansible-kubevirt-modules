@@ -1,0 +1,66 @@
+---
+- name: Create a Template
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python"
+  tasks:
+    - name: Create Template template-demo
+      kubevirt_raw:
+       state: present
+       namespace: default
+       name: template-demo
+       inline:
+         apiVersion: v1
+         kind: Template
+         metadata:
+           name: template-demo
+           labels:
+            miq.github.io/kubevirt-is-vm-template: "true"
+            kubevirt.io/os: rhel-7
+           annotations:
+            description: "OCP kubevirt linux, template"
+            tags: "kubevirt,ocp,template,linux"
+         objects:
+         - apiVersion: kubevirt.io/v1alpha2
+           kind: VirtualMachine
+           metadata: 
+            name: ${NAME}
+           spec:
+            template:
+              spec:
+                domain:
+                  cpu:
+                    cores: ${CPU_CORES}
+                  resources:
+                    requests:
+                      memory: ${MEMORY}
+                  machine:
+                    type: q35
+                  devices:
+                    disks:
+                    - name: registrydisk
+                      volumeName: registryvolume
+                      disk:
+                        dev: vda
+                    - name: cloudinitdisk
+                      volumeName: cloudinitvolume
+                      disk:
+                        dev: vdb
+                volumes:
+                - name: registryvolume
+                  registryDisk:
+                    image: kubevirt/fedora-cloud-registry-disk-demo:latest
+                - name: cloudinitvolume
+                  cloudInitNoCloud:
+                    userDataBase64: I2Nsb3VkLWNvbmZpZwpwYXNzd29yZDogYXRvbWljCnNzaF9wd2F1dGg6IFRydWUKY2hwYXNzd2Q6IHsgZXhwaXJlOiBGYWxzZSB9Cg==
+         parameters:
+         - name: NAME
+           description: Name for the new VM
+           value: demo-vm
+         - name: MEMORY
+           description: Amount of memory in MB
+           value: 512Mi
+         - name: CPU_CORES
+           description: Amount of cores
+           value: "4"

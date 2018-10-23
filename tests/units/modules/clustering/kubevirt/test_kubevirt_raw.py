@@ -36,11 +36,12 @@ class TestKubeVirtRawModule(object):
         K8sAnsibleMixin.find_resource = MagicMock()
 
 
+    @pytest.mark.parametrize("_wait", ( False, True ))
     @pytest.mark.parametrize("_kind", TESTABLE_KINDS)
-    def test_resource_absent(self, _kind):
+    def test_resource_absent(self, _kind, _wait):
         # Desired state:
         args = dict(
-            state='absent', kind=_kind,
+            state='absent', kind=_kind, wait=_wait,
             name='testvmi', namespace='vms', api_version='v1')
         set_module_args(args)
 
@@ -55,11 +56,38 @@ class TestKubeVirtRawModule(object):
         assert result.value[0]['method'] == 'delete' and result.value[0]['changed'] == False
 
 
-    @pytest.mark.parametrize("_kind", TESTABLE_KINDS)
-    def test_resource_creation(self, _kind):
+    @patch('kubevirt_raw.KubeVirtVM._create_stream')
+    def test_pvc_creation_wait(self, mock_create_stream):
+        _kind = 'PersistentVolumeClaim'
         # Desired state:
         args = dict(
-            state='present', kind=_kind,
+            state='present', kind=_kind, wait=True,
+            name='testvmi', namespace='vms', api_version='v1')
+        set_module_args(args)
+
+        # Current state (mock):
+        stream_obj = dict(
+            status = dict( phase = 'Bound' ),
+            metadata = dict( annotations = { 'cdi.kubevirt.io/storage.pod.phase': 'Succeeded' } ),
+            method = 'create', changed = True,
+            )
+        mock_watcher = MagicMock()
+        mock_create_stream.return_value = ( mock_watcher, [ dict( object = stream_obj ) ] )
+        Resource.get.return_value = None # Resource does NOT initially exist in cluster
+        resource_args = dict( kind=_kind, **RESOURCE_DEFAULT_ARGS )
+        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+
+        # Actual test:
+        with pytest.raises(AnsibleExitJson) as result:
+            mymodule.KubeVirtVM().execute_module()
+        assert result.value[0]['method'] == 'create' and result.value[0]['changed'] == True
+
+
+    @pytest.mark.parametrize("_kind", TESTABLE_KINDS)
+    def test_resource_creation_nowait(self, _kind):
+        # Desired state:
+        args = dict(
+            state='present', kind=_kind, wait=False,
             name='testvmi', namespace='vms', api_version='v1')
         set_module_args(args)
 
@@ -74,11 +102,12 @@ class TestKubeVirtRawModule(object):
         assert result.value[0]['method'] == 'create' and result.value[0]['changed'] == True
 
 
+    @pytest.mark.parametrize("_wait", ( False, True ))
     @pytest.mark.parametrize("_kind", TESTABLE_KINDS)
-    def test_resource_deletion(self, _kind):
+    def test_resource_deletion(self, _kind, _wait):
         # Desired state:
         args = dict(
-            state='absent', kind=_kind,
+            state='absent', kind=_kind, wait=_wait,
             name='testvmi', namespace='vms', api_version='v1')
         set_module_args(args)
 

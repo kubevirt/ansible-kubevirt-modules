@@ -238,7 +238,7 @@ class KubeVirtVM(KubernetesRawModule):
                 if entity.status.phase == 'Bound':
                     annotations = metadata.annotations if \
                         metadata.annotations else {}
-                    IMPORT_STATUS_KEY = 'cdi.kubevirt.io/storage.import.pod.phase'
+                    IMPORT_STATUS_KEY = 'cdi.kubevirt.io/storage.pod.phase'
                     import_status = annotations.get(IMPORT_STATUS_KEY)
                     labels = metadata.labels if metadata.labels else {}
                     if (not self._use_cdi(annotations, labels) or
@@ -246,9 +246,9 @@ class KubeVirtVM(KubernetesRawModule):
                         watcher.stop()
                         return_obj = entity
                         break
-                    elif entity.status.phase == 'Failed':
-                        watcher.stop()
-                        self.fail_json(msg="Failed to import PersistentVolumeClaim")
+                elif entity.status.phase == 'Failed':
+                    watcher.stop()
+                    self.fail_json(msg="Failed to import PersistentVolumeClaim")
 
         return self.fix_serialization(return_obj)
 

@@ -216,7 +216,6 @@ class KubeVirtVM(KubernetesRawModule):
             }
         })
 
-    # TODO: Candidate to be common method:
     def _create_stream(self, resource, namespace, wait_time):
         """ Create a stream of events for the object """
         w = None

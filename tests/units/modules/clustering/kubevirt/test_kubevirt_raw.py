@@ -6,15 +6,13 @@ from ansible.compat.tests.mock import patch, MagicMock
 from ansible.module_utils.k8s.common import K8sAnsibleMixin
 from openshift.dynamic import Resource
 
-from utils import set_module_args, AnsibleExitJson, exit_json
+from utils import set_module_args, AnsibleExitJson, exit_json, RESOURCE_DEFAULT_ARGS
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/clustering/kubevirt')
 
 import kubevirt_raw as mymodule
 
-RESOURCE_DEFAULT_ARGS = { 'api_version': 'v1', 'group': 'kubevirt.io',
-                            'prefix': 'apis', 'namespaced': True }
 TESTABLE_KINDS = ( 'VirtualMachineInstance', 'VirtualMachine', 'VirtualMachineInstanceReplicaSet',
                     'VirtualMachineInstancePreset', 'PersistentVolumeClaim' )
  

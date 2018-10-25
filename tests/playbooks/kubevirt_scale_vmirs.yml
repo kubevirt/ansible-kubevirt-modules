@@ -1,5 +1,5 @@
 ---
-- name: Scale freyja replicaset to three
+- name: Scale test replicaset to two
   hosts: localhost
   connection: local
   vars:
@@ -7,6 +7,6 @@
   tasks:
     - kubevirt_scale_vmirs:
         verify_ssl: no
-        replicas: 1
-        name: freyja
-        namespace: vms
+        replicas: 2
+        name: test-vmirs
+        namespace: default

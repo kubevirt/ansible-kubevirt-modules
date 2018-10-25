@@ -217,20 +217,20 @@ class KubeVirtScaleVMIRS(KubernetesRawModule):
                 obj = ResourceInstance(resource, event['object'])
                 if obj.metadata.name == name and hasattr(obj, 'status'):
                     if replicas == 0:
-                        if not hasattr(obj.status, 'readyReplicas') or not obj.status.readyReplicas:
+                        if not hasattr(obj.status, 'replicas') or not obj.status.replicas:
                             return_obj = obj
                             watcher.stop()
                             break
-                    if hasattr(obj.status, 'readyReplicas') and obj.status.readyReplicas == replicas:
+                    if hasattr(obj.status, 'replicas') and obj.status.replicas == replicas:
                         return_obj = obj
                         watcher.stop()
                         break
 
         if not return_obj:
             self.fail_json(msg="Error fetching the patched object. Try a higher wait_timeout value.")
-        if replicas and return_obj.status.readyReplicas is None:
+        if replicas and return_obj.status.replicas is None:
             self.fail_json(msg="Failed to fetch the number of ready replicas. Try a higher wait_timeout value.")
-        if replicas and return_obj.status.readyReplicas != replicas:
+        if replicas and return_obj.status.replicas != replicas:
             self.fail_json(msg="Number of ready replicas is {0}. Failed to reach {1} ready replicas within "
                                "the wait_timeout period.".format(return_obj.status.ready_replicas, replicas))
         return return_obj.to_dict()

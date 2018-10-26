@@ -2,8 +2,6 @@
 - name: Gather facts for vmips-small VirtualMachineInstancePreset in vms namespace
   hosts: localhost
   connection: local
-  vars:
-    ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - k8s_facts:
         name: vmips-small

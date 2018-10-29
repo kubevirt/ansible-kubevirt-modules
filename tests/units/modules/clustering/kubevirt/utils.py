@@ -14,10 +14,17 @@ class AnsibleExitJson(Exception):
     by the test case"""
     pass
 
+class AnsibleFailJson(Exception):
+    """Exception class to be raised by module.fail_json and caught
+    by the test case"""
+    pass
 
 def exit_json(*args, **kwargs):
     if 'changed' not in kwargs:
         kwargs['changed'] = False
     raise AnsibleExitJson(kwargs)
+
+def fail_json(*args, **kwargs):
+    raise AnsibleFailJson(kwargs)
 
 

@@ -3,7 +3,6 @@
   hosts: localhost
   connection: local
   vars:
-    ansible_python_interpreter: "/usr/bin/env python"
     vm_name: e2e-vm
     pvc_name: e2e-pvc
   tasks:

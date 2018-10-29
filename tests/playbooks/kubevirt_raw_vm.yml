@@ -2,8 +2,6 @@
 - name: Deploy a VM with cloud-init data
   hosts: localhost
   connection: local
-  vars:
-    ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - name: create test-fedora VM using kubevirt_raw
       kubevirt_raw:

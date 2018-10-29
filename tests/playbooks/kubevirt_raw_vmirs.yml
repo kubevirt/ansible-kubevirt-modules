@@ -2,8 +2,6 @@
 - name: Deploy a VMIRS with cloud-init data
   hosts: localhost
   connection: local
-  vars:
-    ansible_python_interpreter: "/usr/bin/env python"
   tasks:
     - name: Create test-vmirs VMIRS
       kubevirt_raw:

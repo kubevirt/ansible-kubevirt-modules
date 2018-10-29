@@ -3,6 +3,8 @@ import json
 from ansible.module_utils._text import to_bytes
 from ansible.module_utils import basic
 
+RESOURCE_DEFAULT_ARGS = { 'api_version': 'v1', 'group': 'kubevirt.io',
+                            'prefix': 'apis', 'namespaced': True }
 
 def set_module_args(args):
     args = json.dumps({'ANSIBLE_MODULE_ARGS': args})

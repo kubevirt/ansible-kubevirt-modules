@@ -3,3 +3,4 @@ kubernetes
 **pytest_cache
 **.pyc
 .coverage
+*venv/

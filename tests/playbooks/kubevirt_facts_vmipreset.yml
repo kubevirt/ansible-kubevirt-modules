@@ -5,7 +5,7 @@
   tasks:
     - k8s_facts:
         name: vmips-small
-        namespace: vms
+        namespace: default
         kind: VirtualMachineInstancePreset
       register: k8s_vmips
     - debug:

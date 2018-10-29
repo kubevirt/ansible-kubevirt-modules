@@ -1,12 +1,12 @@
 ---
-- name: Gather facts for freyja VirtualMachineInstanceReplicaSet
+- name: Gather facts for test VirtualMachineInstanceReplicaSet
   hosts: localhost
   connection: local
   tasks:
     - k8s_facts:
-        name: freyja
-        namespace: vms
+        name: test-vmirs
+        namespace: default
         kind: VirtualMachineInstanceReplicaSet
-      register: freyja_vmirs
+      register: test_vmirs
     - debug:
-        var: freyja_vmirs
+        var: test_vmirs

@@ -1,10 +1,10 @@
 ---
-- name: Gather facts for vmips-small VirtualMachineInstancePreset in vms namespace
+- name: Gather facts for test-vmips-small VirtualMachineInstancePreset
   hosts: localhost
   connection: local
   tasks:
     - k8s_facts:
-        name: vmips-small
+        name: test-vmips-small
         namespace: default
         kind: VirtualMachineInstancePreset
       register: k8s_vmips

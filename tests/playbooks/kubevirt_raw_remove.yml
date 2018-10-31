@@ -17,5 +17,6 @@
       with_items:
         - { kind: VirtualMachine, name: test-fedora }
         - { kind: VirtualMachineInstance, name: test-fedora-vmi }
+        - { kind: VirtualMachineInstance, name: test-fedora-vmi-ps }
         - { kind: VirtualMachineInstanceReplicaSet, name: test-vmirs }
-        - { kind: VirtualMachineInstancePreset, name: test-vmps-small }
+        - { kind: VirtualMachineInstancePreset, name: test-vmips-small }

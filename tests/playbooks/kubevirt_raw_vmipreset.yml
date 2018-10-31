@@ -5,25 +5,20 @@
   tasks:
     - kubevirt_raw:
        state: present
-       name: test-vmps-small
+       name: test-vmips-small
        namespace: default
        force: yes
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachineInstancePreset
          metadata:
-           name: test-vmps-small
+           name: test-vmips-small
          spec:
            domain:
              resources:
                requests:
-                 memory: 1024M
-             devices:
-               disks:
-               - volumeName: myvolume
-                 name: mydisk
-                 disk:
-                   bus: virtio
+                 memory: 512M
+             devices: {}
            selector:
              matchLabels:
-               kubevirt.io/vmPreset: vmps-small
+               kubevirt.io/vmPreset: vmi-small

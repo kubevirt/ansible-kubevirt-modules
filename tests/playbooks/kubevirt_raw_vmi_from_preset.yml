@@ -3,22 +3,21 @@
   hosts: localhost
   connection: local
   tasks:
-    - name: Create test-fedora-vmi VMI
+    - name: Create test-fedora-vmi-ps VMI
       kubevirt_raw:
        state: present
-       name: test-fedora-vmi
+       name: test-fedora-vmi-ps
        namespace: default
        inline:
          apiVersion: kubevirt.io/v1alpha2
          kind: VirtualMachineInstance
          metadata:
-           name: test-fedora-vmi
+           name: test-fedora-vmi-ps
            namespace: default
+           labels:
+             kubevirt.io/vmPreset: vmi-small
          spec:
            domain:
-             resources:
-               requests:
-                 memory: 512M
              devices:
                disks:
                - volumeName: bootvolume
@@ -37,7 +36,7 @@
              cloudInitNoCloud:
                userData: |
                  #cloud-config
-                 hostname: test-fedora-vmi
+                 hostname: test-fedora-vmi-ps
                  users:
                    - name: kubevirt
                      gecos: KubeVirt Project

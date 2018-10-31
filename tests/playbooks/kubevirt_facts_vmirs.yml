@@ -7,6 +7,7 @@
         name: test-vmirs
         namespace: default
         kind: VirtualMachineInstanceReplicaSet
+        api_version: kubevirt.io/v1alpha2
       register: test_vmirs
     - debug:
         var: test_vmirs

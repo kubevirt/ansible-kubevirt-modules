@@ -8,12 +8,14 @@
         name: test-working
         namespace: default
         kind: VirtualMachine
+        api_version: kubevirt.io/v1alpha2
       register: vm_facts
     - debug:
         var: vm_facts
     - name: Gather facts for VirtualMachine in all namespaces
       k8s_facts:
         kind: VirtualMachine
+        api_version: kubevirt.io/v1alpha2
       register: vm_facts
     - debug:
         var: vm_facts 

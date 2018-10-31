@@ -1,17 +1,17 @@
 ---
-- name: Gather facts for VirtualMachine, VirtualMachineInstance & PersistantVolumeClaim
+- name: Gather facts for VirtualMachine, VirtualMachineInstance
   hosts: localhost
   connection: local
   tasks:
     - name: "Gather facts for {{item.kind}} in a namespaces"
       k8s_facts:
         kind: "{{ item.kind }}"
+        api_version: kubevirt.io/v1alpha2
         name: "{{ item.name }}"
         namespace: "{{ item.ns }}"
       with_items:
       - { kind: VirtualMachine, name: test-working, ns: default }
       - { kind: VirtualMachineInstance, name: test-working, ns: default}
-      - { kind: PersistantVolumeClaim, name: pvc-demo, ns: default}
       register: item_facts
     - debug:
         var: item_facts

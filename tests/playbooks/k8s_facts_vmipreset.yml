@@ -7,6 +7,7 @@
         name: test-vmips-small
         namespace: default
         kind: VirtualMachineInstancePreset
+        api_version: kubevirt.io/v1alpha2
       register: k8s_vmips
     - debug:
         var: k8s_vmips

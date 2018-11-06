@@ -5,6 +5,7 @@
 ## Contents
 
 - `lib`: Ansible modules files for KubeVirt management
+    - `kubevirt_vm`: Manage virtual machines
     - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
     - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
     - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
@@ -12,10 +13,8 @@
 
 ## Requirements
 
-- Ansible >= 2.4.3.0
-- [KubeVirt Python SDK](https://github.com/kubevirt/client-python)
-- [Kubernetes Python client](https://github.com/kubernetes-client/python)
-- [KubeVirt](https://github.com/kubevirt/kubevirt)
+- Ansible >= 2.7
+- [Kubernetes Python client](https://github.com/openshift/openshift-restclient-python)
 
 ## Installation and usage
 
@@ -43,11 +42,9 @@ $ export ANSIBLE_LIBRARY=<module_path>/lib/ansible/modules
 
 3. A working [Kubernetes configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is also required. It can also be created by issuing `oc login` if using KubeVirt with OpenShift.
 
-4. [Install KubeVirt Python SDK](https://github.com/kubevirt/client-python#installation--usage)
+4. [Install KubeVirt Python SDK](https://github.com/openshift/openshift-restclient-python#installation)
 
-5. [Install Kubernetes Python client](https://github.com/kubernetes-client/python/#installation)
-
-6. Once installed, add it to a playbook:
+5. Once installed, add it to a playbook:
 
 ```yaml
 ---

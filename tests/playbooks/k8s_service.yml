@@ -1,0 +1,22 @@
+---
+- name: Services work just like with standard pods
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Expose ssh port on test-fedora-vmi
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: test-fedora-vmi-ssh-access
+            namespace: default
+          spec:
+            type: NodePort
+            ports:
+              - port: 22
+                nodePort: 30022
+                protocol: TCP
+            selector:
+              name: test-fedora-vmi

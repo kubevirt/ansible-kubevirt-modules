@@ -14,7 +14,7 @@
 ## Requirements
 
 - Ansible >= 2.7
-- [Kubernetes Python client](https://github.com/openshift/openshift-restclient-python)
+- [OpenShift Python client](https://github.com/openshift/openshift-restclient-python)
 
 ## Installation and usage
 
@@ -42,7 +42,7 @@ $ export ANSIBLE_LIBRARY=<module_path>/lib/ansible/modules
 
 3. A working [Kubernetes configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is also required. It can also be created by issuing `oc login` if using KubeVirt with OpenShift.
 
-4. [Install KubeVirt Python SDK](https://github.com/openshift/openshift-restclient-python#installation)
+4. [Install OpenShift Python SDK](https://github.com/openshift/openshift-restclient-python#installation)
 
 5. Once installed, add it to a playbook:
 

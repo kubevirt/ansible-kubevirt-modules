@@ -238,9 +238,8 @@ class KubeVirtVM(KubernetesRawModule):
         return argument_spec
 
     def _manage_state(self, running, resource, existing, wait, wait_time):
-        if not self.check_mode:
-            definition = {'metadata': {'name': self.name, 'namespace': self.namespace}, 'spec': {'running': running}}
-            self.patch_resource(resource, definition, existing, self.name, self.namespace, merge_type='merge')
+        definition = {'metadata': {'name': self.name, 'namespace': self.namespace}, 'spec': {'running': running}}
+        self.patch_resource(resource, definition, existing, self.name, self.namespace, merge_type='merge')
 
         if wait:
             resource = self.find_resource('VirtualMachineInstance', self.api_version, fail=True)

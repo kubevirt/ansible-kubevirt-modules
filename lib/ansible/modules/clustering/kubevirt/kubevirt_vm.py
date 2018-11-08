@@ -224,10 +224,18 @@ class KubeVirtVM(KubernetesRawModule):
     def __init__(self, *args, **kwargs):
         super(KubeVirtVM, self).__init__(*args, **kwargs)
 
-    def merge_dicts(self, x, y):
-        z = x.copy()
-        z.update(y)
-        return z
+    @staticmethod
+    def merge_dicts(x, y):
+        for k in set(x.keys()).union(y.keys()):
+            if k in x and k in y:
+                if isinstance(x[k], dict) and isinstance(y[k], dict):
+                    yield (k, dict(KubeVirtVM.merge_dicts(x[k], y[k])))
+                else:
+                    yield (k, y[k])
+            elif k in x:
+                yield (k, x[k])
+            else:
+                yield (k, y[k])
 
     @property
     def argspec(self):
@@ -342,7 +350,7 @@ class KubeVirtVM(KubernetesRawModule):
             template_spec['domain']['resources']['requests']['memory'] = memory
 
         if labels:
-            template['metadata']['labels'] = labels
+            definition['metadata']['labels'] = labels
 
         if machine_type:
             template_spec['domain']['machine']['type'] = machine_type
@@ -351,7 +359,7 @@ class KubeVirtVM(KubernetesRawModule):
             definition['spec']['running'] = state == 'running'
 
         # Perform create/absent action:
-        definition = self.merge_dicts(self.resource_definitions[0], definition)
+        definition = dict(self.merge_dicts(self.resource_definitions[0], definition))
 
         # TODO: Wait for running state in case of ephemeral VM.
         if ephemeral:

@@ -4,19 +4,19 @@
   connection: local
   tasks:
     - name: Expose ssh port on test-fedora-vmi
-      k8s:
+      k8s_service:
         state: present
+        name: test-fedora-vmi-ssh-access
+        namespace: default
+        type: NodePort
+        ports:
+          - port: 22
+            protocol: TCP
+        selector:
+          kubevirt/vmi: test-fedora-vmi
         definition:
-          apiVersion: v1
-          kind: Service
           metadata:
-            name: test-fedora-vmi-ssh-access
-            namespace: default
+            labels:
+              test: label
           spec:
-            type: NodePort
-            ports:
-              - port: 22
-                nodePort: 30022
-                protocol: TCP
-            selector:
-              name: test-fedora-vmi
+            externalTrafficPolicy: Cluster

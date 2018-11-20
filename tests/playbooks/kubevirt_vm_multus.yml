@@ -1,0 +1,65 @@
+- name: Create Fedora vm with two network interfaces
+  hosts: localhost
+  gather_facts: false
+  connection: local
+
+  # Before running this playbook you need to make sure you have created
+  # 'mynetconf' NetworkAttachmentDefinition. This is used by the second
+  # network intefaces of the VM. Below is one of the example of to create
+  # one. Also this example is using OpenVSwitch, so you need to make sure you
+  # have created br1 ovs bridge.
+  # More info: https://kubevirt.io/user-guide/#/workloads/virtual-machines/interfaces-and-networks?id=multus
+  #
+  #pre_tasks:
+  #  - name: Create NetworkAttachmentDefinition mynetconf
+  #    k8s:
+  #      apiVersion: "k8s.cni.cncf.io/v1"
+  #      kind: NetworkAttachmentDefinition
+  #      metadata:
+  #        name: mynetconf
+  #      spec:
+  #        config: '{
+  #            "cniVersion": "0.2.0",
+  #            "type": "ovs",
+  #            "bridge": "br1"
+  #          }'
+
+  tasks:
+    - name: Create Fedora vm with two network interfaces
+      kubevirt_vm:
+        state: present
+        name: myvm
+        namespace: default
+        memory: 1024M
+        labels:
+          app: galaxy
+          service: web
+          origin: vmware
+        interfaces:
+           - name: default
+             bridge: {}
+             network:
+               pod: {}
+           - name: mynet
+             bridge: {}
+             network:
+               multus:
+                 networkName: mynetconf
+        disks:
+          - name: registrydisk
+            volumeName: registryvolume
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            volumeName: cloudinitvolume
+            disk:
+              bus: virtio
+        volumes:
+          - name: registryvolume
+            registryDisk:
+              image: kubevirt/fedora-cloud-registry-disk-demo:latest
+          - name: cloudinitvolume
+            cloudInitNoCloud:
+              userData: |-
+                password: fedora
+                chpasswd: { expire: False }

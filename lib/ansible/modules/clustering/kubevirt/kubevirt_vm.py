@@ -51,12 +51,12 @@ options:
         description:
             - List of dictionaries which specify disks of the virtual machine.
             - A disk can be made accessible via four different types: I(disk), I(lun), I(cdrom), I(floppy).
-            - https://kubevirt.io/api-reference/master/definitions.html#_v1_disk
+            - All possible configuration options are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_disk)
         type: list
     volumes:
         description:
             - List of volumes specification for the virtual machine.
-            - https://kubevirt.io/api-reference/master/definitions.html#_v1_volume
+            - All possible configuration options are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_volume)
         type: str
     labels:
         description:
@@ -64,9 +64,15 @@ options:
               specify identifying attributes of virtual machines that are meaningful and relevant to users, but do not directly
               imply semantics to the core system. Labels can be used to organize and to select subsets of virtual machines.
               Labels can be attached to virtual machines at creation time and subsequently added and modified at any time.
-            - More on labels that are used for internal implementation:
-              https://kubevirt.io/user-guide/#/misc/annotations_and_labels
+            - More on labels that are used for internal implementation U(https://kubevirt.io/user-guide/#/misc/annotations_and_labels)
         type: dict
+    interfaces:
+        description:
+            - An interface defines a virtual network interface of a virtual machine (also called a frontend).
+            - All possible configuration options interfaces are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_interface)
+            - Each interface must have specified a I(network) that declares which logical or physical device it is connected to (also called as backend).
+              All possible configuration options of network are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_network).
+        type: list
     machine_type:
         description:
             - QEMU machine type is the actual chipset of the virtual machine.
@@ -105,6 +111,22 @@ EXAMPLES = '''
           volumeName: registryvolume
           disk:
             bus: virtio
+
+- name: Create virtual machine 'myvm' with multus network interface
+  kubevirt_vm:
+      name: myvm
+      namespace: vms
+      memory: 512M
+      interfaces:
+        - name: default
+          bridge: {}
+          network:
+            pod: {}
+        - name: mynet
+          bridge: {}
+          network:
+            multus:
+              networkName: mynetconf
 
 - name: Combine inline definition with Ansible parameters:
   kubevirt_vm:
@@ -210,6 +232,7 @@ VM_ARG_SPEC = {
     'disks': {'type': 'list'},
     'volumes': {'type': 'list'},
     'labels': {'type': 'dict'},
+    'interfaces': {'type': 'list'},
     'machine_type': {'type': 'str'},
 }
 
@@ -334,6 +357,7 @@ class KubeVirtVM(KubernetesRawModule):
         volumes = self.params.get('volumes', [])
         memory = self.params.get('memory')
         labels = self.params.get('labels')
+        interfaces = self.params.get('interfaces')
         ephemeral = self.params.get('ephemeral')
         machine_type = self.params.get('machine_type')
         template = definition['spec']['template']
@@ -345,6 +369,21 @@ class KubeVirtVM(KubernetesRawModule):
 
         if disks:
             template_spec['domain']['devices']['disks'] = disks
+
+        if interfaces:
+            # Extract interfaces k8s specification from interfaces list passed to Ansible:
+            spec_interfaces = []
+            for i in interfaces:
+                spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
+            template_spec['domain']['devices']['interfaces'] = spec_interfaces
+
+            # Extract networks k8s specification from interfaces list passed to Ansible:
+            spec_networks = []
+            for i in interfaces:
+                net = i['network']
+                net['name'] = i['name']
+                spec_networks.append(net)
+            template_spec['networks'] = spec_networks
 
         if memory:
             template_spec['domain']['resources']['requests']['memory'] = memory

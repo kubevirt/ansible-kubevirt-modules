@@ -1,0 +1,172 @@
+---
+- name: CRUD test for VM
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create test-fedora VM
+      kubevirt_raw:
+       state: present
+       name: test-fedora
+       namespace: default
+       inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: default
+           labels:
+             kubevirt.io/vm: test
+         spec:
+           running: true
+           template:
+             metadata:
+               labels:
+                 kubevirt.io/vm: test
+             spec:
+               domain:
+                 resources:
+                   requests:
+                     memory: 512M
+                 devices:
+                   disks:
+                   - volumeName: myvolume
+                     name: mydisk
+                     disk:
+                       bus: virtio
+                   - name: cloudinitdisk
+                     volumeName: cloudinitvolume
+                     cdrom:
+                       bus: virtio
+               volumes:
+               - name: myvolume
+                 registryDisk:
+                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
+               - cloudInitNoCloud:
+                   userData: |
+                     #cloud-config
+                     hostname: test-fedora
+                     users:
+                       - name: kubevirt
+                         gecos: KubeVirt Project
+                         sudo: ALL=(ALL) NOPASSWD:ALL
+                         passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                         shell: /bin/bash
+                         home: /home/kubevirt
+                         lock_passwd: false
+                         ssh_authorized_keys:
+                             - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                 name: cloudinitvolume
+      register: vm_facts
+  
+    - name: Fail if VM create task was not 'changed'
+      assert:
+        that:
+        - "vm_facts is changed"
+        fail_msg: "Create VM task did not return changed"
+  
+    - name: recreate test-fedora VM
+      kubevirt_raw:
+       state: present
+       name: test-fedora
+       namespace: default
+       inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: default
+           labels:
+             kubevirt.io/vm: test
+         spec:
+           running: true
+           template:
+             metadata:
+               labels:
+                 kubevirt.io/vm: test
+             spec:
+               domain:
+                 resources:
+                   requests:
+                     memory: 512M
+                 devices:
+                   disks:
+                   - volumeName: myvolume
+                     name: mydisk
+                     disk:
+                       bus: virtio
+                   - name: cloudinitdisk
+                     volumeName: cloudinitvolume
+                     cdrom:
+                       bus: virtio
+               volumes:
+               - name: myvolume
+                 registryDisk:
+                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
+               - cloudInitNoCloud:
+                   userData: |
+                     #cloud-config
+                     hostname: test-fedora
+                     users:
+                       - name: kubevirt
+                         gecos: KubeVirt Project
+                         sudo: ALL=(ALL) NOPASSWD:ALL
+                         passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                         shell: /bin/bash
+                         home: /home/kubevirt
+                         lock_passwd: false
+                         ssh_authorized_keys:
+                             - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                 name: cloudinitvolume
+      register: vm_facts
+
+    - name: Fail if VM recreate task was 'changed'
+      assert:
+        that:
+        - "vm_facts is not changed"
+        - "vm_facts is success"
+        fail_msg: "Create VM task did return changed"
+  
+    - name: Read VM Facts
+      when: vm_facts is succeeded
+      k8s_facts:
+        kind: VirtualMachine
+        api_version: kubevirt.io/v1alpha2
+        name: test-fedora
+        namespace: default
+      register: vm_facts
+
+    - debug:
+        var: vm_facts
+
+    - name: Remove test-fedora VM
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: test-fedora
+        inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: default
+      register: vm_facts
+
+    - name: Remove test-fedora VM
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: test-fedora
+        inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: default
+      register: vm_facts
+
+    - name: Fail if VM delete task was 'changed'
+      assert:
+        that:
+        - "vm_facts is not changed"
+        - "vm_facts is success"
+        fail_msg: "Delete VM task did not return changed"

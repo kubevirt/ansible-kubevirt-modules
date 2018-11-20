@@ -211,9 +211,7 @@ class KubeVirtVM(KubernetesRawModule):
 
         self.exit_json(**{
             'changed': changed,
-            'result': {
-                'results': results
-            }
+            'results': results
         })
 
     def _create_stream(self, resource, namespace, wait_time):

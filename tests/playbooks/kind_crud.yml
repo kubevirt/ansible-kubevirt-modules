@@ -5,57 +5,57 @@
   tasks:
     - name: Create test-fedora VM
       kubevirt_raw:
-       state: present
-       name: test-fedora
-       namespace: default
-       inline:
-         apiVersion: kubevirt.io/v1alpha2
-         kind: VirtualMachine
-         metadata:
-           name: test-fedora
-           namespace: default
-           labels:
-             kubevirt.io/vm: test
-         spec:
-           running: true
-           template:
-             metadata:
-               labels:
-                 kubevirt.io/vm: test
-             spec:
-               domain:
-                 resources:
-                   requests:
-                     memory: 512M
-                 devices:
-                   disks:
-                   - volumeName: myvolume
-                     name: mydisk
-                     disk:
-                       bus: virtio
-                   - name: cloudinitdisk
-                     volumeName: cloudinitvolume
-                     cdrom:
-                       bus: virtio
-               volumes:
-               - name: myvolume
-                 registryDisk:
-                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
-               - cloudInitNoCloud:
-                   userData: |
-                     #cloud-config
-                     hostname: test-fedora
-                     users:
-                       - name: kubevirt
-                         gecos: KubeVirt Project
-                         sudo: ALL=(ALL) NOPASSWD:ALL
-                         passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
-                         shell: /bin/bash
-                         home: /home/kubevirt
-                         lock_passwd: false
-                         ssh_authorized_keys:
-                             - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
-                 name: cloudinitvolume
+        state: present
+        name: test-fedora
+        namespace: default
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachine
+          metadata:
+            name: test-fedora
+            namespace: default
+            labels:
+              kubevirt.io/vm: test
+          spec:
+            running: true
+            template:
+              metadata:
+                labels:
+                  kubevirt.io/vm: test
+              spec:
+                domain:
+                  resources:
+                    requests:
+                      memory: 512M
+                  devices:
+                    disks:
+                    - volumeName: myvolume
+                      name: mydisk
+                      disk:
+                        bus: virtio
+                    - name: cloudinitdisk
+                      volumeName: cloudinitvolume
+                      cdrom:
+                        bus: virtio
+                volumes:
+                - name: myvolume
+                  registryDisk:
+                    image: kubevirt/fedora-cloud-registry-disk-demo:latest
+                - cloudInitNoCloud:
+                    userData: |
+                      #cloud-config
+                      hostname: test-fedora
+                      users:
+                        - name: kubevirt
+                          gecos: KubeVirt Project
+                          sudo: ALL=(ALL) NOPASSWD:ALL
+                          passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                          shell: /bin/bash
+                          home: /home/kubevirt
+                          lock_passwd: false
+                          ssh_authorized_keys:
+                            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                  name: cloudinitvolume
       register: vm_facts
   
     - name: Fail if VM create task was not 'changed'
@@ -63,60 +63,63 @@
         that:
         - "vm_facts is changed"
         fail_msg: "Create VM task did not return changed"
+    
+    - name: wait for changes to appear
+      wait_for: timeout=15
   
     - name: recreate test-fedora VM
       kubevirt_raw:
-       state: present
-       name: test-fedora
-       namespace: default
-       inline:
-         apiVersion: kubevirt.io/v1alpha2
-         kind: VirtualMachine
-         metadata:
-           name: test-fedora
-           namespace: default
-           labels:
-             kubevirt.io/vm: test
-         spec:
-           running: true
-           template:
-             metadata:
-               labels:
-                 kubevirt.io/vm: test
-             spec:
-               domain:
-                 resources:
-                   requests:
-                     memory: 512M
-                 devices:
-                   disks:
-                   - volumeName: myvolume
-                     name: mydisk
-                     disk:
-                       bus: virtio
-                   - name: cloudinitdisk
-                     volumeName: cloudinitvolume
-                     cdrom:
-                       bus: virtio
-               volumes:
-               - name: myvolume
-                 registryDisk:
-                   image: kubevirt/fedora-cloud-registry-disk-demo:latest
-               - cloudInitNoCloud:
-                   userData: |
-                     #cloud-config
-                     hostname: test-fedora
-                     users:
-                       - name: kubevirt
-                         gecos: KubeVirt Project
-                         sudo: ALL=(ALL) NOPASSWD:ALL
-                         passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
-                         shell: /bin/bash
-                         home: /home/kubevirt
-                         lock_passwd: false
-                         ssh_authorized_keys:
-                             - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
-                 name: cloudinitvolume
+        state: present
+        name: test-fedora
+        namespace: default
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachine
+          metadata:
+            name: test-fedora
+            namespace: default
+            labels:
+              kubevirt.io/vm: test
+          spec:
+            running: true
+            template:
+              metadata:
+                labels:
+                  kubevirt.io/vm: test
+              spec:
+                domain:
+                  resources:
+                    requests:
+                      memory: 512M
+                  devices:
+                    disks:
+                    - volumeName: myvolume
+                      name: mydisk
+                      disk:
+                        bus: virtio
+                    - name: cloudinitdisk
+                      volumeName: cloudinitvolume
+                      cdrom:
+                        bus: virtio
+                volumes:
+                - name: myvolume
+                  registryDisk:
+                    image: kubevirt/fedora-cloud-registry-disk-demo:latest
+                - cloudInitNoCloud:
+                    userData: |
+                      #cloud-config
+                      hostname: test-fedora
+                      users:
+                        - name: kubevirt
+                          gecos: KubeVirt Project
+                          sudo: ALL=(ALL) NOPASSWD:ALL
+                          passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                          shell: /bin/bash
+                          home: /home/kubevirt
+                          lock_passwd: false
+                          ssh_authorized_keys:
+                            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                  name: cloudinitvolume
       register: vm_facts
 
     - name: Fail if VM recreate task was 'changed'
@@ -126,6 +129,18 @@
         - "vm_facts is success"
         fail_msg: "Create VM task did return changed"
   
+    - name: shutdown test-fedora VM
+      kubevirt_vm_status:
+        state: stopped
+        name: test-working
+        namespace: default
+
+    - name: Power on test-fedora VM
+      kubevirt_vm_status:
+        state: running
+        name: test-working
+        namespace: default
+
     - name: Read VM Facts
       when: vm_facts is succeeded
       k8s_facts:
@@ -137,6 +152,68 @@
 
     - debug:
         var: vm_facts
+
+    - name: update test-fedora VM
+      kubevirt_raw:
+        state: present
+        name: test-fedora
+        namespace: default
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachine
+          metadata:
+            name: test-fedora
+            namespace: default
+            labels:
+              kubevirt.io/vm: test
+          spec:
+            running: true
+            template:
+              metadata:
+                labels:
+                  kubevirt.io/vm: test
+              spec:
+                domain:
+                  resources:
+                    requests:
+                      memory: 1Gi
+                  devices:
+                    disks:
+                    - volumeName: myvolume
+                      name: mydisk
+                      disk:
+                        bus: virtio
+                    - name: cloudinitdisk
+                      volumeName: cloudinitvolume
+                      cdrom:
+                        bus: virtio
+                volumes:
+                - name: myvolume
+                  registryDisk:
+                    image: kubevirt/fedora-cloud-registry-disk-demo:latest
+                - cloudInitNoCloud:
+                    userData: |
+                      #cloud-config
+                      hostname: test-fedora
+                      users:
+                        - name: kubevirt
+                          gecos: KubeVirt Project
+                          sudo: ALL=(ALL) NOPASSWD:ALL
+                          passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                          shell: /bin/bash
+                          home: /home/kubevirt
+                          lock_passwd: false
+                          ssh_authorized_keys:
+                          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                  name: cloudinitvolume
+      register: vm_facts
+
+    - name: Fail if VM update task was not 'changed'
+      assert:
+        that:
+        - "vm_facts is changed"
+        - "vm_facts is success"
+        fail_msg: "Update VM task did return changed"
 
     - name: Remove test-fedora VM
       kubevirt_raw:
@@ -150,6 +227,15 @@
            name: test-fedora
            namespace: default
       register: vm_facts
+
+    - name: Check if deleting changed
+      assert:
+        that:
+          - "vm_facts is changed"
+        fail_msg: "Delete did not return changed"
+    
+    - name: wait for changes to appear
+      wait_for: timeout=15
 
     - name: Remove test-fedora VM
       kubevirt_raw:
@@ -170,3 +256,219 @@
         - "vm_facts is not changed"
         - "vm_facts is success"
         fail_msg: "Delete VM task did not return changed"
+
+- name: CRUD test for VMI
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create test-fedora-vmi VMI
+      kubevirt_raw:
+        state: present
+        name: test-fedora-vmi
+        namespace: default
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachineInstance
+          metadata:
+            name: test-fedora-vmi
+            namespace: default
+          spec:
+            domain:
+              resources:
+                requests:
+                  memory: 512M
+              devices:
+                disks:
+                - volumeName: bootvolume
+                  name: bootdisk
+                  disk:
+                    bus: virtio
+                - name: cloudinitdisk
+                  volumeName: cloudinitvolume
+                  cdrom:
+                    bus: virtio
+            volumes:
+            - name: bootvolume
+              registryDisk:
+                image: kubevirt/fedora-cloud-registry-disk-demo:latest
+            - name: cloudinitvolume
+              cloudInitNoCloud:
+                userData: |
+                  #cloud-config
+                  hostname: test-fedora-vmi
+                  users:
+                  - name: kubevirt
+                    gecos: KubeVirt Project
+                    sudo: ALL=(ALL) NOPASSWD:ALL
+                    passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                    shell: /bin/bash
+                    home: /home/kubevirt
+                    lock_passwd: false
+                    ssh_authorized_keys:
+                    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+      register: vmi_facts
+
+    - name: Fail if VMI create task was not 'changed'
+      assert:
+        that:
+        - "vmi_facts is changed"
+        fail_msg: "Create VMI task did not return changed"
+  
+    - name: wait for changes to appear
+      wait_for: timeout=15
+    
+    - name: Expose ssh port on test-fedora-vmi
+      k8s_service:
+        state: present
+        name: test-fedora-vmi-ssh-access
+        namespace: default
+        type: NodePort
+        ports:
+          - port: 22
+            protocol: TCP
+        selector:
+          kubevirt/vmi: test-fedora-vmi
+        definition:
+          metadata:
+            labels:
+              test: label
+          spec:
+            externalTrafficPolicy: Cluster
+      register: vmi_facts
+
+    - name: Fail if Expose task was not 'changed'
+      assert:
+        that:
+        - "vmi_facts is changed"
+        fail_msg: "Create Expose Service task did not return changed"
+
+    - name: Expose ssh port on test-fedora-vmi
+      k8s_service:
+        state: present
+        name: test-fedora-vmi-ssh-access
+        namespace: default
+        type: NodePort
+        ports:
+          - port: 22
+            protocol: TCP
+        selector:
+          kubevirt/vmi: test-fedora-vmi
+        definition:
+          metadata:
+            labels:
+              test: label
+          spec:
+            externalTrafficPolicy: Cluster
+      register: vmi_facts
+
+    - name: Fail if Expose task was 'changed'
+      assert:
+        that:
+        - "vmi_facts is not changed"
+        - "vmi_facts is success"
+        fail_msg: "Create Service returned changed"
+
+    - name: Expose ssh port on test-fedora-vmi
+      k8s_service:
+        state: absent
+        name: test-fedora-vmi-ssh-access
+        namespace: default
+        type: NodePort
+        ports:
+          - port: 22
+            protocol: TCP
+        selector:
+          kubevirt/vmi: test-fedora-vmi
+        definition:
+          metadata:
+            labels:
+              test: label
+          spec:
+            externalTrafficPolicy: Cluster
+      register: vmi_facts
+
+    - name: Fail if Expose task was not 'changed'
+      assert:
+        that:
+        - "vmi_facts is changed"
+        fail_msg: "Delete Service task did not return changed"
+
+    - name: Expose ssh port on test-fedora-vmi
+      k8s_service:
+        state: absent
+        name: test-fedora-vmi-ssh-access
+        namespace: default
+        type: NodePort
+        ports:
+          - port: 22
+            protocol: TCP
+        selector:
+          kubevirt/vmi: test-fedora-vmi
+        definition:
+          metadata:
+            labels:
+              test: label
+          spec:
+            externalTrafficPolicy: Cluster
+      register: vmi_facts
+
+    - name: Fail if Expose task was 'changed'
+      assert:
+        that:
+        - "vmi_facts is not changed"
+        - "vmi_facts is success"
+        fail_msg: "Delete Service task returned changed"
+  
+    - name: Read VM Facts
+      when: vm_facts is succeeded
+      k8s_facts:
+        kind: VirtualMachineInstance
+        api_version: kubevirt.io/v1alpha2
+        name: test-fedora-vmi
+        namespace: default
+      register: vmi_facts
+
+    - debug:
+        var: vmi_facts
+
+    - name: Remove test-fedora-vmi VMI
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: test-fedora-vmi
+        inline:
+          apiVersion: kubevirt.io/v1alpha2
+          kind: VirtualMachineInstance
+          metadata:
+            name: test-fedora-vmi
+            namespace: default
+      register: vmi_facts
+
+    - name: Check if deleting changed
+      assert:
+        that:
+          - "vmi_facts is changed"
+        fail_msg: "Delete did not return changed"
+    
+    - name: wait for changes to appear
+      wait_for: timeout=15
+
+    - name: Remove test-fedora-vmi VMI
+      kubevirt_raw:
+        state: absent
+        namespace: default
+        name: test-fedora
+        inline:
+         apiVersion: kubevirt.io/v1alpha2
+         kind: VirtualMachine
+         metadata:
+           name: test-fedora
+           namespace: default
+      register: vmi_facts
+
+    - name: Fail if VMI delete task was 'changed'
+      assert:
+        that:
+        - "vmi_facts is not changed"
+        - "vmi_facts is success"
+        fail_msg: "Delete VMI task returned changed"

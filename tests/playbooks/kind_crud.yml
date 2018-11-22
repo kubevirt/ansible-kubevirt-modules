@@ -4,8 +4,8 @@
   connection: local
   tasks:
     - name: Create test-fedora VM
-      kubevirt_raw:
-        state: present
+      kubevirt_vm:
+        state: running
         name: test-fedora
         namespace: default
         inline:
@@ -17,7 +17,6 @@
             labels:
               kubevirt.io/vm: test
           spec:
-            running: true
             template:
               metadata:
                 labels:
@@ -65,11 +64,15 @@
         fail_msg: "Create VM task did not return changed"
     
     - name: wait for changes to appear
-      wait_for: timeout=15
+      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      register: vm_facts
+      until: vm_facts.stdout == 'true'
+      retries: 60
+      delay: 3
   
     - name: recreate test-fedora VM
-      kubevirt_raw:
-        state: present
+      kubevirt_vm:
+        state: running
         name: test-fedora
         namespace: default
         inline:
@@ -81,7 +84,6 @@
             labels:
               kubevirt.io/vm: test
           spec:
-            running: true
             template:
               metadata:
                 labels:
@@ -136,13 +138,24 @@
         namespace: default
     
     - name: wait for changes to appear
-      wait_for: timeout=15
+      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      register: vm_facts
+      until: vm_facts.stdout == 'false'
+      retries: 60
+      delay: 3
 
     - name: Power on test-fedora VM
       kubevirt_vm_status:
         state: running
         name: test-fedora
         namespace: default
+
+    - name: wait for changes to appear
+      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      register: vm_facts
+      until: vm_facts.stdout == 'true'
+      retries: 60
+      delay: 3
 
     - name: Read VM Facts
       when: vm_facts is succeeded
@@ -318,7 +331,11 @@
         fail_msg: "Create VMI task did not return changed"
   
     - name: wait for changes to appear
-      wait_for: timeout=15
+      command: "oc get vmi test-fedora-vmi -o jsonpath='{.status.phase}'"
+      register: vm_facts
+      until: vm_facts.stdout == 'Running'
+      retries: 60
+      delay: 3
     
     - name: Expose ssh port on test-fedora-vmi
       k8s_service:
@@ -542,7 +559,11 @@
         fail_msg: "Create VMIRS task did not return changed"
   
     - name: wait for changes to appear
-      wait_for: timeout=30
+      command: "oc get vmirs test-vmirs -o jsonpath='{.status.replicas}'"
+      register: vm_facts
+      until: vm_facts.stdout == '3'
+      retries: 60
+      delay: 3
 
     - name: recreate test-vmirs VMIRS
       kubevirt_raw:

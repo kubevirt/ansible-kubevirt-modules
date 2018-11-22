@@ -83,6 +83,12 @@ options:
             - Works only with C(state) I(present) and I(absent).
         type: bool
         default: false
+    cloud_init_nocloud:
+        description:
+            - Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
+              as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
+              More info: U(https://kubevirt.io/api-reference/master/definitions.html#_v1_cloudinitnocloudsource)
+        type: dict
 
 extends_documentation_fragment:
   - k8s_auth_options
@@ -175,17 +181,31 @@ EXAMPLES = '''
           volumeName: registryvolume
           disk:
             bus: virtio
-        - name: cloudinitdisk
-          volumeName: cloudinitvolume
+      volumes:
+        - name: registryvolume
+          registryDisk:
+            image: kubevirt/cirros-registry-disk-demo:latest
+
+- name: Start fedora vm with cloud init
+  kubevirt_vm:
+      state: running
+      wait: true
+      name: myvm
+      namespace: vms
+      memory: 1024M
+      cloud_init_nocloud:
+        userData: |-
+          password: fedora
+          chpasswd: { expire: False }
+      disks:
+        - name: registrydisk
+          volumeName: registryvolume
           disk:
             bus: virtio
       volumes:
         - name: registryvolume
           registryDisk:
-            image: kubevirt/cirros-registry-disk-demo:latest
-        - name: cloudinitvolume
-          cloudInitNoCloud:
-            userDataBase64: IyEvYmluL3NoCgplY2hvICdwcmludGVkIGZyb20gY2xvdWQtaW5pdCB1c2VyZGF0YScK
+            image: kubevirt/fedora-cloud-registry-disk-demo:latest
 
 - name: Remove virtual machine 'myvm'
   kubevirt_vm:
@@ -234,6 +254,7 @@ VM_ARG_SPEC = {
     'labels': {'type': 'dict'},
     'interfaces': {'type': 'list'},
     'machine_type': {'type': 'str'},
+    'cloud_init_nocloud': {'type': 'dict'},
 }
 
 API_VERSION = 'kubevirt.io/v1alpha2'
@@ -347,6 +368,25 @@ class KubeVirtVM(KubernetesRawModule):
                 self._manage_state(False, resource_vm, existing, wait, wait_time)
                 return True
 
+    def _define_cloud_init(self, cloud_init_nocloud, template_spec):
+        """
+        Takes the user's cloud_init_nocloud parameter and fill it in kubevirt
+        API strucuture. The name of the volume is hardcoded to ansiblecloudinitvolume
+        and the name for disk is hardcoded to ansiblecloudinitdisk.
+        """
+        if cloud_init_nocloud:
+            if not template_spec['volumes']:
+                template_spec['volumes'] = []
+            if not template_spec['domain']['devices']['disks']:
+                template_spec['domain']['devices']['disks'] = []
+
+            template_spec['volumes'].append({'name': 'ansiblecloudinitvolume', 'cloudInitNoCloud': cloud_init_nocloud})
+            template_spec['domain']['devices']['disks'].append({
+                'name': 'ansiblecloudinitdisk',
+                'volumeName': 'ansiblecloudinitvolume',
+                'disk': {'bus': 'virtio'},
+            })
+
     def execute_module(self):
         """ Module execution """
         self.client = self.get_api_client()
@@ -359,6 +399,7 @@ class KubeVirtVM(KubernetesRawModule):
         labels = self.params.get('labels')
         interfaces = self.params.get('interfaces')
         ephemeral = self.params.get('ephemeral')
+        cloud_init_nocloud = self.params.get('cloud_init_nocloud')
         machine_type = self.params.get('machine_type')
         template = definition['spec']['template']
         template_spec = template['spec']
@@ -396,6 +437,9 @@ class KubeVirtVM(KubernetesRawModule):
 
         if not ephemeral:
             definition['spec']['running'] = state == 'running'
+
+        # Define cloud init disk if defined:
+        self._define_cloud_init(cloud_init_nocloud, template_spec)
 
         # Perform create/absent action:
         definition = dict(self.merge_dicts(self.resource_definitions[0], definition))

@@ -52,12 +52,9 @@ options:
             - List of dictionaries which specify disks of the virtual machine.
             - A disk can be made accessible via four different types: I(disk), I(lun), I(cdrom), I(floppy).
             - All possible configuration options are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_disk)
+            - Each disk must have specified a I(volume) that declares which volume type of the disk
+              All possible configuration options of volume are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_volume).
         type: list
-    volumes:
-        description:
-            - List of volumes specification for the virtual machine.
-            - All possible configuration options are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_volume)
-        type: str
     labels:
         description:
             - Labels are key/value pairs that are attached to virtual machines. Labels are intended to be used to
@@ -114,7 +111,9 @@ EXAMPLES = '''
       memory: 64M
       disks:
         - name: registrydisk
-          volumeName: registryvolume
+          volume:
+            registryDisk:
+              image: kubevirt/cirros-registry-disk-demo:latest
           disk:
             bus: virtio
 
@@ -151,19 +150,11 @@ EXAMPLES = '''
       memory: 64M
       disks:
         - name: registrydisk
-          volumeName: registryvolume
+          volume:
+            registryDisk:
+              image: kubevirt/cirros-registry-disk-demo:latest
           disk:
             bus: virtio
-        - name: cloudinitdisk
-          volumeName: cloudinitvolume
-          disk:
-            bus: virtio
-      volumes:
-        - name: registryvolume
-          registryDisk:
-            image: kubevirt/cirros-registry-disk-demo:latest
-        - name: cloudinitvolume
-          cloudInitNoCloud:
 
 - name: Start ephemeral virtual machine 'myvm' and wait to be running
   kubevirt_vm:
@@ -178,13 +169,11 @@ EXAMPLES = '''
         kubevirt.io/vm: myvm
       disks:
         - name: registrydisk
-          volumeName: registryvolume
+          volume:
+            registryDisk:
+              image: kubevirt/cirros-registry-disk-demo:latest
           disk:
             bus: virtio
-      volumes:
-        - name: registryvolume
-          registryDisk:
-            image: kubevirt/cirros-registry-disk-demo:latest
 
 - name: Start fedora vm with cloud init
   kubevirt_vm:
@@ -204,8 +193,11 @@ EXAMPLES = '''
             bus: virtio
       volumes:
         - name: registryvolume
-          registryDisk:
-            image: kubevirt/fedora-cloud-registry-disk-demo:latest
+          volume:
+            registryDisk:
+              image: kubevirt/fedora-cloud-registry-disk-demo:latest
+          disk:
+            bus: virtio
 
 - name: Remove virtual machine 'myvm'
   kubevirt_vm:
@@ -255,7 +247,6 @@ VM_ARG_SPEC = {
     'wait_time': {'type': 'int', 'default': 30},
     'memory': {'type': 'str'},
     'disks': {'type': 'list'},
-    'volumes': {'type': 'list'},
     'labels': {'type': 'dict'},
     'interfaces': {'type': 'list'},
     'machine_type': {'type': 'str'},
@@ -392,6 +383,50 @@ class KubeVirtVM(KubernetesRawModule):
                 'disk': {'bus': 'virtio'},
             })
 
+    def _define_interfaces(self, interfaces, template_spec):
+        """
+        Takes interfaces parameter of Ansible and create kubevirt API interfaces
+        and networks strucutre out from it.
+        """
+        if interfaces:
+            # Extract interfaces k8s specification from interfaces list passed to Ansible:
+            spec_interfaces = []
+            for i in interfaces:
+                spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
+            template_spec['domain']['devices']['interfaces'] = spec_interfaces
+
+            # Extract networks k8s specification from interfaces list passed to Ansible:
+            spec_networks = []
+            for i in interfaces:
+                net = i['network']
+                net['name'] = i['name']
+                spec_networks.append(net)
+            template_spec['networks'] = spec_networks
+
+    def _define_disks(self, disks, template_spec):
+        """
+        Takes disks parameter of Ansible and create kubevirt API disks and
+        volumes strucutre out from it.
+        """
+        if disks:
+            # Extract k8s specification from disks list passed to Ansible:
+            spec_disks = []
+            for d in disks:
+                new_disk = {k: v for k, v in d.items() if k != 'volume'}
+                # TODO: Remove when is out:
+                # https://github.com/kubevirt/kubevirt/pull/1570
+                new_disk['volumeName'] = new_disk['name'] + 'volume'
+                spec_disks.append(new_disk)
+            template_spec['domain']['devices']['disks'] = spec_disks
+
+            # Extract volumes k8s specification from disks list passed to Ansible:
+            spec_volumes = []
+            for d in disks:
+                volume = d['volume']
+                volume['name'] = d['name'] + 'volume'
+                spec_volumes.append(volume)
+            template_spec['volumes'] = spec_volumes
+
     def execute_module(self):
         """ Module execution """
         self.client = self.get_api_client()
@@ -416,21 +451,6 @@ class KubeVirtVM(KubernetesRawModule):
         if disks:
             template_spec['domain']['devices']['disks'] = disks
 
-        if interfaces:
-            # Extract interfaces k8s specification from interfaces list passed to Ansible:
-            spec_interfaces = []
-            for i in interfaces:
-                spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
-            template_spec['domain']['devices']['interfaces'] = spec_interfaces
-
-            # Extract networks k8s specification from interfaces list passed to Ansible:
-            spec_networks = []
-            for i in interfaces:
-                net = i['network']
-                net['name'] = i['name']
-                spec_networks.append(net)
-            template_spec['networks'] = spec_networks
-
         if memory:
             template_spec['domain']['resources']['requests']['memory'] = memory
 
@@ -445,6 +465,12 @@ class KubeVirtVM(KubernetesRawModule):
 
         # Define cloud init disk if defined:
         self._define_cloud_init(cloud_init_nocloud, template_spec)
+
+        # Define disks
+        self._define_disks(disks, template_spec)
+
+        # Define interfaces:
+        self._define_interfaces(interfaces, template_spec)
 
         # Perform create/absent action:
         definition = dict(self.merge_dicts(self.resource_definitions[0], definition))

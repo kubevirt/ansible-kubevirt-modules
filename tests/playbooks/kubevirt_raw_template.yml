@@ -37,14 +37,14 @@
                     type: q35
                   devices:
                     disks:
-                    - name: registrydisk
-                      volumeName: registryvolume
-                      disk:
+                    - disk:
                         dev: vda
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
-                      disk:
+                      name: registrydisk
+                      volumeName: registryvolume
+                    - cdrom:
                         dev: vdb
+                      name: cloudinitdisk
+                      volumeName: cloudinitvolume
                 volumes:
                 - name: registryvolume
                   registryDisk:

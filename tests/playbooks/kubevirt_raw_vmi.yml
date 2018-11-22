@@ -21,16 +21,16 @@
                  memory: 512M
              devices:
                disks:
-               - volumeName: bootvolume
-                 name: bootdisk
-                 disk:
+               - disk:
                    bus: virtio
-               - name: cloudinitdisk
+                 name: registrydisk
+                 volumeName: registryvolume
+               - cdrom:
+                   bus: virtio
+                 name: cloudinitdisk
                  volumeName: cloudinitvolume
-                 cdrom:
-                   bus: virtio
            volumes:
-           - name: bootvolume
+           - name: registryvolume
              registryDisk:
                image: kubevirt/fedora-cloud-registry-disk-demo:latest
            - name: cloudinitvolume
@@ -42,9 +42,9 @@
                    - name: kubevirt
                      gecos: KubeVirt Project
                      sudo: ALL=(ALL) NOPASSWD:ALL
-                     passwd: $6$JXbc3063IJir.e5h$ypMlYScNMlUtvQ8Il1ldZi/mat7wXTiRioGx6TQmJjTVMandKqr.jJfe99.QckyfH/JJ.OdvLb5/OrCa8ftLr.
+                     passwd: $6$/hOv3djtWA7DJ3Tz$PufE5F29KS6mlI1lWHbD1WTQBHhrtIYdyNbWMKP0PbsY/YsRSn1sPEQSvYbPjXor3uqcYdAJY0XPx2JtJ6hBC1
                      shell: /bin/bash
                      home: /home/kubevirt
                      lock_passwd: false
                      ssh_authorized_keys:
-                         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+KMp1F4SrKitvgILf8Q2GQbcOslIg4sfqUOf+m832zwoS2Z2ndmpr/3F+NtLq56cTaEzK9IPBIkNLJfsPqRsToLBYZD+l4S5FfuZ2xwCxGBH+TVXApO+SiD6c84rmjOx47665iQvMHKL+n/5gVvSdYDuegNKnj4rRr/eHnG2yC4TVZl3oHI7TPOUJT+kKjSWP1UesWTZmmck39IaFSmorg31X7g9hJHwq9JEDQilcbnIyqDZKiH6Ju4GjOU8mqhazBFB4qu/QDDb25pDpPd2pQGBilGvm7gwJCVnyDk9YZQU7gYE734KLDf5tCKMmEQSjwFx2Tj9mfZveCIJkaj3T kubevirt
+                         - "{{ lookup('file', '../test_rsa.pub') }}"

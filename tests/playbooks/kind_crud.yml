@@ -132,7 +132,7 @@
         fail_msg: "Create VM task did return changed"
   
     - name: shutdown test-fedora VM
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: stopped
         name: test-fedora
         namespace: default
@@ -145,7 +145,7 @@
       delay: 3
 
     - name: Power on test-fedora VM
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: running
         name: test-fedora
         namespace: default

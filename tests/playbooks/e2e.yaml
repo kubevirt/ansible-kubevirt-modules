@@ -3,8 +3,9 @@
   hosts: localhost
   connection: local
   vars:
-    vm_name: e2e-vm
-    pvc_name: e2e-pvc
+    vm_name: cirros-e2e-vm
+    pvc_name: cirros-e2e-pvc
+    service_name: cirros-e2e-service
   tasks:
     - name: Create PVC with CDI annotations
       k8s:
@@ -17,7 +18,7 @@
           metadata:
             name: "{{ pvc_name }}"
             labels:
-              app: containerized-data-importer
+              app: cirros-cdi
             annotations:
               cdi.kubevirt.io/storage.import.endpoint: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
           spec:
@@ -58,7 +59,7 @@
              metadata:
                labels:
                  kubevirt-vm: cirros
-                 special: e2e-key
+                 special: cirros-e2e-key
              spec:
                domain:
                  resources:
@@ -84,7 +85,7 @@
                  cloudInitNoCloud:
                    userData: |
                      #cloud-config
-                     password: "redhat"
+                     password: "gocubsgo"
                      chpasswd: ( expire: False )
 
     - name: Change VM status to running
@@ -93,7 +94,18 @@
         name: '{{ vm_name }}'
         namespace: default
 
-    - name: Incrase the resources of VM
+    - name: Wait for VM to be ready
+      k8s_facts:
+        name: "{{ vm_name }}"
+        namespace: default
+        kind: VirtualMachine
+        api_version: kubevirt.io/v1alpha2
+      register: vm
+      until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
+      delay: 10
+      retries: 18
+
+    - name: Increase the resources of VM
       k8s:
        state: present
        name: '{{ vm_name }}'
@@ -111,12 +123,14 @@
              metadata:
                labels:
                  kubevirt-vm: cirros
-                 special: e2e-key
+                 special: cirros-e2e-key
              spec:
                domain:
                  resources:
                    requests:
-                     memory: 1Gi
+                     memory: 2Gi
+                 cpu:
+                   cores: 2
 
     - name: Restart the VM
       kubevirt_vm:
@@ -126,3 +140,56 @@
       with_items:
         - "stopped"
         - "running"
+
+    - name: Wait for VM to be ready
+      k8s_facts:
+        name: "{{ vm_name }}"
+        namespace: default
+        kind: VirtualMachine
+        api_version: kubevirt.io/v1alpha2
+      register: vm
+      until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
+      delay: 10
+      retries: 18
+
+    - name: Expose the VMI using service
+      k8s_service:
+        state: present
+        name: "{{ service_name }}"
+        namespace: default
+        type: NodePort
+        ports:
+          - name: http
+            nodePort: 30000
+            port: 27017
+            targetPort: 22
+            protocol: TCP
+        selector:
+          special: cirros-e2e-key
+        definition:
+          metadata:
+            labels:
+              kubevirt.io/vm: cirros-e2e-service
+          spec:
+            externalTrafficPolicy: Cluster
+
+    - name: Gather facts for {{ vm_name }} VMI in default namespace
+      k8s_facts:
+        name: "{{ vm_name }}"
+        namespace: default
+        kind: VirtualMachineInstance
+        api_version: kubevirt.io/v1alpha2
+      register: vmi
+
+    - name: Wait for port to be oppened
+      wait_for:
+        host: "{{ vmi.resources[0].status.nodeName}}"
+        port: 30000
+        delay: 10
+      register: result
+
+    - name: Check ssh is executed for VM
+      assert:
+        that:
+          - "result['state'] == 'started'"
+        fail_msg: "ssh is not established "

@@ -215,12 +215,17 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-vm:
-    description:
-      - The virtual machine that user manages.
-      - It contains all attributes https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine
-    returned: success
-    type: complex
+kubevirt_vm:
+  description:
+    - The virtual machine managed by the user.
+  returned: success
+  type: complex
+  contains:
+    k8s_objects:
+      description:
+      - Lists kubernetes objects this module created, modified or read during operation, by type name.
+      returned: success
+      type: dict
 '''
 
 import copy
@@ -450,8 +455,9 @@ class KubeVirtVM(KubernetesRawModule):
         else:
             resource = self.find_resource('VirtualMachine', self.api_version, fail=True)
         definition = self.set_defaults(resource, definition)
-        result = self.perform_action(resource, definition)
-        changed = result['changed']
+        vm_result = self.perform_action(resource, definition)
+        changed = vm_result['changed']
+        k8s_objects = {'VM': vm_result}
 
         # Manage the state:
         if state in ['running', 'stopped']:
@@ -461,7 +467,7 @@ class KubeVirtVM(KubernetesRawModule):
 
         self.exit_json(**{
             'changed': changed,
-            'vm': result,
+            'kubevirt_vm': {'k8s_objects': k8s_objects}
         })
 
 

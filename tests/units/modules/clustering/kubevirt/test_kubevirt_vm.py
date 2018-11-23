@@ -54,7 +54,9 @@ class TestKubeVirtVmModule(object):
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.KubeVirtVM().execute_module()
-        assert result.value[0]['vm']['method'] == 'create' and result.value[0]['changed']
+        assert result.value[0]['changed']
+        assert result.value[0]['kubevirt_vm']['k8s_objects']['VM']['method'] == 'create'
+
 
     def test_simple_merge_dicts(self):
         dict1 = {'labels': {'label1': 'value'}}

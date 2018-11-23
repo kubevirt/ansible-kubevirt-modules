@@ -4,7 +4,7 @@
   connection: local
   tasks:
     - name: Remove raw kind
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: "{{ item.name }}"

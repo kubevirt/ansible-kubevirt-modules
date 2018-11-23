@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   tasks:
-    - kubevirt_raw:
+    - k8s:
        state: present
        name: test-vmips-small
        namespace: default

@@ -1,27 +1,28 @@
 ---
-- name: Deploy a VM with cloud-init data
+- name: Deploy a VMIRS with cloud-init data
   hosts: localhost
   connection: local
   tasks:
-    - name: create test-fedora VM using kubevirt_raw
-      kubevirt_raw:
+    - name: Create test-vmirs VMIRS
+      k8s:
        state: present
-       name: test-fedora
+       name: test-vmirs
        namespace: default
        inline:
          apiVersion: kubevirt.io/v1alpha2
-         kind: VirtualMachine
+         kind: VirtualMachineInstanceReplicaSet
          metadata:
-           name: test-fedora
+           name: test-vmirs
            namespace: default
-           labels:
-             kubevirt.io/vm: test
          spec:
-           running: true
+           replicas: 3
+           selector:
+             matchLabels:
+               rs: test-vmirs
            template:
              metadata:
                labels:
-                 kubevirt.io/vm: test
+                 rs: test-vmirs
              spec:
                domain:
                  resources:
@@ -45,7 +46,6 @@
                  cloudInitNoCloud:
                    userData: |
                      #cloud-config
-                     hostname: test-fedora
                      users:
                        - name: kubevirt
                          gecos: KubeVirt Project

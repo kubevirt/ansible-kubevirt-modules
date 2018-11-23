@@ -4,12 +4,12 @@
   connection: local
   tasks:
     - name: shutdown test-working VM
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: stopped
         name: test-working
         namespace: default
     - name: Power on test-working VM
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: running
         name: test-working
         namespace: default

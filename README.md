@@ -6,7 +6,6 @@
 
 - `lib`: Ansible modules files for KubeVirt management
     - `kubevirt_vm`: Manage virtual machines
-    - `kubevirt_raw`: Allow to manage KubeVirt resources, VirtualMachineInstance, VirtualMachine, VirtualMachineInstanceReplicaSet and VirtualMachineInstancePresets.
     - `kubevirt_vm_status`: Set an VirtualMachine to either `running` or `stopped`.
     - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
 - `tests`: Ansible playbook examples and unit tests
@@ -59,9 +58,9 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 
 ## Playbook examples
 
-* [Virtual Machine Instance](tests/playbooks/kubevirt_raw_vmi.yml)
-* [Virtual Machine](tests/playbooks/kubevirt_raw_vm.yml)
-* [Virtual Machine Instance ReplicaSet](tests/playbooks/kubevirt_raw_vmirs.yml)
+* [Virtual Machine Instance](tests/playbooks/k8s_vmi.yml)
+* [Virtual Machine](tests/playbooks/k8s_vm.yml)
+* [Virtual Machine Instance ReplicaSet](tests/playbooks/k8s_vmirs.yml)
 * [Stop Virtual Machine](tests/playbooks/kubevirt_vm_stopped.yml)
 * [Scale Virtual Machine Instance Replica Set](tests/playbooks/kubevirt_scale_vmirs.yml)
 * [Virtual Machine Instance facts](tests/playbooks/kubevirt_vmi_facts.yml)

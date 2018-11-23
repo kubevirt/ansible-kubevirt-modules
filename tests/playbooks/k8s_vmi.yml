@@ -4,7 +4,7 @@
   connection: local
   tasks:
     - name: Create test-fedora-vmi VMI
-      kubevirt_raw:
+      k8s:
        state: present
        name: test-fedora-vmi
        namespace: default

@@ -7,12 +7,10 @@
     pvc_name: e2e-pvc
   tasks:
     - name: Create PVC with CDI annotations
-      kubevirt_raw:
+      k8s:
         state: present
         namespace: default
         name: "{{ pvc_name }}"
-        wait: yes
-        wait_timeout: 1000
         inline:
           apiVersion: v1
           kind: PersistentVolumeClaim
@@ -30,8 +28,19 @@
                 storage: 1Gi
           storageClassName: default
 
+    - name: Wait for PVC to be ready
+      k8s_facts:
+        name: "{{ pvc_name }}"
+        namespace: default
+        kind: PersistentVolumeClaim
+        api_version: v1
+      register: pvc
+      until: "pvc.resources[0].status.phase == 'Bound' and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
+      delay: 10
+      retries: 18
+
     - name: Create a VM with the CDI PVC that was created
-      kubevirt_raw:
+      k8s:
        state: present
        name: '{{ vm_name }}'
        namespace: default
@@ -79,13 +88,13 @@
                      chpasswd: ( expire: False )
 
     - name: Change VM status to running
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: running
         name: '{{ vm_name }}'
         namespace: default
 
     - name: Incrase the resources of VM
-      kubevirt_raw:
+      k8s:
        state: present
        name: '{{ vm_name }}'
        namespace: default
@@ -110,7 +119,7 @@
                      memory: 1Gi
 
     - name: Restart the VM
-      kubevirt_vm_status:
+      kubevirt_vm:
         state: "{{ item }}"
         name: "{{ vm_name }}"
         namespace: default

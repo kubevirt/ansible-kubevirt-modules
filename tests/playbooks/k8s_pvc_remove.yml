@@ -4,7 +4,7 @@
   connection: local
   tasks:
     - name: Remove pvc-demo PVC
-      kubevirt_raw:
+      k8s:
        state: absent
        namespace: default
        name: pvc-demo

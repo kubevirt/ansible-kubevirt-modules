@@ -3,11 +3,13 @@ import pytest
 import sys
 
 from openshift.dynamic import Resource
+from openshift.helper.exceptions import KubernetesException
 
-from ansible.compat.tests.mock import MagicMock
+from ansible.compat.tests.mock import patch, MagicMock
 from ansible.module_utils.k8s.common import K8sAnsibleMixin
+from ansible.module_utils.k8s.raw import KubernetesRawModule
 
-from utils import set_module_args, AnsibleExitJson, exit_json, fail_json, RESOURCE_DEFAULT_ARGS
+from utils import set_module_args, AnsibleFailJson, AnsibleExitJson, exit_json, fail_json, RESOURCE_DEFAULT_ARGS
 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/clustering/kubevirt')
@@ -22,9 +24,9 @@ class TestKubeVirtVmModule(object):
     @pytest.fixture(autouse=True)
     def setup_class(cls, monkeypatch):
         monkeypatch.setattr(
-            mymodule.KubeVirtVM, "exit_json", exit_json)
+            KubernetesRawModule, "exit_json", exit_json)
         monkeypatch.setattr(
-            mymodule.KubeVirtVM, "fail_json", fail_json)
+            KubernetesRawModule, "fail_json", fail_json)
         # Create mock methods in Resource directly, otherwise dyn client
         # tries binding those to corresponding methods in DynamicClient
         # (with partial()), which is more problematic to intercept
@@ -57,6 +59,43 @@ class TestKubeVirtVmModule(object):
         assert result.value[0]['changed']
         assert result.value[0]['kubevirt_vm']['k8s_objects']['VM']['method'] == 'create'
 
+    @pytest.mark.parametrize("_wait", ( False, True ))
+    def test_resource_absent(self, _wait):
+        # Desired state:
+        args = dict(
+            state='absent', name='testvmi',
+            namespace='vms', api_version='v1',
+            wait=_wait,
+        )
+        set_module_args(args)
+
+        Resource.get.return_value = None
+        resource_args = dict( kind=KIND, **RESOURCE_DEFAULT_ARGS )
+        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+
+        # Actual test:
+        with pytest.raises(AnsibleExitJson) as result:
+            mymodule.KubeVirtVM().execute_module()
+        assert result.value[0]['kubevirt_vm']['k8s_objects']['VM']['method'] == 'delete'
+
+    @patch('openshift.watch.Watch')
+    def test_stream_creation(self, mock_watch):
+        # Desired state:
+        args = dict(
+            state='running', name='testvmi',
+            namespace='vms', api_version='v1',
+            wait=True)
+        set_module_args(args)
+
+        # Mock pre-change state:
+        Resource.get.return_value = None # Resource does NOT initially exist in cluster
+        resource_args = dict( kind=KIND, **RESOURCE_DEFAULT_ARGS )
+        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+
+        # Actual test:
+        mock_watch.side_effect = KubernetesException("Test", value=42)
+        with pytest.raises(AnsibleFailJson) as result:
+            mymodule.KubeVirtVM().execute_module()
 
     def test_simple_merge_dicts(self):
         dict1 = {'labels': {'label1': 'value'}}

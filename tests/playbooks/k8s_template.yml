@@ -4,7 +4,7 @@
   connection: local
   tasks:
     - name: Create Template template-demo
-      kubevirt_raw:
+      k8s:
        state: present
        namespace: default
        name: template-demo

@@ -170,7 +170,7 @@
         var: vm_facts
 
     - name: update test-fedora VM
-      kubevirt_raw:
+      k8s:
         state: present
         name: test-fedora
         namespace: default
@@ -232,7 +232,7 @@
         fail_msg: "Update VM task did return changed"
 
     - name: Remove test-fedora VM
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-fedora
@@ -254,7 +254,7 @@
       wait_for: timeout=15
 
     - name: Remove test-fedora VM
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-fedora
@@ -278,7 +278,7 @@
   connection: local
   tasks:
     - name: Create test-fedora-vmi VMI
-      kubevirt_raw:
+      k8s:
         state: present
         name: test-fedora-vmi
         namespace: default
@@ -452,7 +452,7 @@
         var: vmi_facts
 
     - name: Remove test-fedora-vmi VMI
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-fedora-vmi
@@ -474,7 +474,7 @@
       wait_for: timeout=15
 
     - name: Remove test-fedora-vmi VMI
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-fedora
@@ -498,7 +498,7 @@
   connection: local
   tasks:
     - name: Create test-vmirs VMIRS
-      kubevirt_raw:
+      k8s:
         state: present
         name: test-vmirs
         namespace: default
@@ -566,7 +566,7 @@
       delay: 3
 
     - name: recreate test-vmirs VMIRS
-      kubevirt_raw:
+      k8s:
         state: present
         name: test-vmirs
         namespace: default
@@ -640,7 +640,7 @@
         var: vmirs_facts
 
     - name: Update test-vmirs VMIRS
-      kubevirt_raw:
+      k8s:
         state: present
         name: test-vmirs
         namespace: default
@@ -714,7 +714,7 @@
         fail_msg: "Update VMIRS task did not return changed"
 
     - name: Remove test-vmirs VMIRS
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-vmirs
@@ -736,7 +736,7 @@
       wait_for: timeout=15
 
     - name: Remove test-vmirs VMI
-      kubevirt_raw:
+      k8s:
         state: absent
         namespace: default
         name: test-vmirs

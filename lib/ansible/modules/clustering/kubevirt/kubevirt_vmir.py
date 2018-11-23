@@ -108,11 +108,26 @@ import traceback
 
 from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
 
-from ansible.module_utils.kubevirt import KubeVirtRawModule
-
-from openshift import watch
 from openshift.dynamic.client import ResourceInstance
-from openshift.helper.exceptions import KubernetesException
+
+# FIXME:
+import sys
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils/')
+    from kubevirt import (
+        virtdict,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+        KubeVirtRawModule,
+    )
+else:
+    from ansible.module_utils.kubevirt import (
+        virtdict,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+        KubeVirtRawModule,
+    )
+
 
 KIND = 'VirtualMachineInstanceReplicaSet'
 VMIR_ARG_SPEC = {
@@ -120,12 +135,6 @@ VMIR_ARG_SPEC = {
     'selector': {'type': 'dict'},
 }
 
-from ansible.module_utils.kubevirt import (
-    virtdict,
-    KubeVirtRawModule,
-    VM_COMMON_ARG_SPEC,
-    API_VERSION,
-)
 
 class KubeVirtVMIR(KubeVirtRawModule):
 
@@ -185,11 +194,11 @@ class KubeVirtVMIR(KubeVirtRawModule):
 
         if replicas is not None:
             definition['spec']['replicas'] = replicas
-        
+
         # Execute the CURD of VM:
-        result = self.execute_crud(KIND, definition)
-        changed = result['changed']
-        result = result['result']
+        result_crud = self.execute_crud(KIND, definition)
+        changed = result_crud['changed']
+        result = result_crud.pop('result')
 
         # Wait for the replicas:
         wait = self.params.get('wait')
@@ -200,6 +209,7 @@ class KubeVirtVMIR(KubeVirtRawModule):
         self.exit_json(**{
             'changed': changed,
             'kubevirt_vmir': result,
+            'result': result_crud,
         })
 
 

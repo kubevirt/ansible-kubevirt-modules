@@ -144,9 +144,7 @@ class KubeVirtRawModule(KubernetesRawModule):
         """ Module execution """
         self.client = self.get_api_client()
 
-        state = self.params.get('state')
         disks = self.params.get('disks', [])
-        volumes = self.params.get('volumes', [])
         memory = self.params.get('memory')
         labels = self.params.get('labels')
         interfaces = self.params.get('interfaces')
@@ -178,7 +176,4 @@ class KubeVirtRawModule(KubernetesRawModule):
         definition = dict(self.merge_dicts(self.resource_definitions[0], definition))
         resource = self.find_resource(kind, self.api_version, fail=True)
         definition = self.set_defaults(resource, definition)
-        with open('/tmp/my.txt', 'w') as f:
-            import json
-            f.write(json.dumps(definition, indent=4))
         return self.perform_action(resource, definition)

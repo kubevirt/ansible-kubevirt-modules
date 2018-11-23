@@ -57,7 +57,7 @@ class TestKubeVirtVmModule(object):
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.KubeVirtVM().execute_module()
         assert result.value[0]['changed']
-        assert result.value[0]['kubevirt_vm']['k8s_objects']['VM']['method'] == 'create'
+        assert result.value[0]['result']['method'] == 'create'
 
     @pytest.mark.parametrize("_wait", ( False, True ))
     def test_resource_absent(self, _wait):
@@ -76,7 +76,7 @@ class TestKubeVirtVmModule(object):
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.KubeVirtVM().execute_module()
-        assert result.value[0]['kubevirt_vm']['k8s_objects']['VM']['method'] == 'delete'
+        assert result.value[0]['result']['method'] == 'delete'
 
     @patch('openshift.watch.Watch')
     def test_stream_creation(self, mock_watch):

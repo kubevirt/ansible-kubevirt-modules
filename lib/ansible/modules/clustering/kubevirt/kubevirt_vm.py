@@ -194,18 +194,26 @@ import traceback
 
 from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
 
-from ansible.module_utils.kubevirt import KubeVirtRawModule
-
-from openshift import watch
 from openshift.dynamic.client import ResourceInstance
-from openshift.helper.exceptions import KubernetesException
 
-from ansible.module_utils.kubevirt import (
-    virtdict,
-    KubeVirtRawModule,
-    VM_COMMON_ARG_SPEC,
-    API_VERSION,
-)
+import sys
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils')
+    import kubevirt
+    print kubevirt
+    from kubevirt import (
+        virtdict,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+        KubeVirtRawModule,
+    )
+else:
+    from ansible.module_utils.kubevirt import (
+        virtdict,
+        KubeVirtRawModule,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+    )
 
 
 VM_ARG_SPEC = {
@@ -298,7 +306,7 @@ class KubeVirtVM(KubeVirtRawModule):
 
         if not ephemeral:
             definition['spec']['running'] = state == 'running'
-        
+
         # Execute the CURD of VM:
         kind = 'VirtualMachineInstance' if ephemeral else 'VirtualMachine'
         result = self.execute_crud(kind, definition)
@@ -313,7 +321,8 @@ class KubeVirtVM(KubeVirtRawModule):
         # Return from the module:
         self.exit_json(**{
             'changed': changed,
-            'kubevirt_vm': result['result'],
+            'kubevirt_vm': result.pop('result'),
+            'result': result,
         })
 
 

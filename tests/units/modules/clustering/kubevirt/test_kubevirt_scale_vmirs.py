@@ -36,30 +36,33 @@ class TestKubeVirtVMIRSModule(object):
         K8sAnsibleMixin.find_resource = MagicMock()
 
     @pytest.mark.parametrize("_replicas, _changed", ( (1, True),
+                                                      (3, True),
                                                       (2, False),
                                                       (5, True), ) )
     def test_scale_vmirs_nowait(self, _replicas, _changed):
         _name = 'test-vmirs'
         # Desired state:
-        args = dict(name=_name, namespace='vms', replicas=2, wait=False)
+        args = dict(name=_name, namespace='vms', replicas=_replicas, wait=False)
         set_module_args(args)
 
         # Mock pre-change state:
         resource_args = dict( kind='VirtualMachineInstanceReplicaSet', **RESOURCE_DEFAULT_ARGS )
         K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
-        res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': _replicas}))
+        res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': 2}))
         Resource.get.return_value = res_inst
+        KubernetesRawModule.patch_resource.return_value = dict(metadata = {'name': _name}, spec = {'replicas': _replicas}), None
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.KubeVirtScaleVMIRS().execute_module()
+            mymodule.KubeVirtVMIR().execute_module()
+        print result
         assert result.value[0]['changed'] == _changed
 
 
     @pytest.mark.parametrize("_replicas, _changed", ( (1, True),
                                                       (2, False),
                                                       (5, True), ) )
-    @patch('kubevirt_scale_vmirs.KubeVirtScaleVMIRS._create_stream')
+    @patch('kubevirt_vmir.KubeVirtVMIR._create_stream')
     def test_scale_vmirs_wait(self, mock_create_stream, _replicas, _changed):
         _name = 'test-vmirs'
         # Desired state:
@@ -71,6 +74,7 @@ class TestKubeVirtVMIRSModule(object):
         K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
         res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': 2}))
         Resource.get.return_value = res_inst
+        KubernetesRawModule.patch_resource.return_value = dict(metadata = {'name': _name}, spec = {'replicas': _replicas}), None
 
         # Mock post-change state:
         stream_obj = dict(
@@ -82,7 +86,7 @@ class TestKubeVirtVMIRSModule(object):
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.KubeVirtScaleVMIRS().execute_module()
+            mymodule.KubeVirtVMIR().execute_module()
         assert result.value[0]['changed'] == _changed
 
     @patch('openshift.watch.Watch')
@@ -101,4 +105,4 @@ class TestKubeVirtVMIRSModule(object):
         # Actual test:
         mock_watch.side_effect = KubernetesException("Test", value=42)
         with pytest.raises(AnsibleFailJson) as result:
-            mymodule.KubeVirtScaleVMIRS().execute_module()
+            mymodule.KubeVirtVMIR().execute_module()

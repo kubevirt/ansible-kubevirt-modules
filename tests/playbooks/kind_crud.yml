@@ -701,7 +701,7 @@
         fail_msg: "Update VMIRS task did not return changed"
 
     - name: Scale VMIRS
-      kubevirt_scale_vmirs:
+      kubevirt_vmirs:
         replicas: 2
         name: test-vmirs
         namespace: default

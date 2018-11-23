@@ -6,7 +6,7 @@
 
 - `lib`: Ansible modules files for KubeVirt management
     - `kubevirt_vm`: Manage virtual machines
-    - `kubevirt_scale_vmirs`: Scale up or down a VirtualMachineInstanceReplilcaSet.
+    - `kubevirt_vmir`: Manage virtual machines replica sets
 - `tests`: Ansible playbook examples and unit tests
 
 ## Requirements

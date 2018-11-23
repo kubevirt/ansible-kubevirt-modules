@@ -14,16 +14,16 @@ from utils import set_module_args, AnsibleExitJson, exit_json, AnsibleFailJson, 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/clustering/kubevirt')
 
-import kubevirt_scale_vmirs as mymodule
+import kubevirt_vmir as mymodule
 
 
-class TestKubeVirtScaleVMIRSModule(object):
+class TestKubeVirtVMIRSModule(object):
     @pytest.fixture(autouse=True)
     def setup_class(cls, monkeypatch):
         monkeypatch.setattr(
-            mymodule.KubeVirtScaleVMIRS, "exit_json", exit_json)
+            mymodule.KubeVirtVMIR, "exit_json", exit_json)
         monkeypatch.setattr(
-            mymodule.KubeVirtScaleVMIRS, "fail_json", fail_json)
+            mymodule.KubeVirtVMIR, "fail_json", fail_json)
         # Create mock methods in Resource directly, otherwise dyn client
         # tries binding those to corresponding methods in DynamicClient
         # (with partial()), which is more problematic to intercept

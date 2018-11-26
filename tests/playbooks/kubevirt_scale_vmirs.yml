@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   tasks:
-    - kubevirt_vmirs:
+    - kubevirt_rs:
         verify_ssl: no
         replicas: 2
         name: test-vmirs

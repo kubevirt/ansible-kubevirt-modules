@@ -14,16 +14,16 @@ from utils import set_module_args, AnsibleExitJson, exit_json, AnsibleFailJson, 
 # FIXME: paths/imports should be fixed before submitting a PR to Ansible
 sys.path.append('lib/ansible/modules/clustering/kubevirt')
 
-import kubevirt_vmir as mymodule
+import kubevirt_rs as mymodule
 
 
 class TestKubeVirtVMIRSModule(object):
     @pytest.fixture(autouse=True)
     def setup_class(cls, monkeypatch):
         monkeypatch.setattr(
-            mymodule.KubeVirtVMIR, "exit_json", exit_json)
+            mymodule.KubeVirtVMIRS, "exit_json", exit_json)
         monkeypatch.setattr(
-            mymodule.KubeVirtVMIR, "fail_json", fail_json)
+            mymodule.KubeVirtVMIRS, "fail_json", fail_json)
         # Create mock methods in Resource directly, otherwise dyn client
         # tries binding those to corresponding methods in DynamicClient
         # (with partial()), which is more problematic to intercept
@@ -39,8 +39,8 @@ class TestKubeVirtVMIRSModule(object):
                                                       (3, True),
                                                       (2, False),
                                                       (5, True), ) )
-    def test_scale_vmirs_nowait(self, _replicas, _changed):
-        _name = 'test-vmirs'
+    def test_scale_rs_nowait(self, _replicas, _changed):
+        _name = 'test-rs'
         # Desired state:
         args = dict(name=_name, namespace='vms', replicas=_replicas, wait=False)
         set_module_args(args)
@@ -54,7 +54,7 @@ class TestKubeVirtVMIRSModule(object):
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.KubeVirtVMIR().execute_module()
+            mymodule.KubeVirtVMIRS().execute_module()
         print result
         assert result.value[0]['changed'] == _changed
 
@@ -62,9 +62,9 @@ class TestKubeVirtVMIRSModule(object):
     @pytest.mark.parametrize("_replicas, _changed", ( (1, True),
                                                       (2, False),
                                                       (5, True), ) )
-    @patch('kubevirt_vmir.KubeVirtVMIR._create_stream')
-    def test_scale_vmirs_wait(self, mock_create_stream, _replicas, _changed):
-        _name = 'test-vmirs'
+    @patch('kubevirt_rs.KubeVirtVMIRS._create_stream')
+    def test_scale_rs_wait(self, mock_create_stream, _replicas, _changed):
+        _name = 'test-rs'
         # Desired state:
         args = dict(name=_name, namespace='vms', replicas=_replicas, wait=True)
         set_module_args(args)
@@ -86,12 +86,12 @@ class TestKubeVirtVMIRSModule(object):
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
-            mymodule.KubeVirtVMIR().execute_module()
+            mymodule.KubeVirtVMIRS().execute_module()
         assert result.value[0]['changed'] == _changed
 
     @patch('openshift.watch.Watch')
     def test_stream_creation(self, mock_watch):
-        _name = 'test-vmirs'
+        _name = 'test-rs'
         # Desired state:
         args = dict(name=_name, namespace='vms', replicas=2, wait=True)
         set_module_args(args)
@@ -105,4 +105,4 @@ class TestKubeVirtVMIRSModule(object):
         # Actual test:
         mock_watch.side_effect = KubernetesException("Test", value=42)
         with pytest.raises(AnsibleFailJson) as result:
-            mymodule.KubeVirtVMIR().execute_module()
+            mymodule.KubeVirtVMIRS().execute_module()

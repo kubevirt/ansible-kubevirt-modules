@@ -11,7 +11,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 ---
-module: kubevirt_vmir
+module: kubevirt_rs
 
 short_description: Manage KubeVirt virtual machine replica sets
 
@@ -64,7 +64,7 @@ requirements:
 
 EXAMPLES = '''
 - name: Create virtual machine replica set 'myvmir'
-  kubevirt_vm:
+  kubevirt_rs:
       state: presnet
       name: myvmir
       namespace: vms
@@ -85,7 +85,7 @@ EXAMPLES = '''
              bus: virtio
 
 - name: Remove virtual machine replica set 'myvmir'
-  kubevirt_vm:
+  kubevirt_rs:
       state: absent
       name: myvmir
       namespace: vms
@@ -93,7 +93,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-kubevirt_vmir:
+kubevirt_rs:
   description:
     - The virtual machine virtual machine replica set managed by the user.
     - "This dictionary contains all values returned by the KubeVirt API all options
@@ -136,7 +136,7 @@ VMIR_ARG_SPEC = {
 }
 
 
-class KubeVirtVMIR(KubeVirtRawModule):
+class KubeVirtVMIRS(KubeVirtRawModule):
 
     @property
     def argspec(self):
@@ -208,13 +208,13 @@ class KubeVirtVMIR(KubeVirtRawModule):
         # Return from the module:
         self.exit_json(**{
             'changed': changed,
-            'kubevirt_vmir': result,
+            'kubevirt_rs': result,
             'result': result_crud,
         })
 
 
 def main():
-    module = KubeVirtVMIR()
+    module = KubeVirtVMIRS()
     try:
         module.api_version = API_VERSION
         module.execute_module()

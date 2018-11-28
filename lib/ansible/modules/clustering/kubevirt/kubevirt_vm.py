@@ -47,49 +47,17 @@ options:
             - Namespace where the virtual machine exists.
         required: true
         type: str
-    disks:
-        description:
-            - List of dictionaries which specify disks of the virtual machine.
-            - A disk can be made accessible via four different types: I(disk), I(lun), I(cdrom), I(floppy).
-            - All possible configuration options are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_disk)
-            - Each disk must have specified a I(volume) that declares which volume type of the disk
-              All possible configuration options of volume are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_volume).
-        type: list
-    labels:
-        description:
-            - Labels are key/value pairs that are attached to virtual machines. Labels are intended to be used to
-              specify identifying attributes of virtual machines that are meaningful and relevant to users, but do not directly
-              imply semantics to the core system. Labels can be used to organize and to select subsets of virtual machines.
-              Labels can be attached to virtual machines at creation time and subsequently added and modified at any time.
-            - More on labels that are used for internal implementation U(https://kubevirt.io/user-guide/#/misc/annotations_and_labels)
-        type: dict
-    interfaces:
-        description:
-            - An interface defines a virtual network interface of a virtual machine (also called a frontend).
-            - All possible configuration options interfaces are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_interface)
-            - Each interface must have specified a I(network) that declares which logical or physical device it is connected to (also called as backend).
-              All possible configuration options of network are available in U(https://kubevirt.io/api-reference/master/definitions.html#_v1_network).
-        type: list
-    machine_type:
-        description:
-            - QEMU machine type is the actual chipset of the virtual machine.
-        type: str
     ephemeral:
         description:
             - If (true) ephemeral vitual machine will be created. When destroyed it won't be accessible again.
             - Works only with C(state) I(present) and I(absent).
         type: bool
         default: false
-    cloud_init_nocloud:
-        description:
-            - Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
-              as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
-              More info: U(https://kubevirt.io/api-reference/master/definitions.html#_v1_cloudinitnocloudsource)
-        type: dict
 
 extends_documentation_fragment:
   - k8s_auth_options
   - k8s_resource_options
+  - kubevirt_vm_options
 
 requirements:
   - python >= 2.7
@@ -161,7 +129,7 @@ EXAMPLES = '''
       ephemeral: true
       state: running
       wait: true
-      wait_time: 20
+      wait_timeout: 180
       name: myvm
       namespace: vms
       memory: 64M
@@ -220,21 +188,35 @@ kubevirt_vm:
       type: dict
 '''
 
+
 import copy
 import traceback
 
-from collections import defaultdict
-
 from ansible.module_utils.k8s.common import AUTH_ARG_SPEC, COMMON_ARG_SPEC
-from ansible.module_utils.k8s.raw import KubernetesRawModule
 
-from openshift import watch
 from openshift.dynamic.client import ResourceInstance
-from openshift.helper.exceptions import KubernetesException
+
+import sys
+if hasattr(sys, '_called_from_test'):
+    sys.path.append('lib/ansible/module_utils')
+    import kubevirt
+    print kubevirt
+    from kubevirt import (
+        virtdict,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+        KubeVirtRawModule,
+    )
+else:
+    from ansible.module_utils.kubevirt import (
+        virtdict,
+        KubeVirtRawModule,
+        VM_COMMON_ARG_SPEC,
+        API_VERSION,
+    )
 
 
 VM_ARG_SPEC = {
-    'merge_type': {'type': 'list', 'choices': ['json', 'merge', 'strategic-merge']},
     'ephemeral': {'type': 'bool', 'default': False},
     'state': {
         'type': 'str',
@@ -243,70 +225,30 @@ VM_ARG_SPEC = {
         ],
         'default': 'present'
     },
-    'wait': {'type': 'bool', 'default': True},
-    'wait_time': {'type': 'int', 'default': 30},
-    'memory': {'type': 'str'},
-    'disks': {'type': 'list'},
-    'labels': {'type': 'dict'},
-    'interfaces': {'type': 'list'},
-    'machine_type': {'type': 'str'},
-    'cloud_init_nocloud': {'type': 'dict'},
 }
 
-API_VERSION = 'kubevirt.io/v1alpha2'
 
-
-def virtdict():
-    return defaultdict(virtdict)
-
-
-class KubeVirtVM(KubernetesRawModule):
-    def __init__(self, *args, **kwargs):
-        super(KubeVirtVM, self).__init__(*args, **kwargs)
-
-    @staticmethod
-    def merge_dicts(x, y):
-        for k in set(x.keys()).union(y.keys()):
-            if k in x and k in y:
-                if isinstance(x[k], dict) and isinstance(y[k], dict):
-                    yield (k, dict(KubeVirtVM.merge_dicts(x[k], y[k])))
-                else:
-                    yield (k, y[k])
-            elif k in x:
-                yield (k, x[k])
-            else:
-                yield (k, y[k])
+class KubeVirtVM(KubeVirtRawModule):
 
     @property
     def argspec(self):
         """ argspec property builder """
         argument_spec = copy.deepcopy(COMMON_ARG_SPEC)
         argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
+        argument_spec.update(VM_COMMON_ARG_SPEC)
         argument_spec.update(VM_ARG_SPEC)
         return argument_spec
 
-    def _manage_state(self, running, resource, existing, wait, wait_time):
+    def _manage_state(self, running, resource, existing, wait, wait_timeout):
         definition = {'metadata': {'name': self.name, 'namespace': self.namespace}, 'spec': {'running': running}}
         self.patch_resource(resource, definition, existing, self.name, self.namespace, merge_type='merge')
 
         if wait:
             resource = self.find_resource('VirtualMachineInstance', self.api_version, fail=True)
-            w, stream = self._create_stream(resource, self.namespace, wait_time)
+            w, stream = self._create_stream(resource, self.namespace, wait_timeout)
 
         if wait and stream is not None:
             self._read_stream(resource, w, stream, self.name, running)
-
-    def _create_stream(self, resource, namespace, wait_time):
-        """ Create a stream of events for the object """
-        w = None
-        stream = None
-        try:
-            w = watch.Watch()
-            w._api_client = self.client.client
-            stream = w.stream(resource.get, serialize=False, namespace=namespace, timeout_seconds=wait_time)
-        except KubernetesException as exc:
-            self.fail_json(msg='Failed to initialize watch: {0}'.format(exc.message))
-        return w, stream
 
     def _read_stream(self, resource, watcher, stream, name, running):
         """ Wait for ready_replicas to equal the requested number of replicas. """
@@ -325,19 +267,11 @@ class KubeVirtVM(KubernetesRawModule):
                     watcher.stop()
                     return
 
-        self.fail_json(msg="Error waiting for virtual machine. Try a higher wait_time value. %s" % obj.to_dict())
-
-    def get_resource(self, resource):
-        try:
-            existing = resource.get(name=self.name, namespace=self.namespace)
-        except Exception:
-            existing = None
-
-        return existing
+        self.fail_json(msg="Error waiting for virtual machine. Try a higher wait_timeout value. %s" % obj.to_dict())
 
     def manage_state(self, state):
         wait = self.params.get('wait')
-        wait_time = self.params.get('wait_time')
+        wait_timeout = self.params.get('wait_timeout')
         resource_version = self.params.get('resource_version')
 
         resource_vm = self.find_resource('VirtualMachine', self.api_version)
@@ -355,145 +289,40 @@ class KubeVirtVM(KubernetesRawModule):
             if existing_running:
                 return False
             else:
-                self._manage_state(True, resource_vm, existing, wait, wait_time)
+                self._manage_state(True, resource_vm, existing, wait, wait_timeout)
                 return True
         elif state == 'stopped':
             if not existing_running:
                 return False
             else:
-                self._manage_state(False, resource_vm, existing, wait, wait_time)
+                self._manage_state(False, resource_vm, existing, wait, wait_timeout)
                 return True
 
-    def _define_cloud_init(self, cloud_init_nocloud, template_spec):
-        """
-        Takes the user's cloud_init_nocloud parameter and fill it in kubevirt
-        API strucuture. The name of the volume is hardcoded to ansiblecloudinitvolume
-        and the name for disk is hardcoded to ansiblecloudinitdisk.
-        """
-        if cloud_init_nocloud:
-            if not template_spec['volumes']:
-                template_spec['volumes'] = []
-            if not template_spec['domain']['devices']['disks']:
-                template_spec['domain']['devices']['disks'] = []
-
-            template_spec['volumes'].append({'name': 'ansiblecloudinitvolume', 'cloudInitNoCloud': cloud_init_nocloud})
-            template_spec['domain']['devices']['disks'].append({
-                'name': 'ansiblecloudinitdisk',
-                'volumeName': 'ansiblecloudinitvolume',
-                'disk': {'bus': 'virtio'},
-            })
-
-    def _define_interfaces(self, interfaces, template_spec):
-        """
-        Takes interfaces parameter of Ansible and create kubevirt API interfaces
-        and networks strucutre out from it.
-        """
-        if interfaces:
-            # Extract interfaces k8s specification from interfaces list passed to Ansible:
-            spec_interfaces = []
-            for i in interfaces:
-                spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
-            template_spec['domain']['devices']['interfaces'] = spec_interfaces
-
-            # Extract networks k8s specification from interfaces list passed to Ansible:
-            spec_networks = []
-            for i in interfaces:
-                net = i['network']
-                net['name'] = i['name']
-                spec_networks.append(net)
-            template_spec['networks'] = spec_networks
-
-    def _define_disks(self, disks, template_spec):
-        """
-        Takes disks parameter of Ansible and create kubevirt API disks and
-        volumes strucutre out from it.
-        """
-        if disks:
-            # Extract k8s specification from disks list passed to Ansible:
-            spec_disks = []
-            for d in disks:
-                new_disk = {k: v for k, v in d.items() if k != 'volume'}
-                # TODO: Remove when is out:
-                # https://github.com/kubevirt/kubevirt/pull/1570
-                new_disk['volumeName'] = new_disk['name'] + 'volume'
-                spec_disks.append(new_disk)
-            template_spec['domain']['devices']['disks'] = spec_disks
-
-            # Extract volumes k8s specification from disks list passed to Ansible:
-            spec_volumes = []
-            for d in disks:
-                volume = d['volume']
-                volume['name'] = d['name'] + 'volume'
-                spec_volumes.append(volume)
-            template_spec['volumes'] = spec_volumes
-
     def execute_module(self):
-        """ Module execution """
-        self.client = self.get_api_client()
-
-        state = self.params.get('state')
+        # Parse parameters specific for this module:
         definition = virtdict()
-        disks = self.params.get('disks', [])
-        volumes = self.params.get('volumes', [])
-        memory = self.params.get('memory')
-        labels = self.params.get('labels')
-        interfaces = self.params.get('interfaces')
         ephemeral = self.params.get('ephemeral')
-        cloud_init_nocloud = self.params.get('cloud_init_nocloud')
-        machine_type = self.params.get('machine_type')
-        template = definition['spec']['template']
-        template_spec = template['spec']
-
-        # Merge additional flat parameters:
-        if volumes:
-            template_spec['volumes'] = volumes
-
-        if disks:
-            template_spec['domain']['devices']['disks'] = disks
-
-        if memory:
-            template_spec['domain']['resources']['requests']['memory'] = memory
-
-        if labels:
-            definition['metadata']['labels'] = labels
-
-        if machine_type:
-            template_spec['domain']['machine']['type'] = machine_type
+        state = self.params.get('state')
 
         if not ephemeral:
             definition['spec']['running'] = state == 'running'
 
-        # Define cloud init disk if defined:
-        self._define_cloud_init(cloud_init_nocloud, template_spec)
+        # Execute the CURD of VM:
+        kind = 'VirtualMachineInstance' if ephemeral else 'VirtualMachine'
+        result = self.execute_crud(kind, definition)
+        changed = result['changed']
 
-        # Define disks
-        self._define_disks(disks, template_spec)
-
-        # Define interfaces:
-        self._define_interfaces(interfaces, template_spec)
-
-        # Perform create/absent action:
-        definition = dict(self.merge_dicts(self.resource_definitions[0], definition))
-
-        # TODO: Wait for running state in case of ephemeral VM.
-        if ephemeral:
-            resource = self.find_resource('VirtualMachineInstance', self.api_version, fail=True)
-        else:
-            resource = self.find_resource('VirtualMachine', self.api_version, fail=True)
-        definition = self.set_defaults(resource, definition)
-        vm_result = self.perform_action(resource, definition)
-        changed = vm_result['changed']
-        k8s_objects = {'VM': vm_result}
-
-        # Manage the state:
+        # Manage state of the VM:
         if state in ['running', 'stopped']:
             if not self.check_mode:
                 ret = self.manage_state(state)
                 changed = changed or ret
 
+        # Return from the module:
         self.exit_json(**{
             'changed': changed,
-            'kubevirt_vm': {'k8s_objects': k8s_objects}
+            'kubevirt_vm': result.pop('result'),
+            'result': result,
         })
 
 

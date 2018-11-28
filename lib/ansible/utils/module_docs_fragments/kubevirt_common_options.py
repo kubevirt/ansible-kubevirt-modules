@@ -16,10 +16,10 @@ options:
             - "I(True) if the module should wait for the resource to get into desired state."
         default: true
         type: bool
-    wait_time:
+    wait_timeout:
         description:
             - "The amount of time in seconds the module should wait for the resource to get into desired state."
-        default: 30
+        default: 120
         type: int
     memory:
         description:

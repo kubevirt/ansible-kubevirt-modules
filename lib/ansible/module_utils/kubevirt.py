@@ -18,7 +18,7 @@ API_VERSION = 'kubevirt.io/v1alpha2'
 VM_COMMON_ARG_SPEC = {
     'merge_type': {'type': 'list', 'choices': ['json', 'merge', 'strategic-merge']},
     'wait': {'type': 'bool', 'default': True},
-    'wait_time': {'type': 'int', 'default': 30},
+    'wait_timeout': {'type': 'int', 'default': 120},
     'memory': {'type': 'str'},
     'disks': {'type': 'list'},
     'labels': {'type': 'dict'},
@@ -57,14 +57,14 @@ class KubeVirtRawModule(KubernetesRawModule):
             else:
                 yield (k, y[k])
 
-    def _create_stream(self, resource, namespace, wait_time):
+    def _create_stream(self, resource, namespace, wait_timeout):
         """ Create a stream of events for the object """
         w = None
         stream = None
         try:
             w = watch.Watch()
             w._api_client = self.client.client
-            stream = w.stream(resource.get, serialize=False, namespace=namespace, timeout_seconds=wait_time)
+            stream = w.stream(resource.get, serialize=False, namespace=namespace, timeout_seconds=wait_timeout)
         except KubernetesException as exc:
             self.fail_json(msg='Failed to initialize watch: {0}'.format(exc.message))
         return w, stream

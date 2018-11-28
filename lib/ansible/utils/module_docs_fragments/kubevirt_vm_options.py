@@ -11,11 +11,6 @@ class ModuleDocFragment(object):
     # Standard oVirt documentation fragment
     DOCUMENTATION = '''
 options:
-    wait:
-        description:
-            - "I(True) if the module should wait for the resource to get into desired state."
-        default: true
-        type: bool
     disks:
         description:
             - List of dictionaries which specify disks of the virtual machine.

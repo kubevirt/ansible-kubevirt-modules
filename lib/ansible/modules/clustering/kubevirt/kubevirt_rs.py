@@ -175,12 +175,12 @@ class KubeVirtVMIRS(KubeVirtRawModule):
 
     def wait_for_replicas(self):
         namespace = self.params.get('namespace')
-        wait_time = self.params.get('wait_time')
+        wait_timeout = self.params.get('wait_timeout')
         replicas = self.params.get('replicas')
         name = self.name
         resource = self.find_resource(KIND, self.api_version, fail=True)
 
-        w, stream = self._create_stream(resource, namespace, wait_time)
+        w, stream = self._create_stream(resource, namespace, wait_timeout)
         return self._read_stream(resource, w, stream, name, replicas)
 
     def execute_module(self):

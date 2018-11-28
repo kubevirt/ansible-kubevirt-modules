@@ -129,7 +129,7 @@ EXAMPLES = '''
       ephemeral: true
       state: running
       wait: true
-      wait_time: 20
+      wait_timeout: 180
       name: myvm
       namespace: vms
       memory: 64M
@@ -239,13 +239,13 @@ class KubeVirtVM(KubeVirtRawModule):
         argument_spec.update(VM_ARG_SPEC)
         return argument_spec
 
-    def _manage_state(self, running, resource, existing, wait, wait_time):
+    def _manage_state(self, running, resource, existing, wait, wait_timeout):
         definition = {'metadata': {'name': self.name, 'namespace': self.namespace}, 'spec': {'running': running}}
         self.patch_resource(resource, definition, existing, self.name, self.namespace, merge_type='merge')
 
         if wait:
             resource = self.find_resource('VirtualMachineInstance', self.api_version, fail=True)
-            w, stream = self._create_stream(resource, self.namespace, wait_time)
+            w, stream = self._create_stream(resource, self.namespace, wait_timeout)
 
         if wait and stream is not None:
             self._read_stream(resource, w, stream, self.name, running)
@@ -267,11 +267,11 @@ class KubeVirtVM(KubeVirtRawModule):
                     watcher.stop()
                     return
 
-        self.fail_json(msg="Error waiting for virtual machine. Try a higher wait_time value. %s" % obj.to_dict())
+        self.fail_json(msg="Error waiting for virtual machine. Try a higher wait_timeout value. %s" % obj.to_dict())
 
     def manage_state(self, state):
         wait = self.params.get('wait')
-        wait_time = self.params.get('wait_time')
+        wait_timeout = self.params.get('wait_timeout')
         resource_version = self.params.get('resource_version')
 
         resource_vm = self.find_resource('VirtualMachine', self.api_version)
@@ -289,13 +289,13 @@ class KubeVirtVM(KubeVirtRawModule):
             if existing_running:
                 return False
             else:
-                self._manage_state(True, resource_vm, existing, wait, wait_time)
+                self._manage_state(True, resource_vm, existing, wait, wait_timeout)
                 return True
         elif state == 'stopped':
             if not existing_running:
                 return False
             else:
-                self._manage_state(False, resource_vm, existing, wait, wait_time)
+                self._manage_state(False, resource_vm, existing, wait, wait_timeout)
                 return True
 
     def execute_module(self):

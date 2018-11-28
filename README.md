@@ -60,12 +60,12 @@ Because the role is referenced, the `hello-underworld` role is able to make use 
 * [Virtual Machine Instance](tests/playbooks/k8s_vmi.yml)
 * [Virtual Machine](tests/playbooks/k8s_vm.yml)
 * [Virtual Machine Instance ReplicaSet](tests/playbooks/k8s_vmirs.yml)
-* [Stop Virtual Machine](tests/playbooks/kubevirt_vm_stopped.yml)
+* [Stop Virtual Machine](tests/playbooks/kubevirt_vm_status.yml)
 * [Scale Virtual Machine Instance Replica Set](tests/playbooks/kubevirt_scale_vmirs.yml)
-* [Virtual Machine Instance facts](tests/playbooks/kubevirt_vmi_facts.yml)
-* [Virtual Machine facts](tests/playbooks/kubevirt_vm_facts.yml)
-* [Virtual Machine Instance ReplicaSet facts](tests/playbooks/kubevirt_vmirs_facts.yml)
-* [All Virtual Machine Instance facts](tests/playbooks/kubevirt_all_vmis_facts.yml)
+* [Virtual Machine Instance facts](tests/playbooks/k8s_facts_vmi.yml)
+* [Virtual Machine facts](tests/playbooks/k8s_facts_vm.yml)
+* [Virtual Machine Instance ReplicaSet facts](tests/playbooks/k8s_facts_vmirs.yml)
+* [All Virtual Machine Instance facts](tests/playbooks/k8s_facts.yml)
 
 ## Local testing
 
@@ -80,20 +80,20 @@ $ ansible-playbook tests/playbooks/<playbook>
 2. The playbook examples, include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration, for being able to access the VMIs created.
 
     1. For using SSH do as follows:
-      
+
         ```shell
         $ kubectl get all
         NAME                             READY     STATUS    RESTARTS   AGE
         po/virt-launcher-bbecker-jw5kk   1/1       Running   0          22m
-        
+
         $ kubectl expose pod virt-launcher-bbecker-jw5kk --port=27017 --target-port=22 --name=vmservice
         $ kubectl get svc vmservice
         NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)     AGE
         vmservice   ClusterIP   172.30.133.9   <none>        27017/TCP   19m
-        
-        $ ssh -i tests/kubevirt_rsa -p 27017 kubevirt@172.30.133.9
+
+        $ ssh -i tests/test_rsa -p 27017 kubevirt@172.30.133.9
         ```
-      
+
         > **NOTE:** It might take a while for the VM to completely come up before SSH can be used.
 
     2. For using `virtctl`:
@@ -116,7 +116,7 @@ $ ansible-playbook tests/playbooks/<playbook>
 * Once one of the previous resources has been created, the facts module can be tested as well as follows:
 
 ```shell
-$ ansible-playbook tests/playbooks/kubevirt_vm_facts.yml
+$ ansible-playbook tests/playbooks/k8s_facts_vm.yml
 ```
 
 The above command, will gather the information for the VM stated in the playbook and print out a JSON document based on [KubeVirt VM spec](https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine).

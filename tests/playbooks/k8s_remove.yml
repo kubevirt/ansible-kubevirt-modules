@@ -15,6 +15,7 @@
            name: "{{ item.name }}"
            namespace: default
       with_items:
+        - { kind: VirtualMachine, name: cirros-e2e-vm }
         - { kind: VirtualMachine, name: test-fedora }
         - { kind: VirtualMachineInstance, name: test-fedora-vmi }
         - { kind: VirtualMachineInstance, name: test-fedora-vmi-ps }

@@ -23,7 +23,7 @@
                disks:
                - disk:
                    bus: virtio
-                 name: registrydisk
+                 name: containerdisk
                  volumeName: registryvolume
                - cdrom:
                    bus: virtio
@@ -31,8 +31,9 @@
                  volumeName: cloudinitvolume
            volumes:
            - name: registryvolume
-             registryDisk:
-               image: kubevirt/fedora-cloud-registry-disk-demo:latest
+             containerDisk:
+               image: kubevirt/fedora-cloud-container-disk-demo:latest
+               path: /disk/fedora.qcow2
            - name: cloudinitvolume
              cloudInitNoCloud:
                userData: |

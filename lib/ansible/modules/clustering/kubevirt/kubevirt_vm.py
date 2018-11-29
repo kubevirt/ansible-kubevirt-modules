@@ -78,10 +78,11 @@ EXAMPLES = '''
       namespace: vms
       memory: 64M
       disks:
-        - name: registrydisk
+        - name: containerdisk
           volume:
-            registryDisk:
-              image: kubevirt/cirros-registry-disk-demo:latest
+            containerDisk:
+              image: kubevirt/cirros-container-disk-demo:latest
+              path: /custom-disk/cirros.img
           disk:
             bus: virtio
 
@@ -117,10 +118,11 @@ EXAMPLES = '''
       namespace: vms
       memory: 64M
       disks:
-        - name: registrydisk
+        - name: containerdisk
           volume:
-            registryDisk:
-              image: kubevirt/cirros-registry-disk-demo:latest
+            containerDisk:
+              image: kubevirt/cirros-container-disk-demo:latest
+              path: /custom-disk/cirros.img
           disk:
             bus: virtio
 
@@ -136,10 +138,11 @@ EXAMPLES = '''
       labels:
         kubevirt.io/vm: myvm
       disks:
-        - name: registrydisk
+        - name: containerdisk
           volume:
-            registryDisk:
-              image: kubevirt/cirros-registry-disk-demo:latest
+            containerDisk:
+              image: kubevirt/cirros-container-disk-demo:latest
+              path: /custom-disk/cirros.img
           disk:
             bus: virtio
 
@@ -155,10 +158,11 @@ EXAMPLES = '''
           password: fedora
           chpasswd: { expire: False }
       disks:
-        - name: registrydisk
+        - name: containerdisk
           volume:
-            registryDisk:
-              image: kubevirt/fedora-cloud-registry-disk-demo:latest
+            containerDisk:
+              image: kubevirt/fedora-cloud-container-disk-demo:latest
+              path: /disk/fedora.qcow2
           disk:
             bus: virtio
 

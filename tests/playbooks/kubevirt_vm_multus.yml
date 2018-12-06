@@ -49,21 +49,14 @@
              network:
                multus:
                  networkName: mynetconf
+        cloud_init_nocloud:
+          userData: |-
+            password: fedora
+            chpasswd: { expire: False }
         disks:
           - name: registrydisk
-            volumeName: registryvolume
+            volume:
+              registryDisk:
+                image: kubevirt/fedora-cloud-registry-disk-demo:latest
             disk:
               bus: virtio
-          - name: cloudinitdisk
-            volumeName: cloudinitvolume
-            disk:
-              bus: virtio
-        volumes:
-          - name: registryvolume
-            registryDisk:
-              image: kubevirt/fedora-cloud-registry-disk-demo:latest
-          - name: cloudinitvolume
-            cloudInitNoCloud:
-              userData: |-
-                password: fedora
-                chpasswd: { expire: False }

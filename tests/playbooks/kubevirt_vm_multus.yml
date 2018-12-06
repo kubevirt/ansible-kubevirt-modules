@@ -13,16 +13,20 @@
   #pre_tasks:
   #  - name: Create NetworkAttachmentDefinition mynetconf
   #    k8s:
-  #      apiVersion: "k8s.cni.cncf.io/v1"
-  #      kind: NetworkAttachmentDefinition
-  #      metadata:
-  #        name: mynetconf
-  #      spec:
-  #        config: '{
-  #            "cniVersion": "0.2.0",
-  #            "type": "ovs",
-  #            "bridge": "br1"
-  #          }'
+  #      state: present
+  #      namespace: default
+  #      inline:
+  #        api_version: "k8s.cni.cncf.io/v1"
+  #        kind: NetworkAttachmentDefinition
+  #        metadata:
+  #          name: mynetconf
+  #        spec:
+  #          config:
+  #            '{
+  #              "cniVersion": "0.2.0",
+  #              "type": "ovs",
+  #              "bridge": "br1"
+  #            }'
 
   tasks:
     - name: Create Fedora vm with two network interfaces

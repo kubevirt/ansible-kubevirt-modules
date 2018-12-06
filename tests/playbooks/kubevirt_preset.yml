@@ -1,0 +1,34 @@
+- hosts: localhost
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - name: Create mem preset
+      kubevirt_preset:
+        state: present
+        name: mypreset
+        namespace: default
+        memory: 64M
+        selector:
+          matchLabels:
+            kubevirt.io/vmPreset:  vmi-preset-small
+
+    - name: Create cirros vm
+      kubevirt_vm:
+        state: running
+        name: myvm
+        wait_timeout: 180
+        namespace: default
+        labels:
+            kubevirt.io/vmPreset:  vmi-preset-small
+        cloud_init_nocloud:
+          userData: |-
+            password: cirros
+            chpasswd: { expire: False }
+        disks:
+          - name: registrydisk
+            volume:
+              registryDisk:
+                image: kubevirt/cirros-registry-disk-demo:latest
+            disk:
+              bus: virtio

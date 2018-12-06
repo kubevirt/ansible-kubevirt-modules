@@ -156,11 +156,6 @@ EXAMPLES = '''
           chpasswd: { expire: False }
       disks:
         - name: registrydisk
-          volumeName: registryvolume
-          disk:
-            bus: virtio
-      volumes:
-        - name: registryvolume
           volume:
             registryDisk:
               image: kubevirt/fedora-cloud-registry-disk-demo:latest

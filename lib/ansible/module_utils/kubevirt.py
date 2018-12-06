@@ -140,7 +140,7 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_volumes.append(volume)
             template_spec['volumes'] = spec_volumes
 
-    def execute_crud(self, kind, definition):
+    def execute_crud(self, kind, definition, template):
         """ Module execution """
         self.client = self.get_api_client()
 
@@ -150,7 +150,6 @@ class KubeVirtRawModule(KubernetesRawModule):
         interfaces = self.params.get('interfaces')
         cloud_init_nocloud = self.params.get('cloud_init_nocloud')
         machine_type = self.params.get('machine_type')
-        template = definition['spec']['template']
         template_spec = template['spec']
 
         # Merge additional flat parameters:

@@ -196,7 +196,8 @@ class KubeVirtVMIRS(KubeVirtRawModule):
             definition['spec']['replicas'] = replicas
 
         # Execute the CURD of VM:
-        result_crud = self.execute_crud(KIND, definition)
+        template = definition['spec']['template']
+        result_crud = self.execute_crud(KIND, definition, template)
         changed = result_crud['changed']
         result = result_crud.pop('result')
 

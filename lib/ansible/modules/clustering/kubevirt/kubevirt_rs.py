@@ -77,10 +77,11 @@ EXAMPLES = '''
         matchLabels:
             myvmi: myvmi
       disks:
-         - name: registrydisk
+         - name: containerdisk
            volume:
-             registryDisk:
-               image: kubevirt/cirros-registry-disk-demo:latest
+             containerDisk:
+               image: kubevirt/cirros-container-disk-demo:latest
+               path: /custom-disk/cirros.img
            disk:
              bus: virtio
 

@@ -39,7 +39,7 @@
                     disks:
                     - disk:
                         dev: vda
-                      name: registrydisk
+                      name: containerdisk
                       volumeName: registryvolume
                     - cdrom:
                         dev: vdb
@@ -47,8 +47,9 @@
                       volumeName: cloudinitvolume
                 volumes:
                 - name: registryvolume
-                  registryDisk:
-                    image: kubevirt/fedora-cloud-registry-disk-demo:latest
+                  containerDisk:
+                    image: kubevirt/fedora-cloud-container-disk-demo:latest
+                    path: /disk/fedora.qcow2
                 - name: cloudinitvolume
                   cloudInitNoCloud:
                     userDataBase64: I2Nsb3VkLWNvbmZpZwpwYXNzd29yZDogYXRvbWljCnNzaF9wd2F1dGg6IFRydWUKY2hwYXNzd2Q6IHsgZXhwaXJlOiBGYWxzZSB9Cg==

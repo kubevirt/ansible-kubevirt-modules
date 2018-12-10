@@ -64,7 +64,7 @@
         fail_msg: "Create VM task did not return changed"
     
     - name: wait for changes to appear
-      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'true'
       retries: 60
@@ -138,7 +138,7 @@
         namespace: default
     
     - name: wait for changes to appear
-      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'false'
       retries: 60
@@ -151,7 +151,7 @@
         namespace: default
 
     - name: wait for changes to appear
-      command: "oc get vm test-fedora -o jsonpath='{.spec.running}'"
+      command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'true'
       retries: 60
@@ -331,7 +331,7 @@
         fail_msg: "Create VMI task did not return changed"
   
     - name: wait for changes to appear
-      command: "oc get vmi test-fedora-vmi -o jsonpath='{.status.phase}'"
+      command: "oc get vmi test-fedora-vmi -n default -o jsonpath='{.status.phase}'"
       register: vm_facts
       until: vm_facts.stdout == 'Running'
       retries: 60
@@ -559,7 +559,7 @@
         fail_msg: "Create VMIRS task did not return changed"
   
     - name: wait for changes to appear
-      command: "oc get vmirs test-vmirs -o jsonpath='{.status.replicas}'"
+      command: "oc get vmirs test-vmirs -n default -o jsonpath='{.status.replicas}'"
       register: vm_facts
       until: vm_facts.stdout == '3'
       retries: 60

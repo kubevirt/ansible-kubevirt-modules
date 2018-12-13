@@ -107,6 +107,18 @@ options:
     default: Service
     choices:
       - Service
+  api_version:
+    description:
+      - Required for compatibility with ansible <2.8. Can't be modified.
+    default: v1
+    choices:
+      - v1
+  src:
+    description:
+      - Required for compatibility with ansible <2.8. Don't use.
+    default: ''
+
+
 
 requirements:
   - python >= 2.7
@@ -205,6 +217,13 @@ SERVICE_ARG_SPEC = {
     'kind': {
         'default': 'Service',
         'choices': ['Service'],
+    },
+    'api_version': {
+        'default': 'v1',
+        'choices': ['v1'],
+    },
+    'src': {
+        'default': '',
     },
 }
 

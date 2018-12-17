@@ -32,6 +32,6 @@
         kind: PersistentVolumeClaim
         api_version: v1
       register: pvc
-      until: "pvc.resources[0].status.phase == 'Bound' and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
+      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
       delay: 10
       retries: 18

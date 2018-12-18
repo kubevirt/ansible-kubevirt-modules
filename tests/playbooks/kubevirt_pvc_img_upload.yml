@@ -33,7 +33,7 @@
         kind: PersistentVolumeClaim
         api_version: v1
       register: pvc
-      until: "pvc.resources[0].status.phase == 'Bound'"
+      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Running'"
       delay: 10
       retries: 30
 
@@ -41,6 +41,7 @@
       kubevirt_cdi_upload:
         pvc_namespace: default
         pvc_name: pvc-vm1
-        upload_host: https://127.0.0.1:55555
-        path: /tmp/vm1.img
+        upload_host: https://localhost:8443
+        upload_host_verify_ssl: false
+        path: /tmp/cirros-0.4.0-x86_64-disk.img
 

@@ -32,7 +32,7 @@ options:
         type: str
 requirements:
     - python >= 2.7
-    - openshift >= 0.6.2
+    - openshift >= 0.8.2
 notes:
   - "In order to use this module you have to install Openshift Python SDK.
      To ensure it's installed with correct version you can create the following task:

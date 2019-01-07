@@ -61,7 +61,7 @@ extends_documentation_fragment:
 
 requirements:
   - python >= 2.7
-  - openshift >= 0.6.2
+  - openshift >= 0.8.2
 '''
 
 EXAMPLES = '''

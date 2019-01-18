@@ -137,7 +137,8 @@ class KubeVirtVMPreset(KubeVirtRawModule):
         definition['spec']['domain']['devices'] = dict()
 
         # Execute the CURD of VM:
-        result_crud = self.execute_crud(KIND, definition, definition)
+        _, definition = self.construct_vm_definition(KIND, definition, definition)
+        result_crud = self.execute_crud(KIND, definition)
         changed = result_crud['changed']
         result = result_crud.pop('result')
 

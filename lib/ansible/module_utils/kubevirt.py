@@ -160,7 +160,9 @@ class KubeVirtRawModule(KubernetesRawModule):
             spec_interfaces = []
             for i in interfaces:
                 spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
-            template_spec['domain']['devices']['interfaces'] = spec_interfaces
+            if 'interfaces' not in template_spec['domain']['devices']:
+                template_spec['domain']['devices']['interfaces'] = []
+            template_spec['domain']['devices']['interfaces'].append(spec_interfaces)
 
             # Extract networks k8s specification from interfaces list passed to Ansible:
             spec_networks = []
@@ -168,7 +170,9 @@ class KubeVirtRawModule(KubernetesRawModule):
                 net = i['network']
                 net['name'] = i['name']
                 spec_networks.append(net)
-            template_spec['networks'] = spec_networks
+            if 'networks' not in template_spec:
+                template_spec['networks'] = []
+            template_spec['networks'].append(spec_networks)
 
     def _define_disks(self, disks, template_spec):
         """
@@ -180,7 +184,9 @@ class KubeVirtRawModule(KubernetesRawModule):
             spec_disks = []
             for d in disks:
                 spec_disks.append({k: v for k, v in d.items() if k != 'volume'})
-            template_spec['domain']['devices']['disks'] = spec_disks
+            if 'disks' not in template_spec['domain']['devices']:
+                template_spec['domain']['devices']['disks'] = []
+            template_spec['domain']['devices']['disks'].append(spec_disks)
 
             # Extract volumes k8s specification from disks list passed to Ansible:
             spec_volumes = []
@@ -188,7 +194,9 @@ class KubeVirtRawModule(KubernetesRawModule):
                 volume = d['volume']
                 volume['name'] = d['name']
                 spec_volumes.append(volume)
-            template_spec['volumes'] = spec_volumes
+            if 'volumes' not in template_spec:
+                template_spec['volumes'] = []
+            template_spec['volumes'].append(spec_volumes)
 
     def find_supported_resource(self, kind):
         results = self.client.resources.search(kind=kind, group=API_GROUP)
@@ -201,16 +209,16 @@ class KubeVirtRawModule(KubernetesRawModule):
         self.fail("API versions {0} are too recent. Max supported is {1}/{2}.".format(
             str([r.api_version for r in sr]), API_GROUP, MAX_SUPPORTED_API_VERSION))
 
-    def execute_crud(self, kind, definition, template):
-        """ Module execution """
+
+    def _construct_vm_definition(self, kind, definition, template, params):
         self.client = self.get_api_client()
 
-        disks = self.params.get('disks', [])
-        memory = self.params.get('memory')
-        labels = self.params.get('labels')
-        interfaces = self.params.get('interfaces')
-        cloud_init_nocloud = self.params.get('cloud_init_nocloud')
-        machine_type = self.params.get('machine_type')
+        disks = params.get('disks', [])
+        memory = params.get('memory')
+        labels = params.get('labels')
+        interfaces = params.get('interfaces')
+        cloud_init_nocloud = params.get('cloud_init_nocloud')
+        machine_type = params.get('machine_type')
         template_spec = template['spec']
 
         # Merge additional flat parameters:
@@ -234,6 +242,28 @@ class KubeVirtRawModule(KubernetesRawModule):
 
         # Perform create/absent action:
         definition = dict(self.merge_dicts(self.resource_definitions[0], definition))
+        resource = self.find_supported_resource(kind)
+        return dict(self.merge_dicts(self.resource_definitions[0], definition))
+
+    def construct_vm_definition(self, kind, definition, template):
+        definition = self._construct_vm_definition(kind, definition, template, self.params)
+        resource = self.find_supported_resource(kind)
+        definition = self.set_defaults(resource, definition)
+        return resource, definition
+
+    def construct_vm_template_definition(self, kind, definition, template, params):
+        definition = self._construct_vm_definition(kind, definition, template, params)
+        resource = self.find_resource(kind, definition['apiVersion'], fail=True)
+
+        # Set defaults:
+        definition['kind'] = kind
+        definition['metadata']['name'] = params.get('name')
+        definition['metadata']['namespace'] = params.get('namespace')
+
+        return resource, definition
+
+    def execute_crud(self, kind, definition):
+        """ Module execution """
         resource = self.find_supported_resource(kind)
         definition = self.set_defaults(resource, definition)
         return self.perform_action(resource, definition)

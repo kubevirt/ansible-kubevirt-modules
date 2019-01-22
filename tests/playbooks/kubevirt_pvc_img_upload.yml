@@ -1,0 +1,47 @@
+---
+- name: Create a PVC from local VM image
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create a PVC annotated for upload
+      # This will be shorter with kubevirt_pvc
+      k8s:
+       state: present
+       namespace: default
+       name: pvc-vm1
+       inline:
+         apiVersion: v1
+         kind: PersistentVolumeClaim
+         metadata:
+           name: pvc-vm1
+           labels:
+             app: containerized-data-importer
+           annotations:
+             cdi.kubevirt.io/storage.upload.target: ""
+         spec:
+           accessModes:
+           - ReadWriteOnce
+           resources:
+             requests:
+               storage: 20Mi
+
+    - name: Wait for PVC to become ready 
+      # Won't be needed with kubevirt_pvc with wait support
+      k8s_facts:
+        namespace: default
+        name: pvc-vm1
+        kind: PersistentVolumeClaim
+        api_version: v1
+      register: pvc
+      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Running'"
+      delay: 10
+      retries: 30
+
+    - name: Upload local image to pvc
+      kubevirt_cdi_upload:
+        pvc_namespace: default
+        pvc_name: pvc-vm1
+        upload_host: https://localhost:8443
+        upload_host_verify_ssl: false
+        path: /tmp/cirros-0.4.0-x86_64-disk.img
+

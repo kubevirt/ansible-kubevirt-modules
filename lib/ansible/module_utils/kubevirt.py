@@ -12,7 +12,7 @@ from ansible.module_utils.k8s.raw import KubernetesRawModule
 from openshift import watch
 from openshift.helper.exceptions import KubernetesException
 
-API_VERSION = 'kubevirt.io/v1alpha2'
+API_VERSION = 'kubevirt.io/v1alpha3'
 
 
 VM_COMMON_ARG_SPEC = {
@@ -125,18 +125,14 @@ class KubeVirtRawModule(KubernetesRawModule):
             # Extract k8s specification from disks list passed to Ansible:
             spec_disks = []
             for d in disks:
-                new_disk = {k: v for k, v in d.items() if k != 'volume'}
-                # TODO: Remove when is out:
-                # https://github.com/kubevirt/kubevirt/pull/1570
-                new_disk['volumeName'] = new_disk['name'] + 'volume'
-                spec_disks.append(new_disk)
+                spec_disks.append({k: v for k, v in d.items() if k != 'volume'})
             template_spec['domain']['devices']['disks'] = spec_disks
 
             # Extract volumes k8s specification from disks list passed to Ansible:
             spec_volumes = []
             for d in disks:
                 volume = d['volume']
-                volume['name'] = d['name'] + 'volume'
+                volume['name'] = d['name']
                 spec_volumes.append(volume)
             template_spec['volumes'] = spec_volumes
 

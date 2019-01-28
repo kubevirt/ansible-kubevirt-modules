@@ -163,6 +163,7 @@ class KubeVirtCDIUpload(KubernetesRawModule):
         KIND = 'UploadTokenRequest'
 
         self.client = self.get_api_client()
+        self.warnings = []
 
         api_version = 'upload.cdi.kubevirt.io/{}'.format(API)
         pvc_name = self.params.get('pvc_name')

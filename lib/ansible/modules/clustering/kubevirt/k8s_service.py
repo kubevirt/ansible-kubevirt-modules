@@ -255,6 +255,7 @@ class KubernetesService(KubernetesRawModule):
     def execute_module(self):
         """ Module execution """
         self.client = self.get_api_client()
+        self.warnings = []
 
         api_version = 'v1'
         selector = self.params.get('selector')

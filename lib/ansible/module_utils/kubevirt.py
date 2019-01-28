@@ -139,6 +139,7 @@ class KubeVirtRawModule(KubernetesRawModule):
     def execute_crud(self, kind, definition, template):
         """ Module execution """
         self.client = self.get_api_client()
+        self.warnings = []
 
         disks = self.params.get('disks', [])
         memory = self.params.get('memory')

@@ -198,7 +198,6 @@ from openshift.dynamic.client import ResourceInstance
 import sys
 if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils')
-    import kubevirt
     from kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,

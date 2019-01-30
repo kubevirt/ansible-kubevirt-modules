@@ -199,14 +199,14 @@ import sys
 if hasattr(sys, '_called_from_test'):
     sys.path.append('lib/ansible/module_utils')
     from kubevirt import (
-        virtdict,
+        vmvirtdict,
         VM_COMMON_ARG_SPEC,
         API_VERSION,
         KubeVirtRawModule,
     )
 else:
     from ansible.module_utils.kubevirt import (
-        virtdict,
+        vmvirtdict,
         KubeVirtRawModule,
         VM_COMMON_ARG_SPEC,
         API_VERSION,
@@ -297,7 +297,7 @@ class KubeVirtVM(KubeVirtRawModule):
 
     def execute_module(self):
         # Parse parameters specific for this module:
-        definition = virtdict()
+        definition = vmvirtdict()
         ephemeral = self.params.get('ephemeral')
         state = self.params.get('state')
 

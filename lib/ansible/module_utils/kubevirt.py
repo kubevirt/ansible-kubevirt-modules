@@ -35,6 +35,16 @@ def virtdict():
     return defaultdict(virtdict)
 
 
+def vmvirtdict():
+    """
+    This function create dictionary, with defaults to dictionary,
+    with predefined required values.
+    """
+    vm = virtdict()
+    vm['spec']['template']['spec']['domain']['devices'] = virtdict()
+    return vm
+
+
 class KubeVirtRawModule(KubernetesRawModule):
     def __init__(self, *args, **kwargs):
         self.api_version = API_VERSION

@@ -97,14 +97,12 @@ if hasattr(sys, '_called_from_test'):
     from kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
         KubeVirtRawModule,
     )
 else:
     from ansible.module_utils.kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
         KubeVirtRawModule,
     )
 
@@ -154,7 +152,6 @@ class KubeVirtVMPreset(KubeVirtRawModule):
 def main():
     module = KubeVirtVMPreset()
     try:
-        module.api_version = API_VERSION
         module.execute_module()
     except Exception as e:
         module.fail_json(msg=str(e), exception=traceback.format_exc())

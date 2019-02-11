@@ -28,12 +28,13 @@ class TestKubeVirtVMIRSModule(object):
         # tries binding those to corresponding methods in DynamicClient
         # (with partial()), which is more problematic to intercept
         Resource.get = MagicMock()
+        Resource.search = MagicMock()
         # Globally mock some methods, since all tests will use this
         KubernetesRawModule.patch_resource = MagicMock()
         KubernetesRawModule.patch_resource.return_value = ({}, None)
         K8sAnsibleMixin.get_api_client = MagicMock()
         K8sAnsibleMixin.get_api_client.return_value = None
-        K8sAnsibleMixin.find_resource = MagicMock()
+        mymodule.KubeVirtVMIRS.find_supported_resource = MagicMock()
 
     @pytest.mark.parametrize("_replicas, _changed", ( (1, True),
                                                       (3, True),
@@ -47,15 +48,15 @@ class TestKubeVirtVMIRSModule(object):
 
         # Mock pre-change state:
         resource_args = dict( kind='VirtualMachineInstanceReplicaSet', **RESOURCE_DEFAULT_ARGS )
-        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+        mymodule.KubeVirtVMIRS.find_supported_resource.return_value = Resource(**resource_args)
         res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': 2}))
         Resource.get.return_value = res_inst
+        Resource.search.return_value = [res_inst]
         KubernetesRawModule.patch_resource.return_value = dict(metadata = {'name': _name}, spec = {'replicas': _replicas}), None
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
             mymodule.KubeVirtVMIRS().execute_module()
-        print result
         assert result.value[0]['changed'] == _changed
 
 
@@ -71,9 +72,10 @@ class TestKubeVirtVMIRSModule(object):
 
         # Mock pre-change state:
         resource_args = dict( kind='VirtualMachineInstanceReplicaSet', **RESOURCE_DEFAULT_ARGS )
-        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+        mymodule.KubeVirtVMIRS.find_supported_resource.return_value = Resource(**resource_args)
         res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': 2}))
         Resource.get.return_value = res_inst
+        Resource.search.return_value = [res_inst]
         KubernetesRawModule.patch_resource.return_value = dict(metadata = {'name': _name}, spec = {'replicas': _replicas}), None
 
         # Mock post-change state:
@@ -98,9 +100,10 @@ class TestKubeVirtVMIRSModule(object):
 
         # Mock pre-change state:
         resource_args = dict( kind='VirtualMachineInstanceReplicaSet', **RESOURCE_DEFAULT_ARGS )
-        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+        mymodule.KubeVirtVMIRS.find_supported_resource.return_value = Resource(**resource_args)
         res_inst = ResourceInstance('', dict(metadata = {'name': _name}, spec = {'replicas': 3}))
         Resource.get.return_value = res_inst
+        Resource.search.return_value = [res_inst]
 
         # Actual test:
         mock_watch.side_effect = KubernetesException("Test", value=42)

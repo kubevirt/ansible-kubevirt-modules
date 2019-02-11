@@ -201,7 +201,6 @@ if hasattr(sys, '_called_from_test'):
     from kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
         KubeVirtRawModule,
     )
 else:
@@ -209,7 +208,6 @@ else:
         virtdict,
         KubeVirtRawModule,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
     )
 
 
@@ -241,7 +239,7 @@ class KubeVirtVM(KubeVirtRawModule):
         self.patch_resource(resource, definition, existing, self.name, self.namespace, merge_type='merge')
 
         if wait:
-            resource = self.find_resource('VirtualMachineInstance', self.api_version, fail=True)
+            resource = self.find_supported_resource('VirtualMachineInstance')
             w, stream = self._create_stream(resource, self.namespace, wait_timeout)
 
         if wait and stream is not None:
@@ -271,13 +269,13 @@ class KubeVirtVM(KubeVirtRawModule):
         wait_timeout = self.params.get('wait_timeout')
         resource_version = self.params.get('resource_version')
 
-        resource_vm = self.find_resource('VirtualMachine', self.api_version)
+        resource_vm = self.find_supported_resource('VirtualMachine')
         existing = self.get_resource(resource_vm)
         if resource_version and resource_version != existing.metadata.resourceVersion:
             return False
 
         existing_running = False
-        resource_vmi = self.find_resource('VirtualMachineInstance', self.api_version)
+        resource_vmi = self.find_supported_resource('VirtualMachineInstance')
         existing_running_vmi = self.get_resource(resource_vmi)
         if existing_running_vmi and hasattr(existing_running_vmi.status, 'phase'):
             existing_running = existing_running_vmi.status.phase == 'Running'
@@ -327,7 +325,6 @@ class KubeVirtVM(KubeVirtRawModule):
 def main():
     module = KubeVirtVM()
     try:
-        module.api_version = API_VERSION
         module.execute_module()
     except Exception as e:
         module.fail_json(msg=str(e), exception=traceback.format_exc())

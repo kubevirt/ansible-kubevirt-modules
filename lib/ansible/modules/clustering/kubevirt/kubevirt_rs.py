@@ -118,14 +118,12 @@ if hasattr(sys, '_called_from_test'):
     from kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
         KubeVirtRawModule,
     )
 else:
     from ansible.module_utils.kubevirt import (
         virtdict,
         VM_COMMON_ARG_SPEC,
-        API_VERSION,
         KubeVirtRawModule,
     )
 
@@ -179,7 +177,7 @@ class KubeVirtVMIRS(KubeVirtRawModule):
         wait_timeout = self.params.get('wait_timeout')
         replicas = self.params.get('replicas')
         name = self.name
-        resource = self.find_resource(KIND, self.api_version, fail=True)
+        resource = self.find_supported_resource(KIND)
 
         w, stream = self._create_stream(resource, namespace, wait_timeout)
         return self._read_stream(resource, w, stream, name, replicas)
@@ -218,7 +216,6 @@ class KubeVirtVMIRS(KubeVirtRawModule):
 def main():
     module = KubeVirtVMIRS()
     try:
-        module.api_version = API_VERSION
         module.execute_module()
     except Exception as e:
         module.fail_json(msg=str(e), exception=traceback.format_exc())

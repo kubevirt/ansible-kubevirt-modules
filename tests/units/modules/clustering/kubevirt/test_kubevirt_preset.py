@@ -29,12 +29,13 @@ class TestKubeVirtVMIPresetModule(object):
         # tries binding those to corresponding methods in DynamicClient
         # (with partial()), which is more problematic to intercept
         Resource.get = MagicMock()
+        Resource.search = MagicMock()
         Resource.create = MagicMock()
         Resource.delete = MagicMock()
         # Globally mock some methods, since all tests will use this
         K8sAnsibleMixin.get_api_client = MagicMock()
         K8sAnsibleMixin.get_api_client.return_value = None
-        K8sAnsibleMixin.find_resource = MagicMock()
+        mymodule.KubeVirtVM.find_supported_resource = MagicMock()
 
     def test_preset_creation(self):
         args = dict(
@@ -45,8 +46,9 @@ class TestKubeVirtVMIPresetModule(object):
         set_module_args(args)
 
         Resource.get.return_value = None
+        Resource.search.return_value = None
         resource_args = dict(kind=KIND, **RESOURCE_DEFAULT_ARGS)
-        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+        mymodule.KubeVirtVM.find_supported_resource.return_value = Resource(**resource_args)
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:
@@ -62,8 +64,9 @@ class TestKubeVirtVMIPresetModule(object):
         set_module_args(args)
 
         Resource.get.return_value = None
+        Resource.search.return_value = None
         resource_args = dict(kind=KIND, **RESOURCE_DEFAULT_ARGS)
-        K8sAnsibleMixin.find_resource.return_value = Resource(**resource_args)
+        mymodule.KubeVirtVM.find_supported_resource.return_value = Resource(**resource_args)
 
         # Actual test:
         with pytest.raises(AnsibleExitJson) as result:

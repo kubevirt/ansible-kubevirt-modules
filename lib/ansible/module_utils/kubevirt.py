@@ -6,13 +6,17 @@
 # (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
 
 from collections import defaultdict
+from distutils.version import Version
 
 from ansible.module_utils.k8s.raw import KubernetesRawModule
 
 from openshift import watch
 from openshift.helper.exceptions import KubernetesException
 
-API_VERSION = 'kubevirt.io/v1alpha3'
+import re
+
+MAX_SUPPORTED_API_VERSION = 'v1alpha3'
+API_GROUP = 'kubevirt.io'
 
 
 VM_COMMON_ARG_SPEC = {
@@ -35,9 +39,59 @@ def virtdict():
     return defaultdict(virtdict)
 
 
+class KubeAPIVersion(Version):
+    component_re = re.compile(r'(\d+ | [a-z]+)', re.VERBOSE)
+
+    def __init__(self, vstring=None):
+        if vstring:
+            self.parse(vstring)
+
+    def parse(self, vstring):
+        self.vstring = vstring
+        components = [x for x in self.component_re.split(vstring) if x]
+        for i, obj in enumerate(components):
+            try:
+                components[i] = int(obj)
+            except ValueError:
+                pass
+
+        errmsg = "version '{}' does not conform to kubernetes api versioning guidelines".format(vstring)
+        c = components
+
+        if len(c) not in (2, 4) or c[0] != 'v' or not isinstance(c[1], int):
+            raise ValueError(errmsg)
+        if len(c) == 4 and (c[2] not in ('alpha', 'beta') or not isinstance(c[3], int)):
+            raise ValueError(errmsg)
+
+        self.version = components
+
+    def __str__(self):
+        return self.vstring
+
+    def __repr__(self):
+        return "KubeAPIVersion ('%s')".format(str(self))
+
+    def _cmp(self, other):
+        if isinstance(other, str):
+            other = KubeAPIVersion(other)
+
+        myver = self.version
+        otherver = other.version
+
+        for ver in myver, otherver:
+            if len(ver) == 2:
+                ver.extend(['zeta', 9999])
+
+        if myver == otherver:
+            return 0
+        if myver < otherver:
+            return -1
+        if myver > otherver:
+            return 1
+
+
 class KubeVirtRawModule(KubernetesRawModule):
     def __init__(self, *args, **kwargs):
-        self.api_version = API_VERSION
         super(KubeVirtRawModule, self).__init__(*args, **kwargs)
 
     @staticmethod
@@ -136,6 +190,17 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_volumes.append(volume)
             template_spec['volumes'] = spec_volumes
 
+    def find_supported_resource(self, kind):
+        results = self.client.resources.search(kind=kind, group=API_GROUP)
+        if not results:
+            self.fail('Failed to find resource {0} in {1}'.format(kind, API_GROUP))
+        sr = sorted(results, key=lambda r: KubeAPIVersion(r.api_version), reverse=True)
+        for r in sr:
+            if KubeAPIVersion(r.api_version) <= KubeAPIVersion(MAX_SUPPORTED_API_VERSION):
+                return r
+        self.fail("API versions {0} are too recent. Max supported is {1}/{2}.".format(
+            str([r.api_version for r in sr]), API_GROUP, MAX_SUPPORTED_API_VERSION))
+
     def execute_crud(self, kind, definition, template):
         """ Module execution """
         self.client = self.get_api_client()
@@ -169,6 +234,6 @@ class KubeVirtRawModule(KubernetesRawModule):
 
         # Perform create/absent action:
         definition = dict(self.merge_dicts(self.resource_definitions[0], definition))
-        resource = self.find_resource(kind, self.api_version, fail=True)
+        resource = self.find_supported_resource(kind)
         definition = self.set_defaults(resource, definition)
         return self.perform_action(resource, definition)

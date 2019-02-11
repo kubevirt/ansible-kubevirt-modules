@@ -5,3 +5,4 @@ kubernetes
 .coverage
 *venv/
 *.swp
+ansible.log

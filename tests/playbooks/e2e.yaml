@@ -42,11 +42,18 @@
 
     - name: Create a VM with the CDI PVC that was created
       kubevirt_vm:
-       state: present
-       name: "{{ vm_name }}"
-       namespace: default
-       memory: 64Mi
-       disks:
+        state: present
+        name: "{{ vm_name }}"
+        namespace: default
+        memory: 64Mi
+        inline:
+          spec:
+            template:
+              spec:
+                domain:
+                  cpu:
+                    cores: 1     
+        disks:
         - name: rootdisk
           volume:
             persistentVolumeClaim:
@@ -57,7 +64,7 @@
     - name: Change VM status to running
       kubevirt_vm:
         state: running
-        name: '{{ vm_name }}'
+        name: "{{ vm_name }}"
         namespace: default
 
     - name: Wait for VM to be ready
@@ -77,6 +84,13 @@
        name: '{{ vm_name }}'
        namespace: default
        memory: 1Gi
+       inline:
+        spec:
+          template:
+            spec:
+              domain:
+                cpu:
+                  cores: 2
 
     - name: Restart the VM
       kubevirt_vm:

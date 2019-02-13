@@ -134,8 +134,7 @@ class KubeVirtRawModule(KubernetesRawModule):
     def _define_cloud_init(self, cloud_init_nocloud, template_spec):
         """
         Takes the user's cloud_init_nocloud parameter and fill it in kubevirt
-        API strucuture. The name of the volume is hardcoded to ansiblecloudinitvolume
-        and the name for disk is hardcoded to ansiblecloudinitdisk.
+        API strucuture. The name for disk is hardcoded to ansiblecloudinitdisk.
         """
         if cloud_init_nocloud:
             if not template_spec['volumes']:
@@ -143,10 +142,9 @@ class KubeVirtRawModule(KubernetesRawModule):
             if not template_spec['domain']['devices']['disks']:
                 template_spec['domain']['devices']['disks'] = []
 
-            template_spec['volumes'].append({'name': 'ansiblecloudinitvolume', 'cloudInitNoCloud': cloud_init_nocloud})
+            template_spec['volumes'].append({'name': 'ansiblecloudinitdisk', 'cloudInitNoCloud': cloud_init_nocloud})
             template_spec['domain']['devices']['disks'].append({
                 'name': 'ansiblecloudinitdisk',
-                'volumeName': 'ansiblecloudinitvolume',
                 'disk': {'bus': 'virtio'},
             })
 

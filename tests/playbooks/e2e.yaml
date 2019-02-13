@@ -46,13 +46,7 @@
         name: "{{ vm_name }}"
         namespace: default
         memory: 64Mi
-        inline:
-          spec:
-            template:
-              spec:
-                domain:
-                  cpu:
-                    cores: 1     
+        cpu_cores: 1
         disks:
         - name: rootdisk
           volume:
@@ -84,13 +78,7 @@
        name: '{{ vm_name }}'
        namespace: default
        memory: 1Gi
-       inline:
-        spec:
-          template:
-            spec:
-              domain:
-                cpu:
-                  cores: 2
+       cpu_cores: 2
 
     - name: Restart the VM
       kubevirt_vm:

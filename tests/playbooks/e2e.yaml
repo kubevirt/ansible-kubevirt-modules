@@ -41,57 +41,30 @@
       retries: 18
 
     - name: Create a VM with the CDI PVC that was created
-      k8s:
-       state: present
-       name: '{{ vm_name }}'
-       namespace: default
-       inline:
-         apiVersion: kubevirt.io/v1alpha2
-         kind: VirtualMachine
-         metadata:
-           name: '{{ vm_name }}'
-           namespace: default
-           labels:
-             kubevirt.io/vm: test
-         spec:
-           running: false
-           template:
-             metadata:
-               labels:
-                 kubevirt-vm: cirros
-                 special: cirros-e2e-key
-             spec:
-               domain:
-                 resources:
-                   requests:
-                     memory: 512Mi
-                 cpu:
-                   cores: 1
-                 devices:
-                   disks:
-                   - volumeName: disk0-pvc
-                     name: mydisk
-                     disk:
-                       bus: virtio
-                   - name: cloudinitdisk
-                     volumeName: cloudinitvolume
-                     cdrom:
-                       bus: virtio
-               volumes:
-               - name: disk0-pvc
-                 persistentVolumeClaim:
-                   claimName: '{{ pvc_name }}'
-               - name: cloudinitvolume
-                 cloudInitNoCloud:
-                   userData: |
-                     #cloud-config
-                     password: "gocubsgo"
-                     chpasswd: ( expire: False )
+      kubevirt_vm:
+        state: present
+        name: "{{ vm_name }}"
+        namespace: default
+        memory: 64Mi
+        inline:
+          spec:
+            template:
+              spec:
+                domain:
+                  cpu:
+                    cores: 1     
+        disks:
+        - name: rootdisk
+          volume:
+            persistentVolumeClaim:
+              claimName: "{{ pvc_name }}"
+          disk:
+            bus: virtio
 
     - name: Change VM status to running
       kubevirt_vm:
         state: running
-        name: '{{ vm_name }}'
+        name: "{{ vm_name }}"
         namespace: default
 
     - name: Wait for VM to be ready
@@ -99,38 +72,25 @@
         name: "{{ vm_name }}"
         namespace: default
         kind: VirtualMachine
-        api_version: kubevirt.io/v1alpha2
+        api_version: kubevirt.io/v1alpha3
       register: vm
       until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
       delay: 10
       retries: 18
 
     - name: Increase the resources of VM
-      k8s:
+      kubevirt_vm:
        state: present
        name: '{{ vm_name }}'
        namespace: default
+       memory: 1Gi
        inline:
-         apiVersion: kubevirt.io/v1alpha2
-         kind: VirtualMachine
-         metadata:
-           name: '{{ vm_name }}'
-           namespace: default
-           labels:
-             kubevirt.io/vm: test
-         spec:
-           template:
-             metadata:
-               labels:
-                 kubevirt-vm: cirros
-                 special: cirros-e2e-key
-             spec:
-               domain:
-                 resources:
-                   requests:
-                     memory: 2Gi
-                 cpu:
-                   cores: 2
+        spec:
+          template:
+            spec:
+              domain:
+                cpu:
+                  cores: 2
 
     - name: Restart the VM
       kubevirt_vm:
@@ -146,7 +106,7 @@
         name: "{{ vm_name }}"
         namespace: default
         kind: VirtualMachine
-        api_version: kubevirt.io/v1alpha2
+        api_version: kubevirt.io/v1alpha3
       register: vm
       until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
       delay: 10
@@ -178,7 +138,7 @@
         name: "{{ vm_name }}"
         namespace: default
         kind: VirtualMachineInstance
-        api_version: kubevirt.io/v1alpha2
+        api_version: kubevirt.io/v1alpha3
       register: vmi
 
     - name: Wait for port to be oppened

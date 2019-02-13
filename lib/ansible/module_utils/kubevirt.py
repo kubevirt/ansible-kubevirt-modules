@@ -89,6 +89,10 @@ class KubeAPIVersion(Version):
         if myver > otherver:
             return 1
 
+    # python2 compatibility
+    def __cmp__(self, other):
+        return self._cmp(other)
+
 
 class KubeVirtRawModule(KubernetesRawModule):
     def __init__(self, *args, **kwargs):

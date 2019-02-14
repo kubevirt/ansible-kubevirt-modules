@@ -30,6 +30,9 @@ options:
         description:
             - QEMU machine type is the actual chipset of the virtual machine.
         type: str
+    cpu_cores:
+        description:
+            - "Number of CPU cores."
 requirements:
     - python >= 2.7
     - openshift >= 0.8.2

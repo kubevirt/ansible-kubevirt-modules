@@ -77,6 +77,7 @@ EXAMPLES = '''
       name: myvm
       namespace: vms
       memory: 64M
+      cpu_cores: 1
       disks:
         - name: containerdisk
           volume:

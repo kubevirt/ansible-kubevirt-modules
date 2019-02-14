@@ -24,6 +24,7 @@ VM_COMMON_ARG_SPEC = {
     'wait': {'type': 'bool', 'default': True},
     'wait_timeout': {'type': 'int', 'default': 120},
     'memory': {'type': 'str'},
+    'cpu_cores': {'type': 'int'},
     'disks': {'type': 'list'},
     'labels': {'type': 'dict'},
     'interfaces': {'type': 'list'},
@@ -219,6 +220,7 @@ class KubeVirtRawModule(KubernetesRawModule):
 
         disks = params.get('disks', [])
         memory = params.get('memory')
+        cpu_cores = params.get('cpu_cores')
         labels = params.get('labels')
         interfaces = params.get('interfaces')
         cloud_init_nocloud = params.get('cloud_init_nocloud')
@@ -228,6 +230,9 @@ class KubeVirtRawModule(KubernetesRawModule):
         # Merge additional flat parameters:
         if memory:
             template_spec['domain']['resources']['requests']['memory'] = memory
+
+        if cpu_cores is not None:
+            template_spec['domain']['cpu']['cores'] = cpu_cores
 
         if labels:
             template['metadata']['labels'] = labels

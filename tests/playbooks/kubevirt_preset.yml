@@ -26,9 +26,9 @@
             password: cirros
             chpasswd: { expire: False }
         disks:
-          - name: registrydisk
+          - name: containerDisk
             volume:
-              registryDisk:
-                image: kubevirt/cirros-registry-disk-demo:latest
+              containerDisk:
+                image: kubevirt/cirros-container-disk-demo:latest
             disk:
               bus: virtio

@@ -15,7 +15,7 @@
     - name: Gather facts for VirtualMachine in all namespaces
       k8s_facts:
         kind: VirtualMachine
-        api_version: kubevirt.io/v1alpha2
+        api_version: kubevirt.io/v1alpha3
       register: vm_facts
     - debug:
         var: vm_facts 

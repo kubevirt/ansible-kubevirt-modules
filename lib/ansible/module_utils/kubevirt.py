@@ -189,7 +189,7 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_disks.append({k: v for k, v in d.items() if k != 'volume'})
             if 'disks' not in template_spec['domain']['devices']:
                 template_spec['domain']['devices']['disks'] = []
-            template_spec['domain']['devices']['disks'].append(spec_disks)
+            template_spec['domain']['devices']['disks'].extend(spec_disks)
 
             # Extract volumes k8s specification from disks list passed to Ansible:
             spec_volumes = []
@@ -199,7 +199,7 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_volumes.append(volume)
             if 'volumes' not in template_spec:
                 template_spec['volumes'] = []
-            template_spec['volumes'].append(spec_volumes)
+            template_spec['volumes'].extend(spec_volumes)
 
     def find_supported_resource(self, kind):
         results = self.client.resources.search(kind=kind, group=API_GROUP)

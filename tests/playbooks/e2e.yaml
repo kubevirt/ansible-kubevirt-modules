@@ -45,6 +45,8 @@
         state: present
         name: "{{ vm_name }}"
         namespace: default
+        labels:
+          special: cirros-e2e-key
         memory: 64Mi
         cpu_cores: 1
         disks:

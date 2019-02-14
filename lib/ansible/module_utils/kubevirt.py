@@ -165,7 +165,7 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_interfaces.append({k: v for k, v in i.items() if k != 'network'})
             if 'interfaces' not in template_spec['domain']['devices']:
                 template_spec['domain']['devices']['interfaces'] = []
-            template_spec['domain']['devices']['interfaces'].append(spec_interfaces)
+            template_spec['domain']['devices']['interfaces'].extend(spec_interfaces)
 
             # Extract networks k8s specification from interfaces list passed to Ansible:
             spec_networks = []
@@ -175,7 +175,7 @@ class KubeVirtRawModule(KubernetesRawModule):
                 spec_networks.append(net)
             if 'networks' not in template_spec:
                 template_spec['networks'] = []
-            template_spec['networks'].append(spec_networks)
+            template_spec['networks'].extend(spec_networks)
 
     def _define_disks(self, disks, template_spec):
         """

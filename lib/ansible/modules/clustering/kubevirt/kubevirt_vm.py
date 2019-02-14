@@ -155,6 +155,7 @@ EXAMPLES = '''
       namespace: vms
       memory: 1024M
       cloud_init_nocloud:
+        #cloud-config
         userData: |-
           password: fedora
           chpasswd: { expire: False }

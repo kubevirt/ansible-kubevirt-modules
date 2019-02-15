@@ -46,7 +46,7 @@ options:
       - More info: U(https://github.com/kubevirt/containerized-data-importer/blob/master/doc/upload.md#expose-cdi-uploadproxy-service)
   upload_host_verify_ssl:
     description:
-      - Whether or not to verify the CDI Upload Proxy's SSL certificates against your system's CA trust store.
+      - Whether or not to verify the CDI Upload Proxy's SSL certificates against Mozilla's CA Bundle.
     default: true
     type: bool
   path:
@@ -80,6 +80,8 @@ options:
     description:
       - Required for compatibility with ansible <2.8. Don't use.
 
+Notes:
+  - Mozilla's CA bundle is provided by pip's "certifi" package.
 
 requirements:
   - python >= 2.7

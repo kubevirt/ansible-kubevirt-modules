@@ -33,4 +33,5 @@ module_utils = lib/ansible/module_utils/
 EOF
 
 ## Execute test
-ansible-playbook tests/playbooks/e2e.yaml
+ansible-playbook --version
+ansible-playbook -vvv tests/playbooks/e2e.yaml

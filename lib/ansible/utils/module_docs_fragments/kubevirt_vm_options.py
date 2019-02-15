@@ -2,8 +2,7 @@
 #
 
 # Copyright (c) 2018, KubeVirt Team <@kubevirt>
-# Apache License, Version 2.0
-# (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
 class ModuleDocFragment(object):
@@ -36,9 +35,9 @@ options:
         type: list
     cloud_init_nocloud:
         description:
-            - Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
-              as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
-              More info: U(https://kubevirt.io/api-reference/master/definitions.html#_v1_cloudinitnocloudsource)
+            - "Represents a cloud-init NoCloud user-data source. The NoCloud data will be added
+               as a disk to the virtual machine. A proper cloud-init installation is required inside the guest.
+               More information: U(https://kubevirt.io/api-reference/master/definitions.html#_v1_cloudinitnocloudsource)"
         type: dict
 extends_documentation_fragment:
     - kubevirt_common_options

@@ -2,8 +2,7 @@
 #
 
 # Copyright (c) 2018, KubeVirt Team <@kubevirt>
-# Apache License, Version 2.0
-# (see LICENSE or http://www.apache.org/licenses/LICENSE-2.0)
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
 class ModuleDocFragment(object):
@@ -39,5 +38,5 @@ requirements:
 notes:
   - "In order to use this module you have to install Openshift Python SDK.
      To ensure it's installed with correct version you can create the following task:
-     I(pip: name=openshift version=0.6.2)"
+     I(pip: name=openshift version=0.8.2)"
 '''

@@ -26,7 +26,7 @@
             - ReadWriteOnce
             resources:
               requests:
-                storage: 1Gi
+                storage: 100Mi
           storageClassName: default
 
     - name: Wait for PVC to be ready
@@ -79,7 +79,7 @@
        state: present
        name: '{{ vm_name }}'
        namespace: default
-       memory: 1Gi
+       memory: 128Mi
        cpu_cores: 2
 
     - name: Restart the VM

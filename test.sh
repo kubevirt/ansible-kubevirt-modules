@@ -25,13 +25,6 @@ do
   sleep 6;
 done
 
-### Prepare ansible configuration
-cat << EOF > ansible.cfg
-[defaults]
-library = lib/ansible/modules/
-module_utils = lib/ansible/module_utils/
-EOF
-
 ## Execute test
 ansible-playbook --version
-ansible-playbook -vvv tests/playbooks/e2e.yaml
+ansible-playbook -vvv tests/playbooks/all.yml

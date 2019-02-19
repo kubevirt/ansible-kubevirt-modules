@@ -13,22 +13,8 @@
           matchLabels:
             kubevirt.io/vmPreset:  vmi-preset-small
 
-    - name: Create cirros vm
-      kubevirt_vm:
-        state: running
-        name: myvm
-        wait_timeout: 180
+    - name: Remove mem preset
+      kubevirt_preset:
+        state: absent 
+        name: mypreset
         namespace: default
-        labels:
-            kubevirt.io/vmPreset:  vmi-preset-small
-        cloud_init_nocloud:
-          userData: |-
-            password: cirros
-            chpasswd: { expire: False }
-        disks:
-          - name: containerDisk
-            volume:
-              containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
-            disk:
-              bus: virtio

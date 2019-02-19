@@ -1,0 +1,38 @@
+---
+- name: Scale test replicaset to two
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create VMir
+      kubevirt_rs:
+        state: present
+        name: myvmir
+        namespace: default
+        wait: true
+        replicas: 1
+        memory: 64M
+        labels:
+          myvmi: myvmi
+        selector:
+          matchLabels:
+              myvmi: myvmi
+        disks:
+           - name: containerdisk
+             volume:
+               containerDisk:
+                 image: kubevirt/cirros-container-disk-demo:latest
+             disk:
+               bus: virtio
+
+    - name: Scale VMir
+      kubevirt_rs:
+        replicas: 2
+        name: myvmir
+        namespace: default
+        wait: true
+
+    - name: Remove VMir
+      kubevirt_rs:
+        state: absent
+        name: myvmir
+        namespace: default

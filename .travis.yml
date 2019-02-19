@@ -8,6 +8,7 @@ branches:
 install:
   - sudo pip install -U pyasn1 pyopenssl
   - sudo pip install openshift --ignore-installed PyYAML
+  - sudo pip install git+https://github.com/ansible/ansible.git
   - sudo pip install -r requirements-dev.txt
 jobs:
   include:
@@ -19,12 +20,6 @@ cache:
   - directories:
     - cache
     - "~/.minikube/cache"
-addons:
-  apt:
-    sources:
-    - sourceline: 'ppa:ansible/ansible'
-    packages:
-    - ansible
 before_script:
 ## FIXME Workaround for https://github.com/kubernetes/kubernetes/issues/61058
 ### And https://github.com/LiliC/travis-minikube/blob/e0f26f7b388057f51a0e2558afd5f990e07b6c49/.travis.yml#L11
@@ -36,7 +31,4 @@ before_script:
 - bash -x ci/deploy-kubevirt $CPLATFORM
 
 script:
-- pytest --cov=lib tests
-- flake8 --version
-- flake8 lib/ansible/modules
 - timeout 20m bash -x test.sh

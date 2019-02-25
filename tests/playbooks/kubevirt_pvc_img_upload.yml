@@ -37,11 +37,13 @@
       delay: 10
       retries: 30
 
+    # You need to be able to connect to the cdi upload proxy specified in `upload_host` for this to work.
+    # More info can be found in README.md
     - name: Upload local image to pvc
       kubevirt_cdi_upload:
         pvc_namespace: default
         pvc_name: pvc-vm1
-        upload_host: https://localhost:8443
+        upload_host: https://localhost:9443
         upload_host_verify_ssl: false
         path: /tmp/cirros-0.4.0-x86_64-disk.img
 

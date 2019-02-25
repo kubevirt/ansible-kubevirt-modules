@@ -1,6 +1,6 @@
 # Ansible KubeVirt Modules
 
-Modules have been moved to [Ansible repository](https://github.com/ansible/ansible/tree/devel/lib/ansible/modules/cloud/kubevirt). This repo now only hold the integration tests of the modules.
+Modules have been moved to [Ansible repository](https://github.com/ansible/ansible/tree/devel/lib/ansible/modules/cloud/kubevirt). This repo now only holds the integration tests of the modules.
 
 ## Playbook examples
 
@@ -57,6 +57,15 @@ $ ansible-playbook tests/playbooks/<playbook>
 
         > **NOTE:** Use username `kubevirt` and password `kubevirt`.
 
+### Environment for running playbooks
+
+#### Image uploading from localhost (anything using kubevirt_cdi_upload module)
+
+Your system needs to be able to connect to the [cdi upload proxy pod](https://github.com/kubevirt/containerized-data-importer/blob/master/doc/upload.md). This can be achieved by either:
+
+1. Exposing the `cdi-uploadproxy` Service from the `cdi` namespace.
+
+2. Using `kubectl port-forward` to set up temporary port forwarding through the kubernetes api server, like so: `kubectl port-forward -n cdi service/cdi-uploadproxy 9443:443`
 
 ### Facts
 

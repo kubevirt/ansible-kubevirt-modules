@@ -20,7 +20,7 @@
             description: "OCP kubevirt linux, template"
             tags: "kubevirt,ocp,template,linux"
          objects:
-         - apiVersion: kubevirt.io/v1alpha2
+         - apiVersion: kubevirt.io/v1alpha3
            kind: VirtualMachine
            metadata: 
             name: ${NAME}

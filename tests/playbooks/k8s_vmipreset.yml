@@ -9,7 +9,7 @@
        namespace: default
        force: yes
        inline:
-         apiVersion: kubevirt.io/v1alpha2
+         apiVersion: kubevirt.io/v1alpha3
          kind: VirtualMachineInstancePreset
          metadata:
            name: test-vmips-small

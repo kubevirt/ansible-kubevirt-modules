@@ -9,7 +9,7 @@
        name: test-fedora-vmi-ps
        namespace: default
        inline:
-         apiVersion: kubevirt.io/v1alpha2
+         apiVersion: kubevirt.io/v1alpha3
          kind: VirtualMachineInstance
          metadata:
            name: test-fedora-vmi-ps

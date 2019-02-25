@@ -6,7 +6,7 @@
     - name: "Gather facts for {{item.kind}} in a namespaces"
       k8s_facts:
         kind: "{{ item.kind }}"
-        api_version: kubevirt.io/v1alpha2
+        api_version: kubevirt.io/v1alpha3
         name: "{{ item.name }}"
         namespace: "{{ item.ns }}"
       with_items:

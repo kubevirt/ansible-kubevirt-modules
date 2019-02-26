@@ -39,12 +39,10 @@
                     disks:
                     - disk:
                         dev: vda
-                      name: containerdisk
-                      volumeName: registryvolume
+                      name: registryvolume
                     - cdrom:
                         dev: vdb
-                      name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                      name: cloudinitvolume
                 volumes:
                 - name: registryvolume
                   containerDisk:

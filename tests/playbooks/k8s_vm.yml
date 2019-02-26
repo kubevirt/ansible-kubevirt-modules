@@ -31,12 +31,10 @@
                    disks:
                    - disk:
                        bus: virtio
-                     name: containerdisk
-                     volumeName: registryvolume
+                     name: registryvolume
                    - cdrom:
                        bus: virtio
-                     name: cloudinitdisk
-                     volumeName: cloudinitvolume
+                     name: cloudinitvolume
                volumes:
                - name: registryvolume
                  containerDisk:

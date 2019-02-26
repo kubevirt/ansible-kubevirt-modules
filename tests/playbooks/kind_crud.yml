@@ -28,12 +28,10 @@
                       memory: 512M
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:
@@ -96,12 +94,10 @@
                       memory: 512M
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:
@@ -197,12 +193,10 @@
                       memory: 1Gi
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:
@@ -298,12 +292,10 @@
                   memory: 512M
               devices:
                 disks:
-                - volumeName: bootvolume
-                  name: bootdisk
+                - name: bootvolume
                   disk:
                     bus: virtio
-                - name: cloudinitdisk
-                  volumeName: cloudinitvolume
+                - name: cloudinitvolume
                   cdrom:
                     bus: virtio
             volumes:
@@ -528,12 +520,10 @@
                       memory: 512M
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:
@@ -597,12 +587,10 @@
                       memory: 512M
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:
@@ -672,12 +660,10 @@
                       memory: 1Gi
                   devices:
                     disks:
-                    - volumeName: myvolume
-                      name: mydisk
+                    - name: myvolume
                       disk:
                         bus: virtio
-                    - name: cloudinitdisk
-                      volumeName: cloudinitvolume
+                    - name: cloudinitvolume
                       cdrom:
                         bus: virtio
                 volumes:

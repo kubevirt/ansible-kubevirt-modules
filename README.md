@@ -76,3 +76,37 @@ $ ansible-playbook tests/playbooks/k8s_facts_vm.yml
 ```
 
 The above command, will gather the information for the VM stated in the playbook and print out a JSON document based on [KubeVirt VM spec](https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine).
+
+
+## KubeVirt Inventory plugin
+Inventory plugins allow users to point at data sources to compile the inventory of hosts that Ansible uses to target tasks, either via the -i /path/to/file and/or -i 'host1, host2' command line parameters or from other configuration sources.
+
+### Enabling KubeVirt inventory plugin
+In your `ansible.cfg` file find option `enable_plugins` in `inventory` section and add there kubevirt:
+
+```
+[inventory]
+enable_plugins = kubevirt
+```
+
+### Using KubeVirt inventory plugin
+You need to create plugin configuration which specify which plugin to use, and some other parameters, which you want to use:
+
+```
+plugin: kubevirt
+connections:
+  - namespaces:
+      - default
+    network_name: default
+```
+
+This configuration will use kubevirt plugin and will list all VMIs from default namespace and as default IP it will use network interface from default network.
+
+### Execute the playbook with KubeVirt inventory plugin
+To use the plugin in playbook, just pass it to `ansible-playbook` command in `-i` option:
+
+```
+$ ansible-playbook -i kubevirt.yaml myplaybook.yml
+```
+
+Note that KubeVirt inventory plugin is designed to work with multus, meaning the plugin is designed to work with VMIs which doesn't use Kubernetes service to expose it's network, but VMIs which are connected to bridge and report the reachable IP address in status field of VMI object. For VMIs exposed by Kubernetes services, please use [k8s](https://docs.ansible.com/ansible/latest/plugins/inventory/k8s.html).

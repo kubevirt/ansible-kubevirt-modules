@@ -4,26 +4,14 @@
   connection: local
   tasks:
     - name: Create a PVC annotated for upload
-      # This will be shorter with kubevirt_pvc
-      k8s:
-       state: present
+      kubevirt_pvc:
        namespace: default
        name: pvc-vm1
-       inline:
-         apiVersion: v1
-         kind: PersistentVolumeClaim
-         metadata:
-           name: pvc-vm1
-           labels:
-             app: containerized-data-importer
-           annotations:
-             cdi.kubevirt.io/storage.upload.target: ""
-         spec:
-           accessModes:
-           - ReadWriteOnce
-           resources:
-             requests:
-               storage: 20Mi
+       access_modes:
+       - ReadWriteOnce
+       size: 20Mi
+       cdi_source:
+         upload: yes
 
     - name: Wait for PVC to become ready 
       # Won't be needed with kubevirt_pvc with wait support

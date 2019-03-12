@@ -1,3 +1,4 @@
 - import_playbook: e2e.yaml
 - import_playbook: kubevirt_preset.yml
 - import_playbook: kubevirt_vmir.yml
+- import_playbook: kubevirt_pvc.yml

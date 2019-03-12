@@ -8,26 +8,17 @@
     service_name: cirros-e2e-service
   tasks:
     - name: Create PVC with CDI annotations
-      k8s:
+      kubevirt_pvc:
         state: present
         namespace: default
         name: "{{ pvc_name }}"
-        inline:
-          apiVersion: v1
-          kind: PersistentVolumeClaim
-          metadata:
-            name: "{{ pvc_name }}"
-            labels:
-              app: cirros-cdi
-            annotations:
-              cdi.kubevirt.io/storage.import.endpoint: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-          spec:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 100Mi
-          storageClassName: default
+        access_modes:
+        - ReadWriteOnce
+        size: 100Mi
+        storage_class_name: standard
+        cdi_source:
+          http:
+            url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 
     - name: Wait for PVC to be ready
       k8s_facts:
@@ -37,8 +28,8 @@
         api_version: v1
       register: pvc
       until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
-      delay: 10
-      retries: 18
+      delay: 15
+      retries: 30
 
     - name: Create a VM with the CDI PVC that was created
       kubevirt_vm:

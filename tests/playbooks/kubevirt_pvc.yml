@@ -20,17 +20,7 @@
         size: 20Mi
         cdi_source:
           blank: yes
-
-    - name: Wait for blank PVC to be ready
-      k8s_facts:
-        name: pvc-blank
-        namespace: default
-        kind: PersistentVolumeClaim
-        api_version: v1
-      register: pvc
-      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
-      delay: 15
-      retries: 30
+        wait: yes
 
     - name: Create a PVC and fetch contents from an external http location
       kubevirt_pvc:
@@ -42,17 +32,7 @@
         cdi_source:
           http:
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-
-    - name: Wait for blank PVC to be ready
-      k8s_facts:
-        name: pvc-demo
-        namespace: default
-        kind: PersistentVolumeClaim
-        api_version: v1
-      register: pvc
-      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
-      delay: 15
-      retries: 30
+        wait: yes
 
     - name: Remove all PVCs
       kubevirt_pvc:

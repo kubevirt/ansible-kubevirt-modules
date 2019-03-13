@@ -12,18 +12,7 @@
        size: 20Mi
        cdi_source:
          upload: yes
-
-    - name: Wait for PVC to become ready 
-      # Won't be needed with kubevirt_pvc with wait support
-      k8s_facts:
-        namespace: default
-        name: pvc-vm1
-        kind: PersistentVolumeClaim
-        api_version: v1
-      register: pvc
-      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Running'"
-      delay: 10
-      retries: 30
+       wait: yes
 
     # You need to be able to connect to the cdi upload proxy specified in `upload_host` for this to work.
     # More info can be found in README.md

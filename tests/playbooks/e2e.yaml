@@ -17,7 +17,6 @@
         access_modes:
         - ReadWriteOnce
         size: 100Mi
-        storage_class_name: standard
         cdi_source:
           http:
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"

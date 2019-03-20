@@ -6,7 +6,7 @@
     - name: facts for PVC pvc-demo in default namespaces
       k8s_facts:
         kind: PersistentVolumeClaim
-        name: pvc-demo
+        name: test-e2e-pvc
         namespace: default
       register: pvc_facts
     - debug:

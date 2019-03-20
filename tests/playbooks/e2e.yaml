@@ -27,7 +27,7 @@
         state: present
         name: "{{ vm_name }}"
         labels:
-          special: cirros-e2e-key
+          special: test-e2e-key
         memory: 64Mi
         cpu_cores: 1
         disks:
@@ -75,7 +75,7 @@
         kind: VirtualMachine
         api_version: kubevirt.io/v1alpha3
       register: vm
-      until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
+      until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true and vm.resources[0].spec.template.spec.domain.cpu['cores'] == 2 and vm.resources[0].spec.template.spec.domain.resources.requests['memory'] == '128Mi'"
       delay: 10
       retries: 18
 
@@ -86,16 +86,15 @@
         type: NodePort
         ports:
           - name: http
-            nodePort: 30000
             port: 27017
             targetPort: 22
             protocol: TCP
         selector:
-          special: cirros-e2e-key
+          special: test-e2e-key
         definition:
           metadata:
             labels:
-              kubevirt.io/vm: cirros-e2e-service
+              kubevirt.io/vm: test-e2e-service
           spec:
             externalTrafficPolicy: Cluster
 

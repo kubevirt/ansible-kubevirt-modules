@@ -1,0 +1,88 @@
+---
+- name: Gather facts for Templates
+  hosts: localhost
+  connection: local
+  vars:
+    template_name: test-template
+  tasks:
+    - name: Create template test-template
+      kubevirt_template:
+        state: present
+        name: "{{ template_name }}"
+        namespace: default
+        display_name: Generic cirros template
+        description: Basic cirros template
+        long_description: Verbose description of cirros template
+        provider_display_name: Just Be Cool, Inc.
+        documentation_url: http://theverycoolcompany.com
+        support_url: http://support.theverycoolcompany.com
+        icon_class: icon-linux
+        default_disk:
+          disk:
+            bus: virtio
+        default_nic:
+          model: virtio
+        default_network:
+          resource:
+            resourceName: bridge.network.kubevirt.io/cnvmgmt
+        default_volume:
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo:latest
+        objects:
+          - name: ${NAME}
+            kind: VirtualMachine
+            memory: ${MEMORY_SIZE}
+            state: present
+            namespace: vms
+        parameters:
+          - name: NAME
+            description: VM name
+            generate: expression
+            from: 'vm-[A-Za-z0-9]{8}'
+          - name: MEMORY_SIZE
+            description: Memory size
+            value: 1Gi
+
+    - name: Update template test-template
+      kubevirt_template:
+        state: present
+        name: "{{ template_name }}"
+        namespace: default
+        display_name: Generic cirros template
+        description: Basic cirros template
+        long_description: Verbose description of cirros template
+        provider_display_name: Just Be Cool, Inc.
+        documentation_url: http://theverycoolcompany.com
+        support_url: http://support.theverycoolcompany.com
+        icon_class: icon-linux
+        default_disk:
+          disk:
+            bus: virtio
+        default_nic:
+          model: virtio
+        default_network:
+          resource:
+            resourceName: bridge.network.kubevirt.io/cnvmgmt
+        default_volume:
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo
+        objects:
+          - name: ${NAME}
+            kind: VirtualMachine
+            memory: ${MEMORY_SIZE}
+            state: present
+            namespace: vms
+        parameters:
+          - name: NAME
+            description: VM name
+            generate: expression
+            from: 'vm-[A-Za-z0-9]{8}'
+          - name: MEMORY_SIZE
+            description: Memory size
+            value: 2Gi
+
+    - name: Remove template test-template
+      kubevirt_template:
+        state: absent
+        name: test-template
+        namespace: default

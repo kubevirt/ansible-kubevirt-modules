@@ -2,33 +2,44 @@
 - name: Create PVCs and have CDI do something with them
   hosts: localhost
   connection: local
+  module_defaults:
+    group/k8s:
+      namespace: default
+    kubevirt_pvc:
+      size: 100Mi
   tasks:
     - name: Create a PVC
       kubevirt_pvc:
-        namespace: default
         name: pvc1
         access_modes:
         - ReadWriteOnce
+<<<<<<< HEAD
         size: 100Mi
+=======
+>>>>>>> Changes in playbooks
 
     - name: Create a blank PVC image
       kubevirt_pvc:
-        namespace: default
         name: pvc-blank
         access_modes:
         - ReadWriteOnce
+<<<<<<< HEAD
         size: 100Mi
+=======
+>>>>>>> Changes in playbooks
         cdi_source:
           blank: yes
         wait: yes
 
     - name: Create a PVC and fetch contents from an external http location
       kubevirt_pvc:
-        namespace: default
         name: pvc-demo
         access_modes:
         - ReadWriteOnce
+<<<<<<< HEAD
         size: 100Mi
+=======
+>>>>>>> Changes in playbooks
         cdi_source:
           http:
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
@@ -36,11 +47,13 @@
 
     - name: Clone the last pvc
       kubevirt_pvc:
-        namespace: default
         name: pvc-demo2
         access_modes:
         - ReadWriteOnce
+<<<<<<< HEAD
         size: 100Mi
+=======
+>>>>>>> Changes in playbooks
         cdi_source:
           pvc:
             namespace: default
@@ -51,7 +64,6 @@
       kubevirt_pvc:
         state: absent
         name: "{{ item }}"
-        namespace: default
       with_items:
       - pvc1
       - pvc-blank

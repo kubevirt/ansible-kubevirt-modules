@@ -1,5 +1,5 @@
 ---
-- name: Services work just like with standard pods
+- name: Expose VMI over SSH
   hosts: localhost
   connection: local
   tasks:

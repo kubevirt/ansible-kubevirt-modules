@@ -5,7 +5,6 @@
   connection: local
   module_defaults:
     group/k8s:
-      host: https://192.168.42.55:8443
       verify_ssl: no
 #      ssl_ca_cert: ca.pem
   vars:
@@ -15,10 +14,19 @@
     # It's good practice to store login credentials in a secure vault and not
     # directly in playbooks.
     #- include_vars: k8s_passwords.yml
-
+    - name: Get the hostname of master node dynamically
+      k8s_facts:
+        kind: Node
+        label_selectors:
+          - node-role.kubernetes.io/master = true
+      register: node_facts
+    - name: set fact for the hostname
+      set_fact:
+        hostname: "{{ 'https://' + node_facts.resources[0].status['addresses'][-1]['address'] + ':8443'}}"
     - name: Log in (obtain auth token)
       k8s_auth:
-        username: developer
+        host: "{{ hostname }}"
+        username: test_admin
         password: "{{ k8s_developer_password }}"
       register: k8s_auth_results
 
@@ -26,6 +34,7 @@
     # in k8s modules like this:
     - name: Get a list of all pods from any namespace
       k8s_facts:
+        host: "{{ hostname }}"
         api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
         kind: Pod
       register: pod_list
@@ -35,5 +44,6 @@
       when: k8s_auth_results.k8s_auth.api_key is defined
       k8s_auth:
         state: absent
+        host: "{{ hostname }}"
         api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
 

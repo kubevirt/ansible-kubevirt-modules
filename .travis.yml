@@ -8,7 +8,7 @@ branches:
 install:
   - sudo pip install -U pyasn1 pyopenssl
   - sudo pip install openshift --ignore-installed PyYAML
-  - sudo pip install git+https://github.com/ansible/ansible.git
+  - if [ -n "$PR_NUMBER" ]; then sudo pip install git+https://github.com/ansible/ansible.git@refs/pull/$PR_NUMBER/head; else sudo pip install git+https://github.com/ansible/ansible.git; fi
   - sudo pip install -r requirements-dev.txt
 jobs:
   include:

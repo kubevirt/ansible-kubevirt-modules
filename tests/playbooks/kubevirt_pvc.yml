@@ -34,6 +34,19 @@
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
         wait: yes
 
+    - name: Clone the last pvc
+      kubevirt_pvc:
+        namespace: default
+        name: pvc-demo2
+        access_modes:
+        - ReadWriteOnce
+        size: 20Mi
+        cdi_source:
+          pvc:
+            namespace: default
+            name: pvc-demo
+        wait: yes
+
     - name: Remove all PVCs
       kubevirt_pvc:
         state: absent
@@ -43,4 +56,5 @@
       - pvc1
       - pvc-blank
       - pvc-demo
+      - pvc-demo2
 

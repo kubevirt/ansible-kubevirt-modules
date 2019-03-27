@@ -7,7 +7,9 @@
       namespace: default
   vars:
     vm_name: cirros-e2e-vm
+    vmi_name: cirros-e2e-vmi
     pvc_name: cirros-e2e-pvc
+    pvc2_name: cirros-e2e-pvc2
     service_name: cirros-e2e-service
   tasks:
     - name: Create PVC with CDI annotations
@@ -21,6 +23,50 @@
           http:
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
         wait: yes
+
+    - name: Create a clone of previous PVC
+      kubevirt_pvc:
+        state: present
+        name: "{{ pvc2_name }}"
+        access_modes:
+        - ReadWriteOnce
+        size: 100Mi
+        cdi_source:
+          pvc:
+            namespace: default
+            name: "{{ pvc_name }}"
+        wait: yes
+
+    - name: Create an ephemeral VM with the cloned PVC
+      kubevirt_vm:
+        state: present
+        name: "{{ vmi_name }}"
+        ephemeral: yes
+        memory: 64Mi
+        cpu_cores: 1
+        disks:
+        - name: rootdisk
+          volume:
+            persistentVolumeClaim:
+              claimName: "{{ pvc2_name }}"
+          disk:
+            bus: virtio
+
+    - name: Verify the ephemeral VM is in fact running
+      k8s_facts:
+        name: "{{ vmi_name }}"
+        kind: VirtualMachineInstance
+        api_version: kubevirt.io/v1alpha3
+      register: vmi
+      until: "vmi.resources[0].status['phase'] == 'Running'"
+      delay: 1
+      retries: 1
+
+    - name: Remove the ephemeral VM
+      kubevirt_vm:
+        state: absent
+        name: "{{ vmi_name }}"
+        ephemeral: yes
 
     - name: Create a VM with the CDI PVC that was created
       kubevirt_vm:
@@ -43,15 +89,15 @@
         state: running
         name: "{{ vm_name }}"
 
-    - name: Wait for VM to be ready
+    - name: Verify that VM is ready
       k8s_facts:
         name: "{{ vm_name }}"
         kind: VirtualMachine
         api_version: kubevirt.io/v1alpha3
       register: vm
       until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
-      delay: 10
-      retries: 18
+      delay: 1
+      retries: 1
 
     - name: Increase the resources of VM
       kubevirt_vm:
@@ -69,15 +115,15 @@
         - "stopped"
         - "running"
 
-    - name: Wait for VM to be ready
+    - name: Verify that VM is ready
       k8s_facts:
         name: "{{ vm_name }}"
         kind: VirtualMachine
         api_version: kubevirt.io/v1alpha3
       register: vm
       until: "vm.resources[0].status['created'] == true and vm.resources[0].status['ready'] == true"
-      delay: 10
-      retries: 18
+      delay: 1
+      retries: 1
 
     - name: Expose the VMI using service
       k8s_service:
@@ -106,7 +152,7 @@
         api_version: kubevirt.io/v1alpha3
       register: vmi
 
-    - name: Wait for port to be oppened
+    - name: Wait for port to be opened
       wait_for:
         host: "{{ vmi.resources[0].status.nodeName}}"
         port: 30000

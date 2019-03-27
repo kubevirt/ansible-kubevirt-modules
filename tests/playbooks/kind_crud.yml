@@ -62,12 +62,12 @@
         - "vm_facts is changed"
         fail_msg: "Create VM task did not return changed"
     
-    - name: wait for changes to appear
+    - name: Check if changes appeared
       command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'true'
-      retries: 60
-      delay: 3
+      retries: 1
+      delay: 1
   
     - name: recreate test-fedora VM
       kubevirt_vm:
@@ -135,12 +135,12 @@
         name: test-fedora
         namespace: default
     
-    - name: wait for changes to appear
+    - name: Check if changes appeared
       command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'false'
-      retries: 60
-      delay: 3
+      retries: 1
+      delay: 1
 
     - name: Power on test-fedora VM
       kubevirt_vm:
@@ -148,12 +148,12 @@
         name: test-fedora
         namespace: default
 
-    - name: wait for changes to appear
+    - name: Check if changes appeared
       command: "oc get vm test-fedora -n default -o jsonpath='{.spec.running}'"
       register: vm_facts
       until: vm_facts.stdout == 'true'
-      retries: 60
-      delay: 3
+      retries: 1
+      delay: 1
 
     - name: Read VM Facts
       when: vm_facts is succeeded

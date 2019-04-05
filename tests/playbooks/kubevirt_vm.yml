@@ -1,0 +1,194 @@
+---
+- name: Comprehensive kubevirt_vm testing
+  hosts: localhost
+  connection: local
+  module_defaults:
+    group/k8s:
+      namespace: default
+  tasks:
+    ############# EPHEMERAL ###############
+
+    # For ephemerals `running` is an alias for `present`; also make sure it's actually Running
+    - name: "Create ephemeral VMs utilizing states running/present"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        ephemeral: yes
+        name: "{{ item.name }}"
+        memory: 64M
+        disks:
+          - name: containerdisk
+            volume:
+              containerDisk:
+                image: kubevirt/cirros-container-disk-demo:latest
+            disk:
+              bus: virtio
+      with_items:
+        - { name: 'eph1', state: 'present' }
+        - { name: 'eph2', state: 'running' }
+      register: result
+      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.phase != 'Running'
+
+    - name: "Verify they're all reported as up"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        ephemeral: yes
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'eph1', state: 'present' }
+        - { name: 'eph1', state: 'running' }
+        - { name: 'eph2', state: 'present' }
+        - { name: 'eph2', state: 'running' }
+      register: result
+      failed_when: result.changed != false or result.kubevirt_vm.status.phase != 'Running'
+
+    # For ephemerals `stopped` is an alias for `absent`
+    - name: "Delete ephemeral VMs utilizing states stopped/absent"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        ephemeral: yes
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'eph1', state: 'stopped' }
+        - { name: 'eph2', state: 'absent' }
+      register: result
+      failed_when: result.changed != true or result.method != 'delete'
+
+    - name: "Verify they're actually down"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        ephemeral: yes
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'eph1', state: 'stopped' }
+        - { name: 'eph1', state: 'absent' }
+        - { name: 'eph2', state: 'stopped' }
+        - { name: 'eph2', state: 'absent' }
+      register: result
+      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+
+
+
+    ############# PERSISTENT (NON–EPHEMERAL) ###############
+
+    - name: "Create stopped VMs utilizing states stopped/present"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+        memory: 64M
+        disks:
+          - name: containerdisk
+            volume:
+              containerDisk:
+                image: kubevirt/cirros-container-disk-demo:latest
+            disk:
+              bus: virtio
+      with_items:
+        - { name: 'vm1', state: 'present' }
+        - { name: 'vm2', state: 'stopped' }
+      register: result
+      failed_when: result.changed != true or result.method != 'create'
+
+    - name: "Verify the vms exist, but are down"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm1', state: 'stopped' }
+        - { name: 'vm1', state: 'present' }
+        - { name: 'vm2', state: 'stopped' }
+        - { name: 'vm2', state: 'present' }
+      register: result
+      failed_when: result.changed != false or 'status' in result.kubevirt_vm
+
+    - name: "Create a running VM utilizing state `running`"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+        memory: 64M
+        disks:
+          - name: containerdisk
+            volume:
+              containerDisk:
+                image: kubevirt/cirros-container-disk-demo:latest
+            disk:
+              bus: virtio
+      with_items:
+        - { name: 'vm3', state: 'running' }
+      register: result
+      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.ready != true
+
+    - name: "Verify the vm exists and is actually up"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm3', state: 'present' }
+        - { name: 'vm3', state: 'running' }
+      register: result
+      failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
+
+    - name: "Start vm2"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm2', state: 'running' }
+      register: result
+      failed_when: result.changed != true or result.method != 'patch' or result.kubevirt_vm.status.ready != true
+
+    - name: "Verify the vm exists and is actually up"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm2', state: 'present' }
+        - { name: 'vm2', state: 'running' }
+      register: result
+      failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
+
+    - name: "Stop running vms"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm2', state: 'stopped' }
+        - { name: 'vm3', state: 'stopped' }
+      register: result
+      failed_when: result.changed != true or result.method != 'patch'
+
+    - name: "Verify all the vms exist and are actually stopped"
+      kubevirt_vm:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm1', state: 'present' }
+        - { name: 'vm1', state: 'stopped' }
+        - { name: 'vm2', state: 'present' }
+        - { name: 'vm2', state: 'stopped' }
+        - { name: 'vm3', state: 'present' }
+        - { name: 'vm3', state: 'stopped' }
+      register: result
+      failed_when: result.changed != false or ('status' in result.kubevirt_vm and 'ready' in result.kubevirt_vm.status and result.kubevirt_vm.status.ready != false)
+
+    - name: "Delete VMs"
+      kubevirt_vm:
+        state: absent
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm1' }
+        - { name: 'vm2' }
+        - { name: 'vm3' }
+      register: result
+      failed_when: result.changed != true or result.method != 'delete'
+
+    - name: "Verify they're actually gone"
+      kubevirt_vm:
+        state: absent
+        name: "{{ item.name }}"
+      with_items:
+        - { name: 'vm1' }
+        - { name: 'vm2' }
+        - { name: 'vm3' }
+      register: result
+      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+

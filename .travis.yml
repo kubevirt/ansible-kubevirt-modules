@@ -32,3 +32,11 @@ before_script:
 
 script:
 - timeout 20m bash -x test.sh
+
+notifications:
+  email:
+    recipients:
+      - omachace@redhat.com
+      - mmazur@redhat.com
+    on_success: never
+    on_failure: always

@@ -2,25 +2,41 @@
 - name: Create a PVC from local VM image
   hosts: localhost
   connection: local
+  vars:
+    pvc_name: test-upload-pvc
   tasks:
     - name: Create a PVC annotated for upload
       kubevirt_pvc:
        namespace: default
-       name: pvc-vm1
+       name: "{{ pvc_name }}"
        access_modes:
        - ReadWriteOnce
-       size: 20Mi
+       size: 100Mi
        cdi_source:
          upload: yes
        wait: yes
 
-    # You need to be able to connect to the cdi upload proxy specified in `upload_host` for this to work.
-    # More info can be found in README.md
+    - name: Get the CDI upload host endpoint
+      k8s_facts:
+        kind: Route
+        namespace: cdi
+        name: cdi-uploadproxy-route
+      register: route_cdi
+
+    - name: set facts for upload_host
+      set_fact:
+        upload_host: "{{ 'https://' + route_cdi.resources[0].spec['host'] }}"
+    
+    - name: Get the cirros file
+      get_url:
+        url: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+        dest: /tmp/cirros-0.4.0-x86_64-disk.img
+
     - name: Upload local image to pvc
       kubevirt_cdi_upload:
         pvc_namespace: default
-        pvc_name: pvc-vm1
-        upload_host: https://localhost:9443
+        pvc_name: "{{ pvc_name }}"
+        upload_host: "{{ upload_host }}"
         upload_host_verify_ssl: false
         path: /tmp/cirros-0.4.0-x86_64-disk.img
 

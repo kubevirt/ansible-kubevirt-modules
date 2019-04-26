@@ -12,26 +12,30 @@ install:
   - sudo pip install -r requirements-dev.txt
 jobs:
   include:
-    - stage: Tests
-      name: "Default (minikube with latest k8s)"
+    - name: "minishift"
+      env:
+        - CPLATFORM=minishift
+        - KUBEVIRT=v0.17.0
+        - USE_OPERATOR=yes
+        - ENABLE_DATAVOLUMES=yes
 
 cache:
   - pip
   - directories:
     - cache
-    - "~/.minikube/cache"
+    - "~/.minishift/cache"
 before_script:
 ## FIXME Workaround for https://github.com/kubernetes/kubernetes/issues/61058
 ### And https://github.com/LiliC/travis-minikube/blob/e0f26f7b388057f51a0e2558afd5f990e07b6c49/.travis.yml#L11
 - sudo mount --make-rshared /
 
 - bash -x ci/prepare-host $CPLATFORM
-- bash -x ci/prepare-host virtctl
-- bash -x ci/start-cluster $CPLATFORM $CVER
-- bash -x ci/deploy-kubevirt $CPLATFORM
+- bash -x ci/prepare-host virtctl $KUBEVIRT
+- bash -x ci/start-cluster $CPLATFORM
+- bash -x ci/deploy-kubevirt $CPLATFORM $KUBEVIRT
 
 script:
-- timeout 20m bash -x test.sh
+- timeout 30m bash -x test.sh
 
 notifications:
   email:

@@ -1,3 +1,4 @@
 [submodule "ci"]
 	path = ci
-	url = https://github.com/fabiand/traviskube
+	url = https://github.com/mmazur/traviskube
+	branch = providers

@@ -97,7 +97,7 @@ plugin: kubevirt
 connections:
   - namespaces:
       - default
-    network_name: default
+    interface_name: default
 ```
 
 This configuration will use kubevirt plugin and will list all VMIs from default namespace and as default IP it will use network interface from default network.

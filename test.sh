@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "$(minishift ip) minishift" | sudo tee -a /etc/hosts
+echo "$(minishift ip) minishift node01 node02 node03" | sudo tee -a /etc/hosts
 
 ## Prepare CDI
 export CDI_VERSION=$(curl https://github.com/kubevirt/containerized-data-importer/releases/latest | grep -o "v[0-9]\.[0-9]*\.[0-9]*")
@@ -23,16 +23,22 @@ done
 
 ## Execute test
 ansible-playbook --version
-ansible-playbook -vvv tests/playbooks/all.yml
+ansible-playbook -vvv tests/playbooks/e2e.yaml
 RETVAL=$?
 
 ## Gather debug info
-minishift status
-minishift logs
-minishift ssh 'ps auxw; docker ps -a; free -m; df -h'
+#minishift status
+#minishift logs
+#minishift ssh 'docker ps -a; free -m; df -h'
 
-for i in pvcs vmis vms pods; do
+for i in pvc vmi vm pod svc; do
   oc get $i --all-namespaces
 done
+
+sudo ss -ltnp
+ip r
+ip a
+sudo iptables-save
+
 
 exit $RETVAL

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TS
+minishift logs -t 1
+
 echo "$(minishift ip) minishift" | sudo tee -a /etc/hosts
 
 ## Prepare CDI
@@ -20,6 +23,9 @@ do
   oc get pods --all-namespaces
   sleep 6;
 done
+
+# TS
+minishift logs -t 1
 
 ## Execute test
 ansible-playbook --version

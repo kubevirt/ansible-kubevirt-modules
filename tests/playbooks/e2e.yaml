@@ -106,11 +106,12 @@
         api_version: kubevirt.io/v1alpha3
       register: vmi
 
-    - name: Wait for port to be oppened
+    - name: Wait for port to be opened
       wait_for:
         host: "{{ vmi.resources[0].status.nodeName}}"
         port: 30000
         delay: 10
+        timeout: 900
       register: result
 
     - name: Check ssh is executed for VM

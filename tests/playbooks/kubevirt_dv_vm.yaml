@@ -22,4 +22,4 @@
             pvc:
               accessModes:
                 - ReadWriteOnce
-              storage: 5Gi
+              storage: 1Gi

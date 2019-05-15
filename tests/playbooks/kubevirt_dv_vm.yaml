@@ -6,7 +6,7 @@
     group/k8s:
       namespace: default
   tasks:
-    - name: Create a VM with a DataVolume that was created
+    - name: Create a Cirros VM from a DataVolume
       kubevirt_vm:
         state: running
         name: cirros-dv

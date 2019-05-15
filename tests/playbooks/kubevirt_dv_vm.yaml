@@ -1,0 +1,25 @@
+---
+- name: VM Creation with DataVolumes
+  hosts: localhost
+  connection: local
+  module_defaults:
+    group/k8s:
+      namespace: default
+  tasks:
+    - name: Create a VM with a DataVolume that was created
+      kubevirt_vm:
+        state: running
+        name: cirros-dv
+        labels:
+          special: test-e2e-key
+        memory: 64Mi
+        cpu_cores: 1
+        datavolumes:
+          - name: cirros-dv
+            source:
+              http:
+                url: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+            pvc:
+              accessModes:
+                - ReadWriteOnce
+              storage: 5Gi

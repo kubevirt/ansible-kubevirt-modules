@@ -9,7 +9,7 @@
         name: pvc1
         access_modes:
         - ReadWriteOnce
-        size: 20Mi
+        size: 100Mi
 
     - name: Create a blank PVC image
       kubevirt_pvc:
@@ -17,7 +17,7 @@
         name: pvc-blank
         access_modes:
         - ReadWriteOnce
-        size: 20Mi
+        size: 100Mi
         cdi_source:
           blank: yes
         wait: yes
@@ -40,7 +40,7 @@
         name: pvc-demo2
         access_modes:
         - ReadWriteOnce
-        size: 20Mi
+        size: 100Mi
         cdi_source:
           pvc:
             namespace: default

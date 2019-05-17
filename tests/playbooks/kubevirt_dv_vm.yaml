@@ -23,3 +23,9 @@
               accessModes:
                 - ReadWriteOnce
               storage: 1Gi
+      register: result
+      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.phase != 'Running'
+    - name: Remove the VM recently created
+      kubevirt_vm:
+        state: absent
+        name: cirros-dv

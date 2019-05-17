@@ -28,7 +28,7 @@
         name: pvc-demo
         access_modes:
         - ReadWriteOnce
-        size: 20Mi
+        size: 100Mi
         cdi_source:
           http:
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"

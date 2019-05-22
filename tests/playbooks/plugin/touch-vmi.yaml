@@ -1,0 +1,11 @@
+---
+- name: Touch a file on all the VMIs from the KubeVirt inventory plugin
+  hosts: all
+  vars:
+    ansible_user: fedora
+    ansible_ssh_pass: fedora
+  tasks:
+    - name: Ansible create file if it doesn't exist example
+      file:
+        path: "/home/fedora/test.txt"
+        state: touch

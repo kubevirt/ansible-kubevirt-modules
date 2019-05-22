@@ -6,3 +6,4 @@ kubernetes
 *venv/
 *.swp
 ansible.log
+.kubeconfig*

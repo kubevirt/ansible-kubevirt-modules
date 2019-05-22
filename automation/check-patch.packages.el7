@@ -1,0 +1,8 @@
+git
+rsync
+docker
+make
+openssl-devel
+python36
+python36-devel
+python36-pip

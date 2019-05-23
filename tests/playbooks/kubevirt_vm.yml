@@ -8,6 +8,11 @@
   tasks:
     ############# EPHEMERAL ###############
 
+    # Note: due to a bug in kubenertes <1.12 (which also means openshift 3.x), all the Verify tasks
+    #       ignore 'result.changed', as that will be wrong in such environments. Once we switch
+    #       to openshift 4.0 for testing, the full fail rules can be used once again
+    #       Issue in question: https://github.com/kubernetes/kubernetes/pull/67562
+
     # For ephemerals `running` is an alias for `present`; also make sure it's actually Running
     - name: "Create ephemeral VMs utilizing states running/present"
       kubevirt_vm:
@@ -39,7 +44,8 @@
         - { name: 'eph2', state: 'present' }
         - { name: 'eph2', state: 'running' }
       register: result
-      failed_when: result.changed != false or result.kubevirt_vm.status.phase != 'Running'
+      failed_when: result.kubevirt_vm.status.phase != 'Running'
+#     failed_when: result.changed != false or result.kubevirt_vm.status.phase != 'Running'
 
     # For ephemerals `stopped` is an alias for `absent`
     - name: "Delete ephemeral VMs utilizing states stopped/absent"
@@ -64,7 +70,8 @@
         - { name: 'eph2', state: 'stopped' }
         - { name: 'eph2', state: 'absent' }
       register: result
-      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+      failed_when: ('spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm)
+#     failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
 
 
 
@@ -98,7 +105,8 @@
         - { name: 'vm2', state: 'stopped' }
         - { name: 'vm2', state: 'present' }
       register: result
-      failed_when: result.changed != false or 'status' in result.kubevirt_vm
+      failed_when: ('status' in result.kubevirt_vm)
+#     failed_when: result.changed != false or 'status' in result.kubevirt_vm
 
     - name: "Create a running VM utilizing state `running`"
       kubevirt_vm:
@@ -125,7 +133,8 @@
         - { name: 'vm3', state: 'present' }
         - { name: 'vm3', state: 'running' }
       register: result
-      failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
+      failed_when: result.kubevirt_vm.status.ready != true
+#     failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
 
     - name: "Start vm2"
       kubevirt_vm:
@@ -144,7 +153,8 @@
         - { name: 'vm2', state: 'present' }
         - { name: 'vm2', state: 'running' }
       register: result
-      failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
+      failed_when: result.kubevirt_vm.status.ready != true
+#     failed_when: result.changed != false or result.kubevirt_vm.status.ready != true
 
     - name: "Stop running vms"
       kubevirt_vm:
@@ -168,7 +178,8 @@
         - { name: 'vm3', state: 'present' }
         - { name: 'vm3', state: 'stopped' }
       register: result
-      failed_when: result.changed != false or ('status' in result.kubevirt_vm and 'ready' in result.kubevirt_vm.status and result.kubevirt_vm.status.ready != false)
+      failed_when: ('status' in result.kubevirt_vm and 'ready' in result.kubevirt_vm.status and result.kubevirt_vm.status.ready != false)
+#     failed_when: result.changed != false or ('status' in result.kubevirt_vm and 'ready' in result.kubevirt_vm.status and result.kubevirt_vm.status.ready != false)
 
     - name: "Delete VMs"
       kubevirt_vm:
@@ -190,5 +201,6 @@
         - { name: 'vm2' }
         - { name: 'vm3' }
       register: result
-      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+      failed_when: ('spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm)
+#     failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
 

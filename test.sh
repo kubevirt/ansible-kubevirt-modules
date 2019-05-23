@@ -3,7 +3,7 @@
 echo "$(minikube ip) minikube" | sudo tee -a /etc/hosts
 
 ## No HW virt
-kubectl create configmap -n kubevirt kubevirt-config --from-literal debug.useEmulation=true
+kubectl create configmap -n kubevirt kubevirt-config --from-literal debug.useEmulation=true --from-literal feature-gates=DataVolumes
 kubectl scale --replicas=0 deployment/virt-controller -n kubevirt
 kubectl scale --replicas=2 deployment/virt-controller -n kubevirt
 

@@ -1,0 +1,21 @@
+#jinja2: lstrip_blocks: True
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ item.name }}"
+  namespace: "{{ item.namespace }}"
+  {% if item.labels is defined %}
+  labels: {{ item.labels | to_yaml }}
+  {% endif %}
+spec:
+  {% if item.selector is defined %}
+  selector: {{ item.selector | to_yaml }}
+  {% endif %}
+  {% if item.ports is defined %}
+  {% for port in item.ports %}
+  ports:
+  - protocol: "{{ port.protocol }}"
+    port: {{ port.port | int }}
+    targetPort: {{ port.targetPort | int }}
+  {% endfor %}
+  {% endif %}

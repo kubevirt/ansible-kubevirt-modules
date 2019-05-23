@@ -1,0 +1,15 @@
+- name: Create virtual machines
+  include_tasks: vms.yml
+  with_items: "{{ kubevirt_app_vms }}"
+
+- name: Create deployments
+  k8s:
+    state: "{{ item.state | default(omit) }}"
+    definition: "{{ lookup('template', 'templates/deployment.j2') }}"
+  with_items: "{{ kubevirt_app_deployments }}"
+
+- name: Create services
+  k8s:
+    state: "{{ item.state | default(omit) }}"
+    definition: "{{ lookup('template', 'templates/service.j2') }}"
+  with_items: "{{ kubevirt_app_services }}"

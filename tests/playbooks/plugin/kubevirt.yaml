@@ -2,4 +2,4 @@ plugin: kubevirt
 connections:
   - namespaces:
       - default
-    network_name: nic0
+    network_name: default

@@ -1,5 +1,5 @@
 ---
-- import_playbook: kubevirt_vm_multus.yml 
+- import_playbook: ../kubevirt_vm_multus.yml
 - name: Touch a file on all the VMIs from the KubeVirt inventory plugin
   hosts: label_app_inventory
   vars:

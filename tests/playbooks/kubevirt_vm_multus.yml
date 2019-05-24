@@ -36,7 +36,7 @@
         namespace: default
         memory: 1024M
         labels:
-          app: galaxy
+          app: inventory
           service: web
           origin: vmware
         interfaces:

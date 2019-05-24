@@ -99,22 +99,22 @@
           spec:
             externalTrafficPolicy: Cluster
 
-    - name: Gather facts for {{ vm_name }} VMI in default namespace
-      k8s_facts:
-        name: "{{ vm_name }}"
-        kind: VirtualMachineInstance
-        api_version: kubevirt.io/v1alpha3
-      register: vmi
+#   - name: Gather facts for {{ vm_name }} VMI in default namespace
+#     k8s_facts:
+#       name: "{{ vm_name }}"
+#       kind: VirtualMachineInstance
+#       api_version: kubevirt.io/v1alpha3
+#     register: vmi
 
-    - name: Wait for port to be oppened
-      wait_for:
-        host: "{{ vmi.resources[0].status.nodeName}}"
-        port: 30000
-        delay: 10
-      register: result
+#   - name: Wait for port to be oppened
+#     wait_for:
+#       host: "{{ vmi.resources[0].status.nodeName}}"
+#       port: 30000
+#       delay: 10
+#     register: result
 
-    - name: Check ssh is executed for VM
-      assert:
-        that:
-          - "result['state'] == 'started'"
-        fail_msg: "ssh is not established "
+#   - name: Check ssh is executed for VM
+#     assert:
+#       that:
+#         - "result['state'] == 'started'"
+#       fail_msg: "ssh is not established "

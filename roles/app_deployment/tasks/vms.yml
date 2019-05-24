@@ -1,0 +1,30 @@
+- name: Initialize image
+  set_fact:
+    dvs:
+      - name: "ansible-dv-{{ item.name }}"
+        source:
+          http:
+            url: "{{ item.image.url }}"
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          storage: "{{ item.image.storage }}"
+  when: item.image is defined
+
+- name: Create virtual machines
+  kubevirt_vm:
+    state: "{{ item.state | default('running') }}"
+    wait: "{{ item.wait | default(true) }}"
+    name: "{{ item.name | mandatory }}"
+    namespace: "{{ item.namespace | default('default') }}"
+    memory: "{{ item.memory | default(omit) }}"
+    template: "{{ item.template | default(omit) }}"
+    disks: "{{ item.disks | default(omit) }}"
+    interfaces: "{{ item.interfaces | default(omit) }}"
+    cloud_init_nocloud: "{{ item.cloud_init_nocloud | default(omit) }}"
+    datavolumes: "{{ dvs }}"
+    wait_timeout: 240
+
+- name: Unset image
+  set_fact:
+    dvs: []

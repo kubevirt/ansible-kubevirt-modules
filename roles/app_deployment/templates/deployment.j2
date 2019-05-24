@@ -1,0 +1,46 @@
+#jinja2: lstrip_blocks: True
+kind: Deployment
+apiVersion: "{{ item.api_version | default('apps/v1') }}"
+metadata:
+  name: "{{ item.name }}"
+  namespace: "{{ item.namespace }}"
+  {% if item.labels is defined %}
+  labels: {{ item.labels | to_yaml }}
+  {% endif %}
+  {% if item.annotations is defined %}
+  annotations: "{{ item.annotations }}"
+  {% endif %}
+spec:
+  {% if item.replicas is defined %}
+  replicas: {{ item.replicas | int }}
+  {% endif %}
+  {% if item.labels is defined %}
+  selector:
+    matchLabels: {{ item.labels | to_yaml }}
+  {% endif %}
+  {% if item.max_surge is defined or item.max_unavailable is defined %}
+  strategy:
+     rollingUpdate:
+       maxSurge: "{{ item.max_surge }}"
+       maxUnavailable: "{{ item.max_unavailable }}"
+     type:  RollingUpdate
+  {% endif %}
+  template:
+    {% if item.labels is defined %}
+    metadata:
+      labels: {{ item.labels | to_yaml }}
+    {% endif %}
+    {% if item.containers is defined %}
+    spec:
+      containers:
+      {% for container in item.containers %}
+      - name: "{{ container.name | default(container.image) }}"
+        image: "{{ container.image }}"
+        {% if container.ports is defined %}
+        {% for port in container.ports %}
+        ports:
+        - containerPort: "{{ port.containerPort }}"
+        {% endfor %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}

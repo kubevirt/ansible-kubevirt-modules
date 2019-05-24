@@ -1,0 +1,18 @@
+---
+- import_playbook: ../kubevirt_vm_multus.yml
+- name: Touch a file on all the VMIs from the KubeVirt inventory plugin
+  hosts: label_app_inventory
+  vars:
+    ansible_user: fedora
+    ansible_ssh_pass: fedora
+    test_file_path: "/home/fedora/test.txt"
+  tasks:
+    - name: Create a file on the the VMI
+      file:
+        path: "{{ test_file_path }}"
+        state: touch
+    - name: check if the file was actually created
+      stat:
+        path: "{{ test_file_path }}"
+      register: result
+      failed_when: result.stat.exists != true

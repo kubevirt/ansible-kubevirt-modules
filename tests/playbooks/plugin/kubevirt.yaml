@@ -1,0 +1,5 @@
+plugin: kubevirt
+connections:
+  - namespaces:
+      - default
+    network_name: default

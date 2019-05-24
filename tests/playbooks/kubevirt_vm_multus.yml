@@ -31,12 +31,12 @@
   tasks:
     - name: Create Fedora vm with two network interfaces
       kubevirt_vm:
-        state: present
-        name: myvm
+        state: running
+        name: test-fedora
         namespace: default
-        memory: 1024M
+        memory: 512M
         labels:
-          app: galaxy
+          app: inventory
           service: web
           origin: vmware
         interfaces:
@@ -44,20 +44,21 @@
              bridge: {}
              network:
                pod: {}
-           - name: mynet
+           - name: testbridge
              bridge: {}
              network:
                multus:
-                 networkName: mynetconf
+                 networkName: testbr
         cloud_init_nocloud:
           userData: |-
+            #cloud-config
+            ssh_pwauth: true
             password: fedora
-            chpasswd: { expire: False }
+            chpasswd: { expire: false }
         disks:
           - name: containerdisk
             volume:
               containerDisk:
                 image: kubevirt/fedora-cloud-container-disk-demo:latest
-                path: /disk/fedora.qcow2
             disk:
               bus: virtio

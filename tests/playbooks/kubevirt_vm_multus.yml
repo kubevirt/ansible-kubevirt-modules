@@ -34,7 +34,7 @@
         state: running
         name: test-fedora
         namespace: default
-        memory: 1024M
+        memory: 512M
         labels:
           app: inventory
           service: web

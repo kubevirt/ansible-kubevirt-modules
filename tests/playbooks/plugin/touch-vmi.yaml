@@ -7,7 +7,7 @@
     ansible_ssh_pass: fedora
     test_file_path: "/home/fedora/test.txt"
   tasks:
-    - name: Ansible create file if it doesn't exist example
+    - name: Create a file on the the VMI
       file:
         path: "{{ test_file_path }}"
         state: touch

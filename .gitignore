@@ -7,3 +7,5 @@ kubernetes
 *.swp
 ansible.log
 .kubeconfig*
+cluster/oc
+cluster/kubectl

@@ -6,9 +6,9 @@
     group/k8s:
       namespace: default
   vars:
-    vm_name: cirros-e2e-vm
-    pvc_name: cirros-e2e-pvc
-    service_name: cirros-e2e-service
+    vm_name: test-e2e-vm
+    pvc_name: test-e2e-pvc
+    service_name: test-e2e-service
   tasks:
     - name: Create PVC with CDI annotations
       kubevirt_pvc:
@@ -118,3 +118,18 @@
 #       that:
 #         - "result['state'] == 'started'"
 #       fail_msg: "ssh is not established "
+
+    - name: Clean-up for VM
+      kubevirt_vm:
+        name: "{{ vm_name }}"
+        state: absent
+
+    - name: Clean-up for PVC
+      kubevirt_pvc:
+        name: "{{ pvc_name }}"
+        state: absent
+
+    - name: Clean-up for Service
+      k8s_service:
+        name: "{{ service_name }}"
+        state: absent

@@ -1,8 +1,16 @@
 # Ansible KubeVirt Modules
 
-Modules have been moved to [Ansible repository](https://github.com/ansible/ansible/tree/devel/lib/ansible/modules/cloud/kubevirt). This repo now only holds the integration tests of the modules.
+KubeVirt Ansible modules enable you to automate cluster management tasks such as template, persistent volume claim, and virtual machine management.
 
-## Playbook examples
+For the source code of KubeVirt modules see the [Ansible repository](https://github.com/ansible/ansible/tree/devel/lib/ansible/modules/cloud/kubevirt). This repo contains only the integration tests for these modules.
+
+## Requirements
+
+* Ansible >= 2.8
+* OpenShift >= 0.8.2
+
+
+## Integration tests
 
 * [Virtual Machine Instance](tests/playbooks/k8s_vmi.yml)
 * [Virtual Machine](tests/playbooks/k8s_vm.yml)
@@ -14,19 +22,61 @@ Modules have been moved to [Ansible repository](https://github.com/ansible/ansib
 * [Virtual Machine Instance ReplicaSet facts](tests/playbooks/k8s_facts_vmirs.yml)
 * [All Virtual Machine Instance facts](tests/playbooks/k8s_facts.yml)
 
-## Local testing
+For the full list see [tests/playbooks](./tests/playbooks).
 
-1. Run the tests as follows:
+## How to run the tests?
+
+1. Clone this repository to the machine, where you can run `oc login` to your cluster:
+
+```shell
+$ git clone https://github.com/kubevirt/ansible-kubevirt-modules.git
+$ cd ./ansible-kubevirt-modules
+```
+
+2. (Optional) Configure a virtual environment to isolate dependencies:
+
+```shell
+$ python3 -m venv env
+$ source env/bin/activate
+```
+
+3. Install dependencies:
+
+```shell
+$ pip install openshift
+```
+
+To install Ansible use one of the options below:
+
+    * Install the [latest release version](https://github.com/ansible/ansible/releases):
+    
+    ```shell
+    $ pip install ansible
+    ```
+    
+    * Build RPM from the devel branch:
+    
+    ```shell
+    $ git clone https://github.com/ansible/ansible.git
+    $ cd ./ansible
+    $ make rpm
+    $ sudo rpm -Uvh ./rpm-build/ansible-*.noarch.rpm
+    ```
+    
+    * [Check out PRs locally](https://help.github.com/en/articles/checking-out-pull-requests-locally)
+    
+
+4. Run the tests:
 
 ```shell
 $ export ANSIBLE_CONFIG=tests/ansible.cfg
 $ ansible-playbook tests/playbooks/<playbook>
 ```
-> If your cluser has a self-signed certificate, you can include `verify_ssl = false` in `tests/ansible.cfg`
+>**Note**: If your cluser has a self-signed certificate, you can include `verify_ssl = false` in `tests/ansible.cfg`
 
-2. The playbook examples, include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration, for being able to access the VMIs created.
+>**Note**: The playbook examples include [cloud-init](http://cloudinit.readthedocs.io/en/latest/) configuration to be able to access the created VMIs.
 
-    1. For using SSH do as follows:
+    i. For using SSH do as follows:
 
         ```shell
         $ kubectl get all
@@ -41,9 +91,9 @@ $ ansible-playbook tests/playbooks/<playbook>
         $ ssh -i tests/test_rsa -p 27017 kubevirt@172.30.133.9
         ```
 
-        > **NOTE:** It might take a while for the VM to completely come up before SSH can be used.
+        It might take a while for the VM to come up before SSH can be used.
 
-    2. For using `virtctl`:
+    ii. For using `virtctl`:
 
         ```shell
         $ virtctl console <vmi_name>
@@ -55,42 +105,45 @@ $ ansible-playbook tests/playbooks/<playbook>
         $ virtctl vnc <vmi_name>
         ```
 
-        > **NOTE:** Use username `kubevirt` and password `kubevirt`.
+        Use the username `kubevirt` and the password `kubevirt`.
 
-### Environment for running playbooks
+5. (Optional) Leave the virtual environment and remove it:
 
-#### Image uploading from localhost (anything using kubevirt_cdi_upload module)
+```shell
+$ deactivate
+$ rm -rf env/
+```
 
-Your system needs to be able to connect to the [cdi upload proxy pod](https://github.com/kubevirt/containerized-data-importer/blob/master/doc/upload.md). This can be achieved by either:
 
-1. Exposing the `cdi-uploadproxy` Service from the `cdi` namespace.
+### Using the `kubevirt_cdi_upload` module
 
-2. Using `kubectl port-forward` to set up temporary port forwarding through the kubernetes api server, like so: `kubectl port-forward -n cdi service/cdi-uploadproxy 9443:443`
+To upload an image from localhost by using the `kubevirt_cdi_upload` module, your system needs to be able to connect to the [cdi upload proxy pod](https://github.com/kubevirt/containerized-data-importer/blob/master/doc/upload.md). This can be achieved by either:
 
-### Facts
+1. Exposing the `cdi-uploadproxy` Service from the `cdi` namespace, or
 
-* Once one of the previous resources has been created, the facts module can be tested as well as follows:
+2. Using `kubectl port-forward` to set up a temporary port forwarding through the Kubernetes API server: `kubectl port-forward -n cdi service/cdi-uploadproxy 9443:443`
+
+### Using the `Facts` module
+
+The following command will collect facts about the existing VM(s), if there are any, and print out a JSON document based on [KubeVirt VM spec](https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine):
 
 ```shell
 $ ansible-playbook tests/playbooks/k8s_facts_vm.yml
 ```
 
-The above command, will gather the information for the VM stated in the playbook and print out a JSON document based on [KubeVirt VM spec](https://kubevirt.io/api-reference/master/definitions.html#_v1_virtualmachine).
-
-
 ## KubeVirt Inventory plugin
-Inventory plugins allow users to point at data sources to compile the inventory of hosts that Ansible uses to target tasks, either via the -i /path/to/file and/or -i 'host1, host2' command line parameters or from other configuration sources.
+Inventory plugins allow users to point at data sources to compile the inventory of hosts that Ansible uses to target tasks, either via the `-i /path/to/file` and/or `-i 'host1, host2'` command line parameters or from other configuration sources.
 
-### Enabling KubeVirt inventory plugin
-In your `ansible.cfg` file find option `enable_plugins` in `inventory` section and add there kubevirt:
+### Enabling the KubeVirt inventory plugin
+To enable the KubeVirt plugin, add the following section in the `tests/ansible.cfg` file:
 
 ```
 [inventory]
 enable_plugins = kubevirt
 ```
 
-### Using KubeVirt inventory plugin
-You need to create plugin configuration which specify which plugin to use, and some other parameters, which you want to use:
+### Configuring the KubeVirt inventory plugin
+Define the plugin configuration in `tests/playbooks/plugin/kubevirt.yaml` as follows:
 
 ```
 plugin: kubevirt
@@ -100,16 +153,16 @@ connections:
     interface_name: default
 ```
 
-This configuration will use kubevirt plugin and will list all VMIs from default namespace and as default IP it will use network interface from default network.
+In this example, the KubeVirt plugin will list all VMIs from the `default` namespace and use the `default` interface name.
 
-### Execute the playbook with KubeVirt inventory plugin
-To use the plugin in playbook, just pass it to `ansible-playbook` command in `-i` option:
+### Using the KubeVirt inventory plugin
+To use the plugin in a playbook, run:
 
 ```
-$ ansible-playbook -i kubevirt.yaml myplaybook.yml
+$ ansible-playbook -i kubevirt.yaml <playbook>
 ```
 
-Note that KubeVirt inventory plugin is designed to work with multus, meaning the plugin is designed to work with VMIs which doesn't use Kubernetes service to expose it's network, but VMIs which are connected to bridge and report the reachable IP address in status field of VMI object. For VMIs exposed by Kubernetes services, please use [k8s](https://docs.ansible.com/ansible/latest/plugins/inventory/k8s.html).
+>**Note**: The KubeVirt inventory plugin is designed to work with Multus. It can be used only for VMIs, which are connected to the bridge and display the IP address in the Status field. For VMIs exposed by Kubernetes services, please use the [k8s Ansible module](https://docs.ansible.com/ansible/latest/plugins/inventory/k8s.html).
 
 ## Automatic testing
 

@@ -49,6 +49,19 @@
         labels:
           app: myapphttp
 
+    kubevirt_app_network_policies:
+      - name: allow-http
+        namespace: default
+        pod_selector:
+          app: myappdb
+        ingress:
+          - from:
+            - pod_selector:
+                app: myapphttp
+            ports:
+              - protocol: TCP
+                port: 5432
+
   roles:
     - app_deployment
 

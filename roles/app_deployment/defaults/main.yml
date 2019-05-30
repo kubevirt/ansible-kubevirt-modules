@@ -1,0 +1,4 @@
+kubevirt_app_vms: []
+kubevirt_app_deployments: []
+kubevirt_app_services: []
+kubevirt_app_network_policies: []

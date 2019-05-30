@@ -3,6 +3,7 @@
 set -xe
 
 export CLUSTER_PROVIDER=$TARGET
+export CLUSTER_NUM_NODES=4
 
 source cluster/common.sh
 

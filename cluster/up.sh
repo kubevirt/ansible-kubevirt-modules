@@ -36,4 +36,7 @@ fi
 # A bit of debugging info
 diff -urN ${KUBE_CFG}.orig $KUBE_CFG || :
 
+sleep 60
+
 _kubectl get nodes
+_kubectl get pods --all-namespaces

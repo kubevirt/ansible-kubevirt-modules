@@ -20,9 +20,12 @@ Role Variables
 | kubevirt_app_deployments | UNDEF         | Deployments applications specification/ |
 
 `kubevirt_app_vms`
-| Name     | Default value |                                              |
-|----------|---------------|-------------------------------------------------------------|
-| name     | UNDEF         | Name of the virtual machine. |
+| Name      | Default value |                                              |
+|-----------|---------------|----------------------------------------------|
+| name      | UNDEF         | Name of the virtual machine.                 |
+| affinity  | UNDEF         | Describes node affinity scheduling rules for the vm. |
+| node_affinity | UNDEF     | Describes vm affinity scheduling rules e.g. co-locate this vm in the same node, zone, etc. as some other vms |
+| anti_affinity | UNDEF     | Describes vm anti-affinity scheduling rules e.g. avoid putting this vm in the same node, zone, etc. as some other vms. |
 
 Dependencies
 ------------

@@ -1,0 +1,16 @@
+#jinja2: lstrip_blocks: True
+{% if not item.source is defined %}
+blank: yes
+{% elif item.source == 'blank' %}
+blank: yes
+{% elif item.source.startswith('http://') or item.source.startswith('https://') %}
+http:
+  url: {{ item.source }}
+{% elif item.source.startswith('/') or item.source.startswith('file://') %}
+upload: yes
+{% elif item.source.startswith('docker://') %}
+registry:
+  url: {{ item.source }}
+{% else %}
+blank: yes
+{% endif %}

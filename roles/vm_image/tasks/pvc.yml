@@ -1,0 +1,21 @@
+- name: "Create and initialize PVC {{ item.namespace | default('default') }}/{{ item.name }}"
+  kubevirt_pvc:
+    state: "{{ item.state | default('present') }}"
+    name: "{{ item.name | mandatory }}"
+    namespace: "{{ item.namespace | default('default') }}"
+    size: "{{ item.size | default(omit) }}"
+    wait: "{{ item.wait | default(true) }}"
+    wait_timeout: "{{ item.wait_timeout | default(300) }}"
+    labels: "{{ item.labels | default(omit) }}"
+    annotations: "{{ item.annotations | default(omit) }}"
+    storage_class_name: "{{ item.storage_class | default(omit) }}"
+    cdi_source: "{{ lookup('template', 'templates/cdi_source.j2') | from_yaml }}"
+    access_modes:
+      - ReadWriteOnce
+
+- name: "Upload local image to {{ item.namespace | default('default') }}/{{ item.name }}"
+  kubevirt_cdi_upload:
+    pvc_name: "{{ item.name | mandatory }}"
+    pvc_namespace: "{{ item.namespace | default('default') }}"
+    path: "{{ item.source | replace('file://', '', 1) }}"
+  when: item.source.startswith('/') or item.source.startswith('file://')

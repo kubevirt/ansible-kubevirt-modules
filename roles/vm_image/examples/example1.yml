@@ -1,0 +1,28 @@
+---
+- name: Create volumes 1
+  hosts: localhost
+
+  vars:
+    kubevirt_image_volumes:
+      - name: volume1
+        namespace: default
+        size: 100Mi
+        source: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+
+      - name: volume2
+        namespace: default
+        size: 100Mi
+        source: "docker://kubevirt/cirros-container-disk-demo:latest"
+
+      - name: volume3-blank
+        namespace: default
+        size: 100Mi
+        source: blank
+
+      - name: volume4-blank
+        namespace: default
+        size: 100Mi
+
+  roles:
+    - kubevirt.vm_image
+

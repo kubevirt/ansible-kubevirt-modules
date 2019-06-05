@@ -1,0 +1,4 @@
+- name: Create volumes
+  include_tasks: pvc.yml
+  with_items: "{{ kubevirt_image_volumes }}"
+

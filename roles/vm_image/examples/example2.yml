@@ -1,0 +1,25 @@
+---
+- name: Create volumes from local files
+  hosts: localhost
+  module_defaults:
+    # Hints to the upload module on where to connect to
+    kubevirt_cdi_upload:
+      upload_host_verify_ssl: false
+      upload_host: https://127.0.0.1:8443
+
+  vars:
+    kubevirt_image_volumes:
+      - name: volume1
+        namespace: default
+        size: 100Mi
+        source: "/tmp/cirros-0.4.0-x86_64-disk.img"
+
+      - name: volume2
+        namespace: default
+        size: 100Mi
+        source: "file:///tmp/cirros-0.4.0-x86_64-disk.img"
+
+
+  roles:
+    - kubevirt.vm_image
+

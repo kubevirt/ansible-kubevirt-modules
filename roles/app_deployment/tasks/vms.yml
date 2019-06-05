@@ -23,7 +23,10 @@
     interfaces: "{{ item.interfaces | default(omit) }}"
     cloud_init_nocloud: "{{ item.cloud_init_nocloud | default(omit) }}"
     datavolumes: "{{ dvs }}"
-    wait_timeout: 240
+    wait_timeout: "{{ item.wait_timeout | default(240) }}"
+    affinity: "{{ item.affinity | default(omit) }}"
+    anti_affinity: "{{ item.anti_affinity | default(omit) }}"
+    node_affinity: "{{ item.node_affinity | default(omit) }}"
 
 - name: Unset image
   set_fact:

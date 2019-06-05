@@ -11,6 +11,15 @@
           storage: 1Gi
         labels:
           app: myappdb
+        affinity:
+          soft:
+            - weight: 1
+              term:
+                match_expressions:
+                  - key: security
+                    operator: In
+                    values:
+                      - S1
 
     kubevirt_app_services:
       - name: myapp-db-service

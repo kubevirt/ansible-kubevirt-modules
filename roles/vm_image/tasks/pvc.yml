@@ -18,4 +18,4 @@
     pvc_name: "{{ item.name | mandatory }}"
     pvc_namespace: "{{ item.namespace | default('default') }}"
     path: "{{ item.source | replace('file://', '', 1) }}"
-  when: item.source.startswith('/') or item.source.startswith('file://')
+  when: item.source is defined and (item.source.startswith('/') or item.source.startswith('file://'))

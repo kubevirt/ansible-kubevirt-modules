@@ -1,8 +1,6 @@
 - import_playbook: kubevirt_pvc.yml
-  when: ansible_version.full < "2.9.0"
 - import_playbook: kubevirt_vm.yml
 - import_playbook: kubevirt_dv_vm.yaml
 - import_playbook: kubevirt_preset.yml
 - import_playbook: kubevirt_vmir.yml
 - import_playbook: e2e.yaml
-  when: ansible_version.full < "2.9.0"

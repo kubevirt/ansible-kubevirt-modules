@@ -6,6 +6,11 @@
     group/k8s:
       namespace: default
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: dv_vm
+
     - name: Create a Cirros VM from a DataVolume
       kubevirt_vm:
         state: running

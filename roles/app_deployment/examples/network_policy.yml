@@ -1,0 +1,30 @@
+- name: Deploy application
+  hosts: localhost
+
+  vars:
+    kubevirt_app_vms:
+      - name: myhttp
+        namespace: default
+        memory: 1024Mi
+        image:
+          url: https://download.fedoraproject.org/pub/fedora/linux/releases/30/Cloud/x86_64/images/Fedora-Cloud-Base-30-1.2.x86_64.qcow2
+          storage: 10Gi
+        labels:
+          app: myhttp
+
+    # Allow access to database pod from myhttp VM
+    kubevirt_app_network_policies:
+      - name: allow-db
+        namespace: default
+        pod_selector:
+          app: mydb
+        ingress:
+          - from:
+            - pod_selector:
+                app: myhttp
+            ports:
+              - protocol: TCP
+                port: 5432
+
+  roles:
+    - kubevirt.app_deployment

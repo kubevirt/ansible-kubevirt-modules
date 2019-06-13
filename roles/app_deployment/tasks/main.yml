@@ -13,3 +13,9 @@
     state: "{{ item.state | default(omit) }}"
     definition: "{{ lookup('template', 'templates/service.j2') }}"
   with_items: "{{ kubevirt_app_services }}"
+
+- name: Create network policies
+  k8s:
+    state: "{{ item.state | default(omit) }}"
+    definition: "{{ lookup('template', 'templates/network_policies.j2') }}"
+  with_items: "{{ kubevirt_app_network_policies }}"

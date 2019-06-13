@@ -1,0 +1,104 @@
+#jinja2: lstrip_blocks: True
+kind: NetworkPolicy
+apiVersion: "{{ item.api_version | default('networking.k8s.io/v1') }}"
+metadata:
+  name: "{{ item.name | mandatory }}"
+  namespace: "{{ item.namespace | mandatory }}"
+spec:
+  podSelector:
+    matchLabels: {{ item.pod_selector | default({}) | to_yaml }}
+  {% if item.deny_all is defined %}
+  policyTypes:
+    - Ingress
+    - Egress
+  {% endif %}
+  {% if item.ingress_deny_all is defined and item.ingress_deny_all %}
+  policyTypes:
+    - Ingress
+  {% endif %}
+  {% if item.ingress_allow_all is defined and item.ingress_allow_all %}
+  ingress:
+    - {}
+  {% endif %}
+  {% if item.ingress_allow_same_namespace is defined and item.ingress_deny_all %}
+  ingress:
+    - from:
+      - podSelector: {}
+  {% endif %}
+  {% if item.ingress is defined %}
+  ingress:
+  {% for i in item.ingress %}
+      -
+      {% if i.from is defined %}
+        from:
+        {% for f in i.from %}
+        -
+        {% if f.ip_block is defined %}
+          ipBlock:
+            cidr: "{{ from.ip_block.cidr }}"
+            except: "{{ from.ip_block.except }}"
+        {% endif %}
+        {% if f.namespace_selector is defined %}
+          namespaceSelector:
+            matchLabels: {{ f.namespace_selector | to_yaml }}
+        {% endif %}
+        {% if f.pod_selector is defined %}
+          podSelector:
+            matchLabels: {{ f.pod_selector | to_yaml }}
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+      {% if i.ports is defined %}
+        ports:
+        {% for port in i.ports %}
+          - protocol: "{{ port.protocol | default('TCP') }}"
+            port: {{ port.port | mandatory }}
+        {% endfor %}
+      {% endif %}
+  {% endfor %}
+  {% endif %}
+  {% if item.egress_deny_all is defined and item.egress_deny_all %}
+  policyTypes:
+    - Ingress
+  {% endif %}
+  {% if item.egress_allow_all is defined and item.egress_allow_all %}
+  egress:
+    - {}
+  {% endif %}
+  {% if item.egress_allow_same_namespace is defined and item.egress_deny_all %}
+  egress:
+    - from:
+      - podSelector: {}
+  {% endif %}
+  {% if item.egress is defined %}
+  egress:
+  {% for egress in item.egress %}
+      -
+      {% if egress.to is defined %}
+      to:
+      {% for to in egress.to %}
+        -
+        {% if to.ip_block is defined %}
+          ipBlock:
+            cidr: "{{ to.ip_block.cidr }}"
+            except: "{{ to.ip_block.except }}"
+        {% endif %}
+        {% if to.namespace_selector is defined %}
+          namespaceSelector:
+            matchLabels: {{ to.namespace_selector | to_yaml }}
+        {% endif %}
+        {% if to.pod_selector is defined %}
+          podSelector:
+            matchLabels: {{ to.pod_selector | to_yaml }}
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+      {% if egress.ports is defined %}
+        ports:
+        {% for port in egress.ports %}
+          - protocol: "{{ port.protocol | default('TCP') }}"
+            port: {{ port.port | mandatory }}
+        {% endfor %}
+      {% endif %}
+  {% endfor %}
+  {% endif %}

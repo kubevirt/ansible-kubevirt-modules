@@ -1,0 +1,9 @@
+- name: "Fetch {{ item.url }}"
+  uri:
+    url: "{{ item.url }}"
+  register: result
+  failed_when: not 'json' in result or not 'state' in result.json
+
+- name: "Set {{ item.name}} var"
+  set_fact:
+    "{{ item.name }}": "{{ result.json }}"

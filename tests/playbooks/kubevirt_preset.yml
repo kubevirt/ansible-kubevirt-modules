@@ -3,6 +3,11 @@
   connection: local
 
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: preset
+
     - name: Create mem preset
       kubevirt_preset:
         state: present

@@ -10,6 +10,11 @@
     pvc_name: test-e2e-pvc
     service_name: test-e2e-service
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: e2e
+
     - name: Create PVC with CDI annotations
       kubevirt_pvc:
         state: present

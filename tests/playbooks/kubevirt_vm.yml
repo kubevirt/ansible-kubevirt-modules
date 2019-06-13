@@ -6,6 +6,11 @@
     group/k8s:
       namespace: default
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: vm
+
     ############# EPHEMERAL ###############
 
     # For ephemerals `running` is an alias for `present`; also make sure it's actually Running

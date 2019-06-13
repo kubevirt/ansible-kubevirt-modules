@@ -3,6 +3,11 @@
   hosts: localhost
   connection: local
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: vmir
+
     - name: Create VMir
       kubevirt_rs:
         state: present

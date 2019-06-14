@@ -8,19 +8,11 @@
     skip_e2e: false
     current_playbook: ''
 
-    github_issues:
-    - name: pvc_module_242
-      url: https://api.github.com/repos/kubevirt/ansible-kubevirt-modules/issues/242
-
-- name: Fetch github issues
-  include_tasks: known_issues/github.yaml
-  with_items: "{{ github_issues }}"
-
 - name: "Known issue: ansible.git@devel breaks kubevirt_pvc #242"
   set_fact:
     skip_pvc: true
     skip_e2e: true
-  when: (ansible_version.full == "2.8.1" or ansible_version.full == "2.8.2") and pvc_module_242.state == "open"
+  when: ansible_version.full == "2.8.1" or ansible_version.full == "2.8.1.post0"
 
 - name: "Skipping this playbook due to open issues"
   meta: end_play

@@ -1,33 +1,49 @@
-sudo: required
+notifications:
+  email:
+    recipients:
+      - mmazur@redhat.com
+      - omachace@redhat.com
+    on_success: never
+    on_failure: always
+
 dist: xenial
+sudo: required
+language: python
+python:
+  - "3.7"
 
 branches:
   only:
-  - master
-  - "/^v[0-9]/"
-install:
-  - sudo pip install -U pyasn1 pyopenssl
-  - sudo pip install openshift --ignore-installed PyYAML
-  - if [ -n "$PR_NUMBER" ]; then sudo pip install git+https://github.com/ansible/ansible.git@refs/pull/$PR_NUMBER/head; else sudo pip install git+https://github.com/ansible/ansible.git; fi
-  - sudo pip install -r requirements-dev.txt
-jobs:
-  include:
-    - stage: Tests
-      name: "Default (Playbook syntax test)"
+    - master
 
 cache:
   - pip
   - directories:
     - cache
-before_script:
-script:
-- ansible-playbook --version
-- ansible-playbook -vvv --syntax-check tests/playbooks/all.yml
+    - "~/.minikube/cache"
 
-notifications:
-  email:
-    recipients:
-      - omachace@redhat.com
-      - mmazur@redhat.com
-    on_success: never
-    on_failure: always
+# If you trigger a custom build with a custom config like this:
+#   env: ANSIBLE_SOURCE=pr/9999
+# then ansible from ansible.git's PR 9999 will be installed and used for executing the playbook
+env:
+  - ANSIBLE_SOURCE=pip
+  - ANSIBLE_SOURCE=branch/stable-2.8
+  - ANSIBLE_SOURCE=branch/devel
+
+install:
+  - travis/install-ansible.sh $ANSIBLE_SOURCE
+  - travis/install-cluster.sh
+
+# travis_terminate: ok=0, fail=1, error=2+
+# if minikube fails to start/deploy, that should be an error
+script:
+  - ansible-playbook --version
+  # Catch obvious errors before we spend the time on booting the cluster up:
+  - ansible-playbook -vvv --syntax-check tests/playbooks/all.yml || travis_terminate 1;
+  # Error out if the cluster doesn't start. This can't be inside install:, because then running a
+  # quick --syntax-check before the cluster starts wouldn't be doable:
+  - travis/run-cluster.sh || travis_terminate 2;
+  - ansible-playbook -vvv tests/playbooks/all.yml
+
+after_failure:
+  - travis/print-debug-info.sh

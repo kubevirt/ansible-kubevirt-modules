@@ -1,0 +1,3 @@
+[submodule "traviskube"]
+	path = travis/traviskube
+	url = https://github.com/fabiand/traviskube

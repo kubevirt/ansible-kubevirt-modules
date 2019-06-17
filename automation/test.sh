@@ -17,29 +17,22 @@ make cluster-down
 make cluster-up
 make cluster-sync
 
-# Deps
-pip3 install --user pyasn1 pyopenssl openshift
-pip3 install --user -r requirements-dev.txt
 
-# STABLE ansible
-pip3 install --user ansible
+for ANSIBLE_SOURCE in pip branch/stable-2.8 branch/devel; do
+  # Clean up and wait a bit
+  pip3 uninstall -y ansible || :
+  sleep 30
 
-ansible-playbook --version
-ansible-playbook -vvv tests/playbooks/all.yml
+  # First make sure everything has been cleaned up
+  objcount=$( for kind in vmi pvc vm vmirs vmipreset; do _kubectl get $kind -o name || :; done | wc -l )
+  if [ $objcount != 0 ]; then
+    echo "Playbooks did not clean up after themselves; aborting"
+    exit 1
+  fi
 
-sleep 30
+  # Test
+  automation/install-ansible.sh $ANSIBLE_SOURCE
 
-# DEV ansible
-pip3 uninstall -y ansible
-pip3 install --user git+https://github.com/ansible/ansible.git
-
-# First make sure everything has been cleaned up
-objcount=$( for kind in vmi pvc vm vmirs; do _kubectl get $kind -o name; done | wc -l )
-if [ $objcount != 0 ]; then
-  echo "Playbooks did not clean up after themselves; aborting"
-  exit 1
-fi
-
-# And another one
-ansible-playbook --version
-ansible-playbook -vvv tests/playbooks/all.yml
+  ansible-playbook --version
+  ansible-playbook -vvv tests/playbooks/all.yml
+done

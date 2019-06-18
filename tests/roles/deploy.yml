@@ -14,6 +14,7 @@
         affinity:
           soft:
             - weight: 1
+              topology_key: "kubernetes.io/hostname"
               term:
                 match_expressions:
                   - key: security

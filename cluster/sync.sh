@@ -4,7 +4,7 @@ set -xe
 
 source cluster/common.sh
 
-if [ $CLUSTER_TYPE == openshift ]; then
+if [[ $CLUSTER_TYPE == openshift ]]; then
   oc adm policy add-scc-to-user privileged -n kubevirt -z kubevirt-operator
   oc adm policy add-scc-to-group anyuid system:authenticated
 fi

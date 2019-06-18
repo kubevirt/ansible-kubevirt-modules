@@ -4,7 +4,7 @@ set -xe
 
 source cluster/common.sh
 
-if [ $CLUSTER_TYPE == openshift ]; then
+if [[ $CLUSTER_TYPE == openshift ]]; then
   # Openshift needs some more args
   GOCLI_RUN_EXTRA_ARGS="${GOCLI_RUN_EXTRA_ARGS} --ocp-port 8443 --reverse"
 fi
@@ -17,7 +17,7 @@ fi
 
 gocli run --random-ports --nodes "$CLUSTER_NUM_NODES" --background $GOCLI_RUN_EXTRA_ARGS "kubevirtci/$CLUSTER_PROVIDER"
 
-if [ $CLUSTER_TYPE == openshift ]; then
+if [[ $CLUSTER_TYPE == openshift ]]; then
   gocli scp /etc/origin/master/admin.kubeconfig - > $KUBE_CFG
   cp $KUBE_CFG ${KUBE_CFG}.orig
   gocli scp /usr/bin/oc - > cluster/oc

@@ -26,9 +26,14 @@ cache:
 #   env: ANSIBLE_SOURCE=pr/9999
 # then ansible from ansible.git's PR 9999 will be installed and used for executing the playbook
 env:
-  - ANSIBLE_SOURCE=pip
-  - ANSIBLE_SOURCE=branch/stable-2.8
-  - ANSIBLE_SOURCE=branch/devel
+  global: # Make sure there are defaults for each matrix var
+    - TEST=playbooks/all.yml
+    - ANSIBLE_SOURCE=pip
+  matrix:
+    - ANSIBLE_SOURCE=pip                  TEST=playbooks/all.yml
+    - ANSIBLE_SOURCE=branch/stable-2.8    TEST=playbooks/all.yml
+    - ANSIBLE_SOURCE=branch/devel         TEST=playbooks/all.yml
+    - ANSIBLE_SOURCE=branch/devel         TEST=roles/deploy.yml
 
 install:
   - travis/install-ansible.sh $ANSIBLE_SOURCE
@@ -39,11 +44,11 @@ install:
 script:
   - ansible-playbook --version
   # Catch obvious errors before we spend the time on booting the cluster up:
-  - ansible-playbook -vvv --syntax-check tests/playbooks/all.yml || travis_terminate 1;
+  - ansible-playbook -vvv --syntax-check tests/$TEST || travis_terminate 1;
   # Error out if the cluster doesn't start. This can't be inside install:, because then running a
   # quick --syntax-check before the cluster starts wouldn't be doable:
   - travis/run-cluster.sh || travis_terminate 2;
-  - ansible-playbook -vvv tests/playbooks/all.yml
+  - ansible-playbook -vvv tests/$TEST
 
 after_failure:
   - travis/print-debug-info.sh

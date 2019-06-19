@@ -21,6 +21,7 @@ Role Variables
 | kubevirt_app_network_policies | UNDEF         | By default, all vmis in a namespace are accessible from other vmis and network endpoints. To isolate one or more vmis in a project, you can create NetworkPolicy objects in that namespace to indicate the allowed incoming connections. Note that your networking solution must support NetworkPolicy. |
 
 `kubevirt_app_vms`
+
 | Name      | Default value |                                              |
 |-----------|---------------|----------------------------------------------|
 | name      | UNDEF         | Name of the virtual machine.                 |
@@ -29,6 +30,7 @@ Role Variables
 | anti_affinity | UNDEF     | Describes vm anti-affinity scheduling rules e.g. avoid putting this vm in the same node, zone, etc. as some other vms. |
 
 `kubevirt_app_network_policies`
+
 | Name                 | Default value |                                            |
 |----------------------|---------------|--------------------------------------------|
 | name                 | UNDEF         | Name of the network policy.                |
@@ -44,6 +46,7 @@ Role Variables
 | egress_allow_same_namespace | UNDEF  | If true only egress trafic from same namespace will be allowed. |
 
 `ingress`
+
 | Name                 | Default value |                                            |
 |----------------------|---------------|--------------------------------------------|
 | ingress_ip_blocks    | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |
@@ -52,6 +55,7 @@ Role Variables
 | ingress_ports        | UNDEF         | Define ports and protocol of the ports to be allowed by ingress traffic. |
 
 `egress`
+
 | Name                 | Default value |                                            |
 |----------------------|---------------|--------------------------------------------|
 | egress_ip_blocks     | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |

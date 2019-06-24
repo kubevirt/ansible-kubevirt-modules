@@ -11,6 +11,11 @@
           storage: 1Gi
         labels:
           app: myappdb
+        cloud_init_nocloud:
+          userData: |-
+            #cloud-config
+            password: mypassword
+            chpasswd: { expire: False }
         affinity:
           soft:
             - weight: 1

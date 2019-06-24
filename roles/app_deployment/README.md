@@ -49,19 +49,19 @@ Role Variables
 
 | Name                 | Default value |                                            |
 |----------------------|---------------|--------------------------------------------|
-| ingress_ip_blocks    | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |
-| ingress_namespace_selector | UNDEF   | This selects particular namespaces for which all Pods should be allowed as egress destinations. |
-| ingress_pod_selector | UNDEF         | Specify vmis to which the ingress rules apply. |
-| ingress_ports        | UNDEF         | Define ports and protocol of the ports to be allowed by ingress traffic. |
+| ip_blocks    | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |
+| namespace_selector | UNDEF   | This selects particular namespaces for which all Pods should be allowed as egress destinations. |
+| pod_selector | UNDEF         | Specify vmis to which the ingress rules apply. |
+| ports        | UNDEF         | Define ports and protocol of the ports to be allowed by ingress traffic. |
 
 `egress`
 
 | Name                 | Default value |                                            |
 |----------------------|---------------|--------------------------------------------|
-| egress_ip_blocks     | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |
-| egress_namespace_selector | UNDEF    | This selects particular namespaces for which all Pods should be allowed as egress destinations. |
-| egress_pod_selector  | UNDEF         | Specify vmis to which the egress rules apply. |
-| egress_ports         | UNDEF         | Define ports and protocol of the ports to be allowed by egress traffic. |
+| ip_blocks     | UNDEF         | This selects particular IP CIDR ranges to allow as ingress sources. These should be cluster-external IPs, since VMI IPs are ephemeral and unpredictable |
+| namespace_selector | UNDEF    | This selects particular namespaces for which all Pods should be allowed as egress destinations. |
+| pod_selector  | UNDEF         | Specify vmis to which the egress rules apply. |
+| ports         | UNDEF         | Define ports and protocol of the ports to be allowed by egress traffic. |
 
 Dependencies
 ------------
@@ -70,54 +70,7 @@ None.
 
 Example Playbook
 ----------------
-
-```yaml
----
-- name: Deploy application
-  hosts: localhost
-
-  vars:
-    kubevirt_app_vms:
-      - name: myapp
-        namespace: default
-        memory: 128Mi
-        image:
-          url: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
-          storage: 1Gi
-        labels:
-          app: myappdb
-
-    kubevirt_app_services:
-      - name: myapp-db-service
-        namespace: default
-        selector:
-          app: myappdb
-        ports:
-          - protocol: TCP
-            port: 22
-            targetPort: 9376
-
-      - name: myapp-nginx-service
-        namespace: default
-        selector:
-          app: myapphttp
-        ports:
-          - protocol: TCP
-            port: 80
-            targetPort: 9377
-
-    kubevirt_app_deployments:
-      - name: myapp
-        replicas: 2
-        namespace: default
-        containers:
-          - image: nginx
-        labels:
-          app: myapphttp
-
-  roles:
-    - kubevirt.app_deployment
-```
+See [example playbooks](https://github.com/kubevirt/ansible-kubevirt-modules/blob/master/roles/app_deployment/examples).
 
 License
 -------

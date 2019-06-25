@@ -2,14 +2,13 @@
 
 set -xe
 
-export CLUSTER_PROVIDER=$TARGET
-source cluster/common.sh
-
-# Ansible tweaks/settings
-export PATH=$HOME/.local/bin:$PATH
-export K8S_AUTH_KUBECONFIG="$KUBE_CFG"
+export KUBEVIRT_PROVIDER=$TARGET
+export KUBEVIRT_NUM_NODES=2
+export KUBECONFIG=$(cluster-up/kubeconfig.sh)
+export K8S_AUTH_KUBECONFIG="$KUBECONFIG"
 
 # Setup Python
+export PATH=$HOME/.local/bin:$PATH
 pip3 install --user virtualenv
 virtualenv py3env
 source py3env/bin/activate

@@ -1,10 +1,13 @@
+generate:
+	./update-cluster-up.sh
+
 cluster-up:
-	./cluster/up.sh
+	./cluster-up/up.sh
 
 cluster-down:
-	./cluster/down.sh
+	./cluster-up/down.sh
 
 cluster-sync:
-	./cluster/sync.sh
+	./jenkins/cluster-sync.sh
 
-.PHONY: cluster-up cluster-down cluster-sync
+.PHONY: generate cluster-up cluster-down cluster-sync

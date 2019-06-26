@@ -28,6 +28,8 @@ Role Variables
 | affinity  | UNDEF         | Describes node affinity scheduling rules for the vm. |
 | node_affinity | UNDEF     | Describes vm affinity scheduling rules e.g. co-locate this vm in the same node, zone, etc. as some other vms |
 | anti_affinity | UNDEF     | Describes vm anti-affinity scheduling rules e.g. avoid putting this vm in the same node, zone, etc. as some other vms. |
+| hostname  | UNDEF         | Specifies the hostname of the virtual machine. The hostname will be set either by dhcp, cloud-init if configured or virtual machine name will be used. |
+| subdomain | UNDEF         | If specified, the fully qualified virtual machine hostname will be "hostname.subdomain.namespace.svc.cluster_domain". If not specified, the virtual machine will not have a domain name at all. The DNS entry will resolve to the virtual machine, no matter if the vmi itself can pick up a hostname. |
 
 `kubevirt_app_network_policies`
 

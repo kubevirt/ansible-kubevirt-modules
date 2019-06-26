@@ -16,6 +16,8 @@
     state: "{{ item.state | default('running') }}"
     wait: "{{ item.wait | default(true) }}"
     name: "{{ item.name | mandatory }}"
+    hostname: "{{ item.hostname | default(omit) }}"
+    subdomain: "{{ item.subdomain | default(omit) }}"
     namespace: "{{ item.namespace | default('default') }}"
     memory: "{{ item.memory | default(omit) }}"
     template: "{{ item.template | default(omit) }}"

@@ -29,5 +29,7 @@ kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/$KUBEVIR
 
 sleep 12
 
+free -m
+kubectl get pods --all-namespaces
 kubectl describe nodes
 

@@ -36,7 +36,7 @@ env:
     - ANSIBLE_SOURCE=branch/devel         TEST=roles/deploy.yml
 
 install:
-  - travis/install-ansible.sh $ANSIBLE_SOURCE
+  - ci-common/install-ansible.sh $ANSIBLE_SOURCE
   - travis/install-cluster.sh
 
 # travis_terminate: ok=0, fail=1, error=2+

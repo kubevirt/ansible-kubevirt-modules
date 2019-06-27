@@ -4,7 +4,7 @@ set -xe
 
 pip install openshift
 
-if [ "$1" == "pip" ]; then
+if [[ "$1" == "pip" ]]; then
   pip install ansible
 elif [[ "$1" =~ branch/..* ]]; then
   branch="$(echo $1|cut -d/ -f 2)"

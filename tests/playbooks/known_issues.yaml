@@ -18,3 +18,8 @@
   meta: end_play
   when: "skip_{{ current_playbook }} == true"
 
+# This is a workaround for https://github.com/kubevirt/ansible-kubevirt-modules/issues/240
+- name: "Travis/minikube: give cluster time to recover from its instability"
+  pause:
+    seconds: 90
+  when: lookup('env','CI') == 'true' and lookup('env','TRAVIS') == 'true'

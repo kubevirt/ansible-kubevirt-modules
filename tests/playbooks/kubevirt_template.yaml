@@ -4,7 +4,13 @@
   connection: local
   vars:
     template_name: test-template
+    vm_name: template-vm
   tasks:
+    - name: Check for known open issues
+      include_tasks: known_issues.yaml
+      vars:
+        current_playbook: template
+
     - name: Create template test-template
       kubevirt_template:
         state: present
@@ -45,11 +51,28 @@
           - name: MEMORY_SIZE
             description: Memory size
             value: 1Gi
+
     - name: Create a VM
       kubevirt_vm:
         state: running
-        name: test-vm
+        name: "{{ vm_name }}"
         namespace: default
         template: "{{ template_name }}"
         template_parameters:
           name: test-vm
+      register: result
+      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.ready != true
+
+    - name: "Delete VM"
+      kubevirt_vm:
+        state: absent
+        name: "{{ vm_name }}"
+        namespace: default
+      register: result
+      failed_when: result.changed != true or result.method != 'delete'
+
+    - name: "Delete template"
+      kubevirt_template:
+        state: absent
+        name: "{{ template_name }}"
+        namespace: default

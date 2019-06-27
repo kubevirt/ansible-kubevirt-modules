@@ -110,3 +110,23 @@ $ ansible-playbook -i kubevirt.yaml myplaybook.yml
 ```
 
 Note that KubeVirt inventory plugin is designed to work with multus, meaning the plugin is designed to work with VMIs which doesn't use Kubernetes service to expose it's network, but VMIs which are connected to bridge and report the reachable IP address in status field of VMI object. For VMIs exposed by Kubernetes services, please use [k8s](https://docs.ansible.com/ansible/latest/plugins/inventory/k8s.html).
+
+## Automatic testing
+
+### Unit tests
+
+Upstream [ansible](https://github.com/ansible/ansible) repository contains unit tests covering the kubevirt modules.
+
+### Integration tests
+
+Module and role tests ([tests/playbooks/all.yml](tests/playbooks/all.yml) and [tests/roles/deploy.yml](tests/roles/deploy.yml) respectively) are run
+against actual clusters with both [KubeVirt](https://github.com/kubevirt/kubevirt) and [CDI](https://github.com/kubevirt/containerized-data-importer) deployed, on top of:
+- TravisCI (ubuntu vms supporting only minikube; no kvm acceleration for KubeVirt vms)
+- oVirt Jenkins (physical servers that run any cluster [kubevirtci](https://github.com/kubevirt/kubevirtci) supports)
+
+Module tests are run using:
+- most recently released ansible (whatever one gets with `pip install ansible`)
+- ansible stable branch(es)
+- ansible devel branch
+
+To detect regressions early, Travis runs all the tests every 24 hours against a fresh clone of ansible.git and emails kubevirt module developers if tests fail.

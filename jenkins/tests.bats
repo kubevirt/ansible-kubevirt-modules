@@ -5,7 +5,7 @@ run_test() {
   sleep 60
 
   # First make sure everything has been cleaned up
-  objcount=$( for kind in vmi pvc vm vmirs vmipreset; do kubectl get $kind -o name || :; done | wc -l )
+  objcount=$( for kind in vmi pvc vm vmirs vmipreset template; do cluster-up/oc.sh get $kind -o name || :; done | wc -l )
   if [ $objcount != 0 ]; then
     echo "Playbooks did not clean up after themselves; aborting"
     false

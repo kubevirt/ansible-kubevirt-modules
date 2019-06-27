@@ -20,7 +20,7 @@ mkdir bats
 ( cd bats-core; git reset --hard 8789f910812afbf6b87dd371ee5ae30592f1423f; ./install.sh ../bats  )
 
 # Gather debug info and shut down the cluster on exit
-trap '{ set +e; ansible --version; _kubectl get pvc -o yaml; _kubectl get vmis -o yaml; _kubectl get vms -o yaml; _kubectl get pods --all-namespaces; make cluster-down; }' EXIT SIGINT SIGTERM SIGSTOP
+trap '{ set +e; for kind in vmi pvc vm vmirs vmipreset template; do cluster-up/oc.sh get $kind -o yaml; done; cluster-up/oc.sh get pods --all-namespaces; make cluster-down; }' EXIT SIGINT SIGTERM SIGSTOP
 
 # Set up the cluster
 make cluster-down

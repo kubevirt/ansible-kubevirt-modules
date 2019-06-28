@@ -1,2 +1,2 @@
+- import_playbook: vm_image.yml
 - import_playbook: app_deployment.yml
-#- import_playbook: vm_image.yml

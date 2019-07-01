@@ -1,18 +1,33 @@
 - name: Set some global known_issues vars
   set_fact:
+    current_playbook: ''
     skip_pvc: false
     skip_vm: false
     skip_dv_vm: false
     skip_preset: false
     skip_vmir: false
     skip_e2e: false
-    current_playbook: ''
+    skip_template: true        # Assume vanilla unless we detect otherwise
+    cluster_type: 'kubernetes' # Assume vanilla unless we detect otherwise
+
+- name: "Hack: detect cluster type (vanilla/openshift) and use this to skip openshift–specific playbooks"
+  set_fact:
+    cluster_type: "openshift"
+    openshift_version: "{{ lookup('env','KUBEVIRT_PROVIDER').split('-')[1] }}"
+    skip_template: false
+  when: lookup('env','KUBEVIRT_PROVIDER') is match('okd-.*') or lookup('env','KUBEVIRT_PROVIDER') is match('os-.*')
 
 - name: "Known issue: ansible.git@devel breaks kubevirt_pvc #242"
   set_fact:
     skip_pvc: true
     skip_e2e: true
   when: ansible_version.full == "2.8.1"
+
+# More info: https://github.com/kubevirt/ansible-kubevirt-modules/issues/265
+- name: "Known issue: openshift3 has issues with CDI"
+  set_fact:
+    skip_pvc: true
+  when: cluster_type == 'openshift' and openshift_version is match('3.*')
 
 - name: "Skipping this playbook due to open issues"
   meta: end_play

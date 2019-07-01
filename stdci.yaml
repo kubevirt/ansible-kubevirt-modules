@@ -1,6 +1,7 @@
 ---
 sub-stages:
   - os-3.11.0
+  - okd-4.1.2
 runtime_requirements:
   support_nesting_level: 2
   isolation_level: container

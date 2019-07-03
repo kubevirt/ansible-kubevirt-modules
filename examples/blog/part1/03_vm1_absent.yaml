@@ -1,0 +1,10 @@
+---
+- name: Playbook 3
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Delete the vm
+      kubevirt_vm:
+        namespace: default
+        name: vm1
+        state: absent

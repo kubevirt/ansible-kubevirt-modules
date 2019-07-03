@@ -1,0 +1,10 @@
+---
+- name: Playbook 1
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create first vm?
+      kubevirt_vm:
+        namespace: default
+        name: vm1
+        state: running

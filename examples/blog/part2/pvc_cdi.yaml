@@ -1,0 +1,16 @@
+---
+- name: PVC + CDI
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create pvc and fetch data
+      kubevirt_pvc:
+        name: pvc2
+        namespace: default
+        size: 100Mi
+        access_modes:
+          - ReadWriteOnce
+        wait: yes
+        cdi_source:
+          http:
+            url: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img

@@ -1,0 +1,5 @@
+plugin: kubevirt
+connections:
+  - namespaces:
+      - default
+    interface_name: default

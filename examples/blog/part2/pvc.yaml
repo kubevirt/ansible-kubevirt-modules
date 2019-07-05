@@ -1,0 +1,12 @@
+---
+- name: PVC
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create pvc
+      kubevirt_pvc:
+        name: pvc1
+        namespace: default
+        size: 100Mi
+        access_modes:
+          - ReadWriteOnce

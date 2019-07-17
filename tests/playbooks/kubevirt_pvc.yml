@@ -39,18 +39,11 @@
             url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
         wait: yes
 
-    - name: Clone the last pvc
-      kubevirt_pvc:
-        namespace: default
-        name: pvc-demo2
-        access_modes:
-        - ReadWriteOnce
-        size: 100Mi
-        cdi_source:
-          pvc:
-            namespace: default
-            name: pvc-demo
-        wait: yes
+    # Missing test: clone the last PVC
+    # This used to be possible with CDI, but with 1.9.4 cloning got limited to datavols
+    # only and won't be reintroduced for PVCs.
+    # However in k8s 1.15 spec.dataSource got introduced and it does the same thing. So once
+    # kubevirt_pvc gets support for that, there should again be a test for it here.
 
     - name: Remove all PVCs
       kubevirt_pvc:

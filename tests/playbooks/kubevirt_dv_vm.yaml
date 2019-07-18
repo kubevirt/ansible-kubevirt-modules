@@ -29,7 +29,8 @@
                 - ReadWriteOnce
               storage: 1Gi
       register: result
-      failed_when: result.changed != true or result.method != 'create'
+      failed_when: result.changed != true or not result.method in ('create', 'apply')
+
     - name: Remove the VM recently created
       kubevirt_vm:
         state: absent

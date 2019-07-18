@@ -31,7 +31,7 @@
         - { name: 'eph1', state: 'present' }
         - { name: 'eph2', state: 'running' }
       register: result
-      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.phase != 'Running'
+      failed_when: result.changed != true or not result.method in ('create', 'apply') or result.kubevirt_vm.status.phase != 'Running'
 
     - name: "Verify they're all reported as up"
       kubevirt_vm:
@@ -91,7 +91,7 @@
         - { name: 'vm1', state: 'present' }
         - { name: 'vm2', state: 'stopped' }
       register: result
-      failed_when: result.changed != true or result.method != 'create'
+      failed_when: result.changed != true or not result.method in ('create', 'apply')
 
     - name: "Verify the vms exist, but are down"
       kubevirt_vm:
@@ -120,7 +120,7 @@
       with_items:
         - { name: 'vm3', state: 'running' }
       register: result
-      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.ready != true
+      failed_when: result.changed != true or not result.method in ('create', 'apply') or result.kubevirt_vm.status.ready != true
 
     - name: "Verify the vm exists and is actually up"
       kubevirt_vm:

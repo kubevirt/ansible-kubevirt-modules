@@ -61,7 +61,7 @@
         template_parameters:
           name: test-vm
       register: result
-      failed_when: result.changed != true or result.method != 'create' or result.kubevirt_vm.status.ready != true
+      failed_when: result.changed != true or not result.method in ('create', 'apply') or result.kubevirt_vm.status.ready != true
 
     - name: "Delete VM"
       kubevirt_vm:

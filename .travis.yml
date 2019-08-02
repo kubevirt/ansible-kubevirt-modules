@@ -29,6 +29,7 @@ env:
   global: # Make sure there are defaults for each matrix var
     - TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=pip
+    - CDI_VER=v1.9.5
   matrix:
     - ANSIBLE_SOURCE=pip                  TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=branch/stable-2.8    TEST=playbooks/all.yml

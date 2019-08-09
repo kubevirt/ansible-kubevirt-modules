@@ -17,10 +17,10 @@ branches:
     - master
 
 cache:
-  - pip
-  - directories:
-    - cache
-    - "~/.minikube/cache"
+  pip: yes
+  directories:
+  - cache
+  - "~/.minikube/cache"
 
 # If you trigger a custom build with a custom config like this:
 #   env: ANSIBLE_SOURCE=pr/9999

@@ -29,7 +29,8 @@ env:
   global: # Make sure there are defaults for each matrix var
     - TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=pip
-    - CDI_VER=v1.9.5
+    - LATEST_KUBEVIRT_VER=$(curl -s https://github.com/kubevirt/kubevirt/releases/latest | grep -o "v[0-9]\.[0-9]*\.[0-9]*")
+    - LATEST_CDI_VER=$(curl -s https://github.com/kubevirt/containerized-data-importer/releases/latest | grep -o "v[0-9]\.[0-9]*\.[0-9]*")
   matrix:
     - ANSIBLE_SOURCE=pip                  TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=branch/stable-2.8    TEST=playbooks/all.yml
@@ -43,6 +44,8 @@ install:
 # travis_terminate: ok=0, fail=1, error=2+
 # if minikube fails to start/deploy, that should be an error
 script:
+  - export CDI_VER=${CDI_VER:-$LATEST_CDI_VER}
+  - export KUBEVIRT_VER=${KUBEVIRT_VER:-$LATEST_KUBEVIRT_VER}
   - ansible-playbook --version
   # Catch obvious errors before we spend the time on booting the cluster up:
   - ansible-playbook -vvv --syntax-check tests/$TEST || travis_terminate 1;

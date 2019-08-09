@@ -5,6 +5,8 @@
   module_defaults:
     group/k8s:
       namespace: default
+  vars:
+    test_image: "kubevirt/cirros-container-disk-demo:{{ lookup('env', 'KUBEVIRT_VER') or 'latest' }}"
   tasks:
     - name: Check for known open issues
       include_tasks: known_issues.yaml
@@ -24,7 +26,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:
@@ -84,7 +86,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:
@@ -114,7 +116,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:

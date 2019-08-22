@@ -5,6 +5,7 @@
   vars:
     template_name: test-template
     vm_name: template-vm
+    test_image: "kubevirt/cirros-container-disk-demo:{{ lookup('env', 'KUBEVIRT_VER') or 'latest' }}"
   tasks:
     - name: Check for known open issues
       include_tasks: known_issues.yaml
@@ -36,7 +37,7 @@
         default_volume:
           name: default-volume
           containerDisk:
-            image: kubevirt/cirros-container-disk-demo:latest
+            image: "{{ test_image }}"
         objects:
           - name: ${NAME}
             kind: VirtualMachine

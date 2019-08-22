@@ -5,6 +5,8 @@
   module_defaults:
     group/k8s:
       namespace: default
+  vars:
+    test_image: "kubevirt/cirros-container-disk-demo:{{ lookup('env', 'KUBEVIRT_VER') or 'latest' }}"
   tasks:
     - name: Check for known open issues
       include_tasks: known_issues.yaml
@@ -24,7 +26,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:
@@ -69,7 +71,7 @@
         - { name: 'eph2', state: 'stopped' }
         - { name: 'eph2', state: 'absent' }
       register: result
-      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+      failed_when: result.changed != false or ( 'status' in result.kubevirt_vm and result.kubevirt_vm.status|length>0 )
 
 
 
@@ -84,7 +86,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:
@@ -103,7 +105,7 @@
         - { name: 'vm2', state: 'stopped' }
         - { name: 'vm2', state: 'present' }
       register: result
-      failed_when: result.changed != false or 'status' in result.kubevirt_vm
+      failed_when: result.changed != false or ( 'status' in result.kubevirt_vm and result.kubevirt_vm.status|length>0 )
 
     - name: "Create a running VM utilizing state `running`"
       kubevirt_vm:
@@ -114,7 +116,7 @@
           - name: containerdisk
             volume:
               containerDisk:
-                image: kubevirt/cirros-container-disk-demo:latest
+                image: "{{ test_image }}"
             disk:
               bus: virtio
       with_items:
@@ -195,5 +197,5 @@
         - { name: 'vm2' }
         - { name: 'vm3' }
       register: result
-      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or 'status' in result.kubevirt_vm
+      failed_when: result.changed != false or 'spec' in result.kubevirt_vm or ( 'status' in result.kubevirt_vm and result.kubevirt_vm.status|length>0 )
 

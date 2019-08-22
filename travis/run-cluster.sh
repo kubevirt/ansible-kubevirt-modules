@@ -21,7 +21,7 @@ kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/$KUBEVIR
 
 
 (
-  kubectl wait --timeout=240s --for=condition=Ready -n kubevirt kv/kubevirt ;
+  kubectl wait --timeout=240s --for condition=Available -n kubevirt kv/kubevirt ;
 ) || {
   echo "Something went wrong"
   kubectl describe -n kubevirt kv/kubevirt

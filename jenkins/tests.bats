@@ -26,6 +26,10 @@ run_test() {
   run_test branch/stable-2.8
 }
 
+@test "branch/stable-2.9" {
+  run_test branch/stable-2.9
+}
+
 @test "branch/devel" {
   run_test branch/devel
 }

@@ -29,6 +29,7 @@ env:
   matrix:
     - ANSIBLE_SOURCE=pip                  TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=branch/stable-2.8    TEST=playbooks/all.yml
+    - ANSIBLE_SOURCE=branch/stable-2.9    TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=branch/devel         TEST=playbooks/all.yml
     - ANSIBLE_SOURCE=branch/devel         TEST=roles/all.yml
 

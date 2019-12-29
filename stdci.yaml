@@ -1,6 +1,0 @@
----
-sub-stages:
-  - os-3.11.0
-runtime_requirements:
-  support_nesting_level: 2
-  isolation_level: container

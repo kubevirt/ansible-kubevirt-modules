@@ -12,6 +12,9 @@
       kubevirt_pvc:
         namespace: default
         name: pvc1
+        storage_class_name: "{{ storage_provisioner | default('standard') }}"
+        annotations:
+          "kubevirt.io/provisionOnNode" : "{{ node_name }}"
         access_modes:
         - ReadWriteOnce
         size: 100Mi
@@ -20,24 +23,50 @@
       kubevirt_pvc:
         namespace: default
         name: pvc-blank
+        storage_class_name: "{{ storage_provisioner | default('standard') }}"
+        annotations:
+          "kubevirt.io/provisionOnNode" : "{{ node_name }}"
         access_modes:
         - ReadWriteOnce
         size: 100Mi
         cdi_source:
           blank: yes
-        wait: yes
+
+    - name: Wait for blank PVC to be ready
+      k8s_facts:
+        name: pvc-blank
+        namespace: default
+        kind: PersistentVolumeClaim
+        api_version: v1
+      register: pvc
+      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
+      delay: 15
+      retries: 30
 
     - name: Create a PVC and fetch contents from an external http location
       kubevirt_pvc:
         namespace: default
         name: pvc-demo
+        storage_class_name: "{{ storage_provisioner | default('standard') }}"
+        annotations:
+          "kubevirt.io/provisionOnNode" : "{{ node_name }}"
         access_modes:
         - ReadWriteOnce
-        size: 100Mi
+        size: 5Gi
         cdi_source:
           http:
-            url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-        wait: yes
+            url: "https://dl.fedoraproject.org/pub/fedora/linux/releases/31/Cloud/x86_64/images/Fedora-Cloud-Base-31-1.9.x86_64.qcow2"
+
+    - name: Wait for blank PVC to be ready
+      k8s_facts:
+        name: pvc-demo
+        namespace: default
+        kind: PersistentVolumeClaim
+        api_version: v1
+      register: pvc
+      until: "pvc.resources[0].status.phase == 'Bound' and 'cdi.kubevirt.io/storage.pod.phase' in pvc.resources[0].metadata.annotations and pvc.resources[0].metadata.annotations['cdi.kubevirt.io/storage.pod.phase'] == 'Succeeded'"
+      delay: 15
+      retries: 30
 
     # Missing test: clone the last PVC
     # This used to be possible with CDI, but with 1.9.4 cloning got limited to datavols
@@ -54,4 +83,3 @@
       - pvc1
       - pvc-blank
       - pvc-demo
-

@@ -11,27 +11,30 @@
       vars:
         current_playbook: dv_vm
 
-    - name: Create a Cirros VM from a DataVolume
+    - name: Create a fedora VM from a DataVolume
       kubevirt_vm:
         state: running
-        name: cirros-dv
+        wait: true
+        wait_timeout: 200
+        name: fedora-dv-test
         labels:
           special: test-e2e-key
-        memory: 64Mi
+        memory: 2Gi
         cpu_cores: 1
         datavolumes:
-          - name: cirros-dv
+          - name: fedora-dv-test
             source:
               http:
-                url: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+                url: "https://dl.fedoraproject.org/pub/fedora/linux/releases/31/Cloud/x86_64/images/Fedora-Cloud-Base-31-1.9.x86_64.qcow2"
             pvc:
+              storageClassName: "{{ storage_provisioner }}"
               accessModes:
                 - ReadWriteOnce
-              storage: 1Gi
+              storage: 5Gi
       register: result
       failed_when: result.changed != true or not result.method in ('create', 'apply')
 
     - name: Remove the VM recently created
       kubevirt_vm:
         state: absent
-        name: cirros-dv
+        name: fedora-dv-test

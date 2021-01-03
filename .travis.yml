@@ -4,7 +4,6 @@ notifications:
       - mmazur@redhat.com
       - omachace@redhat.com
       - igulina@redhat.com
-      - talayan@redhat.com
     on_success: never
     on_failure: always
 

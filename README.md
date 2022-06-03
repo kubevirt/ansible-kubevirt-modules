@@ -37,9 +37,9 @@ For a quick introduction, please see the following [kubevirt.io][kubevirt.io] bl
 ## Requirements
 
 * Ansible >= 2.8
-  * `pip3 --user install ansible`
+  * `pip3 install --user ansible`
 * [openshift-restclient-python][openshift-restclient-python.git] >= 0.8.2
-  * `pip3 --user install openshift`
+  * `pip3 install --user openshift`
 
 ## Source Code
 

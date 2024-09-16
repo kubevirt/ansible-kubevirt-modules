@@ -1,3 +1,5 @@
+# This collection is obsolete and has been replaced by the [kubevirt.core](https://github.com/kubevirt/kubevirt.core) Ansible collection.
+
 # Ansible KubeVirt Modules
 
 Ansible KubeVirt modules enable the automation of management of the following Kubernetes cluster object types:
